@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using PolisGo.Application.Abstractions;
 using PolisGo.Application.Claims.Dtos;
+using PolisGo.Application.Common;
 using PolisGo.Application.Common.Exceptions;
 using PolisGo.Domain.Entities;
 using DomainClaim = PolisGo.Domain.Entities.Claim;
@@ -54,13 +55,9 @@ public class ClaimDocumentService : IClaimDocumentService
                 $"File size must be between 1 byte and {MaxFileSizeBytes / (1024 * 1024)} MB.");
         }
 
-        // GetFileName strips any directory components a client might have tried
-        // to sneak in (../../secret.pdf becomes secret.pdf).
-        var safeDisplayName = Path.GetFileName(originalFileName ?? string.Empty);
-        if (string.IsNullOrWhiteSpace(safeDisplayName))
-        {
-            throw new ValidationException("file", "File name is required.");
-        }
+        // Cross-platform sanitiser — Path.GetFileName only strips '\' on Windows,
+        // so a '..\\..\\etc\\passwd.pdf' name survives on Linux containers.
+        var safeDisplayName = FileNames.Sanitize(originalFileName);
 
         var extension = Path.GetExtension(safeDisplayName).ToLowerInvariant();
         if (!AllowedExtensions.Contains(extension))

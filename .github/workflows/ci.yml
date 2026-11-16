@@ -68,13 +68,25 @@ jobs:
         shell: bash
         run: |
           # Cobertura stores line-rate as a 0..1 decimal on the root <coverage> node.
-          report=$(find TestResults -name 'coverage.cobertura.xml' | head -n1)
-          if [ -z "$report" ]; then
+          # Bash in GitHub Actions sets `pipefail`, so `grep ... | head -n1` fails
+          # when head closes the pipe early (SIGPIPE on grep). A single awk pass
+          # avoids the pipeline entirely and also handles a missing attribute.
+          report=$(find TestResults -name 'coverage.cobertura.xml' -print -quit)
+          if [ -z "$report" ] || [ ! -f "$report" ]; then
             echo "No coverage report found." >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
-          rate=$(grep -oE 'line-rate="[0-9.]+"' "$report" | head -n1 | grep -oE '[0-9.]+')
-          pct=$(awk "BEGIN { printf \"%.1f\", ${rate} * 100 }")
+          rate=$(awk 'match($0, /line-rate="[0-9.]+"/) {
+            s = substr($0, RSTART, RLENGTH)
+            gsub(/line-rate="|"/, "", s)
+            print s
+            exit
+          }' "$report")
+          if [ -z "$rate" ]; then
+            echo "Coverage report at \`$report\` had no line-rate attribute." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          pct=$(awk -v r="$rate" 'BEGIN { printf "%.1f", r * 100 }')
           {
             echo "## Coverage"
             echo ""
