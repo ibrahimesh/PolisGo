@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/PolisGo.Api/PolisGo.Api.csproj" />
+    <Project Path="src/PolisGo.Application/PolisGo.Application.csproj" />
+    <Project Path="src/PolisGo.Domain/PolisGo.Domain.csproj" />
+    <Project Path="src/PolisGo.Infrastructure/PolisGo.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/PolisGo.Tests/PolisGo.Tests.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,68 @@
+## .NET build output
+bin/
+obj/
+out/
+
+## User-specific files
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.userprefs
+
+## Visual Studio cache / options
+.vs/
+.vscode/
+*.rsuser
+*.sbr
+*.tmp
+*.log
+*.log.*
+
+## Rider / ReSharper
+.idea/
+*.DotSettings.user
+_ReSharper*/
+
+## Test / coverage results
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+*.VisualState.xml
+TestResult.xml
+coverage*.xml
+coverage*.json
+coverage*.info
+*.coverage
+*.coveragexml
+
+## Publish
+PublishProfiles/
+publish/
+
+## NuGet
+*.nupkg
+*.snupkg
+.nuget/
+packages/
+!packages/build/
+*.nuget.props
+*.nuget.targets
+
+## MSBuild
+msbuild.log
+msbuild.err
+msbuild.wrn
+
+## EF Core local DB (keep migrations in source control; ignore local .mdf)
+*.mdf
+*.ldf
+
+## OS cruft
+.DS_Store
+Thumbs.db
+
+## Secrets
+appsettings.*.local.json
+*.pfx
+*.key
+*.pem
