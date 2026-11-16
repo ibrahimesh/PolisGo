@@ -66,3 +66,6 @@ appsettings.*.local.json
 *.pfx
 *.key
 *.pem
+
+## Local scratch
+prompt.txt
