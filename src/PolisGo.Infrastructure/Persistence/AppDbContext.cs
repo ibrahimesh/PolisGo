@@ -1,9 +1,10 @@
 using Microsoft.EntityFrameworkCore;
+using PolisGo.Application.Abstractions;
 using PolisGo.Domain.Entities;
 
 namespace PolisGo.Infrastructure.Persistence;
 
-public class AppDbContext : DbContext
+public class AppDbContext : DbContext, IApplicationDbContext
 {
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {
