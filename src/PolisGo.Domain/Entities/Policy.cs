@@ -39,7 +39,7 @@ public class Policy
     {
         if (Status != PolicyStatus.Draft)
         {
-            throw new InvalidPolicyStateException(
+            throw new InvalidStateTransitionException(
                 $"Policy {PolicyNumber} cannot be activated from status {Status}; only Draft is allowed.");
         }
         Status = PolicyStatus.Active;
@@ -49,7 +49,7 @@ public class Policy
     {
         if (Status is not (PolicyStatus.Draft or PolicyStatus.Active))
         {
-            throw new InvalidPolicyStateException(
+            throw new InvalidStateTransitionException(
                 $"Policy {PolicyNumber} cannot be cancelled from status {Status}; only Draft or Active is allowed.");
         }
         Status = PolicyStatus.Cancelled;

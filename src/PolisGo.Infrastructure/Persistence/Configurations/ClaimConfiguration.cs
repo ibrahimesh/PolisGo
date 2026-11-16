@@ -17,6 +17,12 @@ public class ClaimConfiguration : IEntityTypeConfiguration<Claim>
         builder.Property(c => c.ClaimedAmount).HasColumnType("decimal(18,2)");
         builder.Property(c => c.ApprovedAmount).HasColumnType("decimal(18,2)");
 
+        // Portable optimistic concurrency: the entity's domain methods bump
+        // RowVersion on every state change (see Claim.TransitionTo). Guid
+        // instead of byte[] gives us value equality in the change tracker and
+        // avoids provider-specific rowversion / timestamp columns.
+        builder.Property(c => c.RowVersion).IsConcurrencyToken();
+
         builder.HasIndex(c => c.ClaimNumber).IsUnique();
 
         // Restrict: claims hold legal/accounting weight; a policy owner must

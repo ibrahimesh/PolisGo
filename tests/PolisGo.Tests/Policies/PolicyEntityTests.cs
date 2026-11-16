@@ -32,7 +32,7 @@ public class PolicyEntityTests
     {
         var policy = Draft();
         policy.Status = startingStatus;
-        Assert.Throws<InvalidPolicyStateException>(() => policy.Activate());
+        Assert.Throws<InvalidStateTransitionException>(() => policy.Activate());
     }
 
     [Theory]
@@ -53,7 +53,7 @@ public class PolicyEntityTests
     {
         var policy = Draft();
         policy.Status = startingStatus;
-        Assert.Throws<InvalidPolicyStateException>(() => policy.Cancel());
+        Assert.Throws<InvalidStateTransitionException>(() => policy.Cancel());
     }
 
     [Fact]

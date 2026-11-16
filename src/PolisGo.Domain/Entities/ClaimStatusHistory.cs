@@ -9,7 +9,8 @@ public class ClaimStatusHistory
     public Guid ClaimId { get; set; }
     public Claim Claim { get; set; } = null!;
 
-    public ClaimStatus FromStatus { get; set; }
+    // Null on the very first row (Submit): nothing came before.
+    public ClaimStatus? FromStatus { get; set; }
     public ClaimStatus ToStatus { get; set; }
 
     public Guid ChangedByUserId { get; set; }

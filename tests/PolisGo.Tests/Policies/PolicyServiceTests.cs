@@ -310,7 +310,7 @@ public class PolicyServiceTests
         var draft = await sut.CreateAsync(new CreatePolicyRequest(vehicleId, "MTPL", Today, 12, null));
         await sut.CancelAsync(draft.Id);
 
-        await Assert.ThrowsAsync<InvalidPolicyStateException>(() => sut.CancelAsync(draft.Id));
+        await Assert.ThrowsAsync<InvalidStateTransitionException>(() => sut.CancelAsync(draft.Id));
     }
 
     // ---------- StartDate validation ----------

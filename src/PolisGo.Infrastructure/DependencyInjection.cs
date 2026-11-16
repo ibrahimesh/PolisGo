@@ -3,9 +3,11 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using PolisGo.Application.Abstractions;
+using PolisGo.Application.Claims;
 using PolisGo.Infrastructure.Auth;
 using PolisGo.Infrastructure.Payments;
 using PolisGo.Infrastructure.Persistence;
+using PolisGo.Infrastructure.Storage;
 
 namespace PolisGo.Infrastructure;
 
@@ -29,8 +31,16 @@ public static class DependencyInjection
         services.AddScoped<IPasswordHasher, BcryptPasswordHasher>();
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 
-        // Fake gateway for now — replace with a real PSP adapter when needed.
+        // Fake gateways for now — replace with real PSP/payout adapters when needed.
         services.AddSingleton<IPaymentGateway, FakePaymentGateway>();
+        services.AddSingleton<IPayoutGateway, FakePayoutGateway>();
+
+        // Claim options: binds a "Claims" section if present; falls back to the
+        // defaults baked into ClaimOptions otherwise.
+        services.Configure<ClaimOptions>(configuration.GetSection(ClaimOptions.SectionName));
+
+        services.Configure<FileStorageOptions>(configuration.GetSection(FileStorageOptions.SectionName));
+        services.AddSingleton<IFileStorage, LocalFileStorage>();
 
         // Options bound to configuration; validation runs eagerly so a misconfigured
         // SecretKey causes a startup failure, not a 500 on the first login.

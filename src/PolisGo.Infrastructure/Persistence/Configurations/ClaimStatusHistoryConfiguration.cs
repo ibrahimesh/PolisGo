@@ -11,7 +11,8 @@ public class ClaimStatusHistoryConfiguration : IEntityTypeConfiguration<ClaimSta
         builder.HasKey(h => h.Id);
 
         builder.Property(h => h.Comment).IsRequired().HasMaxLength(1000);
-        builder.Property(h => h.FromStatus).HasConversion<string>().HasMaxLength(16).IsRequired();
+        // FromStatus is null only on the first history row (the Submit itself).
+        builder.Property(h => h.FromStatus).HasConversion<string>().HasMaxLength(16).IsRequired(false);
         builder.Property(h => h.ToStatus).HasConversion<string>().HasMaxLength(16).IsRequired();
 
         // Cascade with the parent claim: audit trail dies with the claim.

@@ -25,6 +25,7 @@
     <ProjectReference Include="..\..\src\PolisGo.Application\PolisGo.Application.csproj" />
     <ProjectReference Include="..\..\src\PolisGo.Domain\PolisGo.Domain.csproj" />
     <ProjectReference Include="..\..\src\PolisGo.Infrastructure\PolisGo.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\PolisGo.Api\PolisGo.Api.csproj" />
   </ItemGroup>
 
 </Project>

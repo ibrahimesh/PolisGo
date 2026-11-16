@@ -1,6 +1,8 @@
 using Microsoft.Extensions.DependencyInjection;
 using PolisGo.Application.Abstractions;
 using PolisGo.Application.Auth;
+using PolisGo.Application.Claims;
+using PolisGo.Application.Claims.Documents;
 using PolisGo.Application.Policies;
 using PolisGo.Application.Pricing;
 using PolisGo.Application.Vehicles;
@@ -20,6 +22,8 @@ public static class DependencyInjection
 
         services.AddScoped<IVehicleService, VehicleService>();
         services.AddScoped<IPolicyService, PolicyService>();
+        services.AddScoped<IClaimService, ClaimService>();
+        services.AddScoped<IClaimDocumentService, ClaimDocumentService>();
 
         return services;
     }
