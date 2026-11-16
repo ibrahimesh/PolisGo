@@ -70,3 +70,8 @@ appsettings.*.local.json
 ## Local scratch
 prompt.txt
 p.txt
+
+## Docker / compose secrets (never commit — see .env.example for the template)
+.env
+.env.*
+!.env.example

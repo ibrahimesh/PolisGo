@@ -1,5 +1,6 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -29,6 +30,11 @@ public class Program
 
         builder.Services.AddApplication();
         builder.Services.AddInfrastructure(builder.Configuration);
+
+        // Liveness + DB connectivity probe. Anonymous so orchestrators (compose,
+        // Kubernetes, load balancers) can poll without a credential.
+        builder.Services.AddHealthChecks()
+            .AddDbContextCheck<AppDbContext>("database");
 
         // CurrentUser needs HttpContext to read claims; register the accessor
         // and the scoped resolver that reads them once per request.
@@ -64,25 +70,81 @@ public class Program
         // Runs first so every downstream exception hits ProblemDetails formatting.
         app.UseMiddleware<ExceptionHandlingMiddleware>();
 
+        // Migrations run before the app starts serving traffic so the first
+        // request after a deploy doesn't race the schema update.
+        await ApplyMigrationsIfConfiguredAsync(app);
+
         if (app.Environment.IsDevelopment())
         {
             app.UseSwagger();
             app.UseSwaggerUI();
 
-            // Dev-only convenience: ensure schema is up-to-date and seed admin.
+            // Dev-only admin bootstrap; no-op if the user-secrets aren't set.
             await using var scope = app.Services.CreateAsyncScope();
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-            await db.Database.MigrateAsync();
             var hasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
             await DatabaseSeeder.SeedDevelopmentAsync(db, builder.Configuration, hasher);
         }
 
-        app.UseHttpsRedirection();
+        // HTTPS redirection would 307 every /health call to :443 inside the
+        // container where no HTTPS listener exists — enable only when at least
+        // one configured URL actually speaks HTTPS.
+        var urls = builder.Configuration["ASPNETCORE_URLS"] ?? string.Empty;
+        if (urls.Contains("https://", StringComparison.OrdinalIgnoreCase))
+        {
+            app.UseHttpsRedirection();
+        }
+
         app.UseAuthentication();
         app.UseAuthorization();
+
+        // Health probe stays anonymous even though [Authorize] is applied at
+        // controller level.
+        app.MapHealthChecks("/health").AllowAnonymous();
+
         app.MapControllers();
 
         await app.RunAsync();
+    }
+
+    // When Database:ApplyMigrationsOnStartup=true (compose/docker defaults),
+    // apply pending migrations with a retry loop so the container survives
+    // SQL Server's warm-up window on the first boot.
+    private static async Task ApplyMigrationsIfConfiguredAsync(WebApplication app)
+    {
+        if (!app.Configuration.GetValue<bool>("Database:ApplyMigrationsOnStartup"))
+        {
+            return;
+        }
+
+        var logger = app.Services
+            .GetRequiredService<ILoggerFactory>()
+            .CreateLogger("Startup.Migrations");
+
+        const int maxAttempts = 20;
+        const int delaySeconds = 3;
+
+        for (var attempt = 1; attempt <= maxAttempts; attempt++)
+        {
+            try
+            {
+                await using var scope = app.Services.CreateAsyncScope();
+                var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                await db.Database.MigrateAsync();
+                logger.LogInformation("Migrations applied on startup (attempt {Attempt}).", attempt);
+                return;
+            }
+            catch (Exception ex) when (attempt < maxAttempts)
+            {
+                logger.LogWarning(ex,
+                    "Migration attempt {Attempt} failed; retrying in {Delay}s.",
+                    attempt, delaySeconds);
+                await Task.Delay(TimeSpan.FromSeconds(delaySeconds));
+            }
+        }
+
+        throw new InvalidOperationException(
+            $"Database migrations failed to apply after {maxAttempts} attempts.");
     }
 
     private static void ConfigureSwagger(Swashbuckle.AspNetCore.SwaggerGen.SwaggerGenOptions options)

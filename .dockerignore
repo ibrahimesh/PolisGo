@@ -1,0 +1,38 @@
+# Build output — rebuilt from source inside the SDK stage.
+**/bin
+**/obj
+**/out
+**/publish
+
+# IDE / local tooling
+**/.vs
+**/.vscode
+**/.idea
+**/*.user
+**/*.suo
+**/*.swp
+
+# Git history is never needed inside the image.
+.git
+.gitignore
+.gitattributes
+
+# Test results and coverage artefacts.
+**/TestResults
+**/coverage.*
+**/*.coverage
+
+# Local scratch files (see .gitignore for the authoritative list).
+.env
+.env.*
+!.env.example
+prompt.txt
+p.txt
+
+# Logs, OS cruft
+*.log
+.DS_Store
+Thumbs.db
+
+# Node — just in case a future UI lives here.
+node_modules
