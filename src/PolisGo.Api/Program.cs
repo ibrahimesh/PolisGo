@@ -82,6 +82,13 @@ public class Program
     {
         options.SwaggerDoc("v1", new OpenApiInfo { Title = "PolisGo API", Version = "v1" });
 
+        // Surface XML triple-slash comments (summaries, remarks) in Swagger UI.
+        var xmlFile = Path.Combine(AppContext.BaseDirectory, "PolisGo.Api.xml");
+        if (File.Exists(xmlFile))
+        {
+            options.IncludeXmlComments(xmlFile);
+        }
+
         // Bearer scheme + requirement so the Authorize button appears and sends
         // the token on every subsequent request.
         options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
