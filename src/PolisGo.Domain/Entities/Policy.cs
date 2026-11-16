@@ -1,4 +1,5 @@
 using PolisGo.Domain.Enums;
+using PolisGo.Domain.Exceptions;
 
 namespace PolisGo.Domain.Entities;
 
@@ -31,4 +32,33 @@ public class Policy
 
     public ICollection<Payment> Payments { get; set; } = new List<Payment>();
     public ICollection<Claim> Claims { get; set; } = new List<Claim>();
+
+    // State transitions live on the entity so controllers and services can't
+    // bypass the guards by mutating Status directly.
+    public void Activate()
+    {
+        if (Status != PolicyStatus.Draft)
+        {
+            throw new InvalidPolicyStateException(
+                $"Policy {PolicyNumber} cannot be activated from status {Status}; only Draft is allowed.");
+        }
+        Status = PolicyStatus.Active;
+    }
+
+    public void Cancel()
+    {
+        if (Status is not (PolicyStatus.Draft or PolicyStatus.Active))
+        {
+            throw new InvalidPolicyStateException(
+                $"Policy {PolicyNumber} cannot be cancelled from status {Status}; only Draft or Active is allowed.");
+        }
+        Status = PolicyStatus.Cancelled;
+    }
+
+    // Inclusive overlap: two policies share at least one day in their date ranges.
+    // Caller is responsible for also matching on vehicle and type.
+    public bool OverlapsWith(Policy other)
+    {
+        return StartDate <= other.EndDate && other.StartDate <= EndDate;
+    }
 }

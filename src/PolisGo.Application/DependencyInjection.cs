@@ -1,7 +1,9 @@
 using Microsoft.Extensions.DependencyInjection;
 using PolisGo.Application.Abstractions;
 using PolisGo.Application.Auth;
+using PolisGo.Application.Policies;
 using PolisGo.Application.Pricing;
+using PolisGo.Application.Vehicles;
 
 namespace PolisGo.Application;
 
@@ -15,6 +17,9 @@ public static class DependencyInjection
         // and avoids per-request allocation.
         services.AddSingleton<IPremiumCalculator, PremiumCalculator>();
         services.AddScoped<IQuoteService, QuoteService>();
+
+        services.AddScoped<IVehicleService, VehicleService>();
+        services.AddScoped<IPolicyService, PolicyService>();
 
         return services;
     }

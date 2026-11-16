@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using PolisGo.Application.Common.Exceptions;
+using PolisGo.Domain.Exceptions;
 using AppUnauthorizedException = PolisGo.Application.Common.Exceptions.UnauthorizedException;
 
 namespace PolisGo.Api.Middleware;
@@ -43,6 +44,12 @@ public class ExceptionHandlingMiddleware
         catch (ConflictException ex)
         {
             await WriteProblem(context, StatusCodes.Status409Conflict, "Conflict", ex.Message);
+        }
+        catch (InvalidPolicyStateException ex)
+        {
+            // Domain state-transition failure (e.g. activating a Cancelled policy).
+            // Semantically identical to a conflict from the HTTP point of view.
+            await WriteProblem(context, StatusCodes.Status409Conflict, "Invalid policy state", ex.Message);
         }
         catch (Exception ex)
         {

@@ -66,7 +66,7 @@ public class AuthService : IAuthService
         _db.Customers.Add(customer);
         await _db.SaveChangesAsync(cancellationToken);
 
-        var (token, expiresAt) = _jwtTokenGenerator.GenerateToken(user);
+        var (token, expiresAt) = _jwtTokenGenerator.GenerateToken(user, customer.Id);
         return new AuthResponse(token, expiresAt, user.Email, user.FullName, user.Role);
     }
 
@@ -86,7 +86,13 @@ public class AuthService : IAuthService
             throw new UnauthorizedException();
         }
 
-        var (token, expiresAt) = _jwtTokenGenerator.GenerateToken(user);
+        // Clients always have a linked Customer; staff accounts usually don't.
+        var customerId = await _db.Customers
+            .Where(c => c.UserId == user.Id)
+            .Select(c => (Guid?)c.Id)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        var (token, expiresAt) = _jwtTokenGenerator.GenerateToken(user, customerId);
         return new AuthResponse(token, expiresAt, user.Email, user.FullName, user.Role);
     }
 

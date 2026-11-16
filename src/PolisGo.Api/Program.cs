@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using PolisGo.Api.Auth;
 using PolisGo.Api.Middleware;
 using PolisGo.Application;
 using PolisGo.Infrastructure;
@@ -27,6 +28,11 @@ public class Program
 
         builder.Services.AddApplication();
         builder.Services.AddInfrastructure(builder.Configuration);
+
+        // CurrentUser needs HttpContext to read claims; register the accessor
+        // and the scoped resolver that reads them once per request.
+        builder.Services.AddHttpContextAccessor();
+        builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 
         // JWT Bearer. The signing key comes from the same options that
         // Infrastructure already validated at startup.

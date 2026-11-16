@@ -18,7 +18,11 @@ public class JwtTokenGenerator : IJwtTokenGenerator
         _settings = settings.Value;
     }
 
-    public (string Token, DateTime ExpiresAt) GenerateToken(User user)
+    // Custom claim carrying the linked Customer id for Client tokens. Named
+    // outside the JWT reserved set so it stays obviously application-specific.
+    public const string CustomerIdClaimType = "customerId";
+
+    public (string Token, DateTime ExpiresAt) GenerateToken(User user, Guid? customerId = null)
     {
         var expiresAt = DateTime.UtcNow.AddMinutes(_settings.ExpiryMinutes);
 
@@ -32,6 +36,11 @@ public class JwtTokenGenerator : IJwtTokenGenerator
             // ClaimTypes.Role is what ASP.NET Core authorization looks at by default.
             new(ClaimTypes.Role, user.Role.ToString())
         };
+
+        if (customerId.HasValue)
+        {
+            claims.Add(new Claim(CustomerIdClaimType, customerId.Value.ToString()));
+        }
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_settings.SecretKey));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);

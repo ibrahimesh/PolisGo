@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using PolisGo.Application.Abstractions;
 using PolisGo.Infrastructure.Auth;
+using PolisGo.Infrastructure.Payments;
 using PolisGo.Infrastructure.Persistence;
 
 namespace PolisGo.Infrastructure;
@@ -27,6 +28,9 @@ public static class DependencyInjection
 
         services.AddScoped<IPasswordHasher, BcryptPasswordHasher>();
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
+
+        // Fake gateway for now — replace with a real PSP adapter when needed.
+        services.AddSingleton<IPaymentGateway, FakePaymentGateway>();
 
         // Options bound to configuration; validation runs eagerly so a misconfigured
         // SecretKey causes a startup failure, not a 500 on the first login.
