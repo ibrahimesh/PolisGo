@@ -19,7 +19,8 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        builder.Services.AddControllers();
+        builder.Services.AddControllers()
+            .AddJsonOptions(options => JsonConfiguration.Configure(options.JsonSerializerOptions));
 
         // Swashbuckle (instead of the minimal AddOpenApi) for the "Authorize"
         // button users need to paste Bearer tokens during manual testing.
@@ -94,6 +95,10 @@ public class Program
         {
             options.IncludeXmlComments(xmlFile);
         }
+
+        // Render enums inline as their string names (matches the JSON
+        // serializer config) instead of showing integer schemas.
+        options.UseInlineDefinitionsForEnums();
 
         // Bearer scheme + requirement so the Authorize button appears and sends
         // the token on every subsequent request.
