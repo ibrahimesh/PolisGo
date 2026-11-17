@@ -65,6 +65,8 @@ public class Program
 
         builder.Services.AddAuthorization();
 
+        builder.Services.AddCors(options => ConfigureFrontendCors(options, builder.Configuration));
+
         var app = builder.Build();
 
         // Runs first so every downstream exception hits ProblemDetails formatting.
@@ -95,6 +97,10 @@ public class Program
             app.UseHttpsRedirection();
         }
 
+        // Before auth so browser preflights (OPTIONS, no Authorization header)
+        // are answered here instead of being challenged with a 401.
+        app.UseCors(FrontendCorsPolicy);
+
         app.UseAuthentication();
         app.UseAuthorization();
 
@@ -105,6 +111,31 @@ public class Program
         app.MapControllers();
 
         await app.RunAsync();
+    }
+
+    private const string FrontendCorsPolicy = "Frontend";
+
+    // Explicit origin allow-list from config: the SPA authenticates with a
+    // Bearer header (not cookies), so credentials stay disabled and a wildcard
+    // origin is rejected outright to avoid accidental "allow everything".
+    private static void ConfigureFrontendCors(
+        Microsoft.AspNetCore.Cors.Infrastructure.CorsOptions options, IConfiguration configuration)
+    {
+        var origins = configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+            ?? ["http://localhost:5173", "http://localhost:3000"];
+
+        if (origins.Any(o => o.Contains('*')))
+        {
+            throw new InvalidOperationException("Cors:AllowedOrigins must list explicit origins, not wildcards.");
+        }
+
+        options.AddPolicy(FrontendCorsPolicy, policy => policy
+            .WithOrigins(origins)
+            .WithMethods("GET", "POST", "PUT", "PATCH", "DELETE")
+            .WithHeaders("Authorization", "Content-Type", "Accept", "Accept-Language")
+            // Lets the client read the file name of downloaded claim documents.
+            .WithExposedHeaders("Content-Disposition")
+            .SetPreflightMaxAge(TimeSpan.FromMinutes(10)));
     }
 
     // When Database:ApplyMigrationsOnStartup=true (compose/docker defaults),

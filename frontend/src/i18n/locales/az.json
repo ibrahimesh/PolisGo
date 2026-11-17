@@ -1,0 +1,268 @@
+{
+  "app": {
+    "name": "PolisGo",
+    "home": "PolisGo — ana səhifə"
+  },
+  "nav": {
+    "primary": "Əsas naviqasiya",
+    "skipToContent": "Məzmuna keç",
+    "calculator": "Kalkulyator",
+    "method": "Metodika",
+    "signIn": "Daxil ol",
+    "register": "Hesab aç",
+    "workspace": "Kabinet",
+    "signOut": "Çıxış",
+    "settings": "Görünüş ayarları"
+  },
+  "theme": {
+    "label": "Mövzu",
+    "dark": "Tünd",
+    "light": "Açıq",
+    "system": "Sistem"
+  },
+  "language": {
+    "label": "Dil",
+    "en": "English",
+    "ru": "Русский",
+    "az": "Azərbaycanca"
+  },
+  "footer": {
+    "about": "Azərbaycanda avtomobil sığortasının idarə edilməsi: polislər, ödənişlər və sığorta hadisələri bir yerdə.",
+    "statusLabel": "Sistem",
+    "api": "API",
+    "status": {
+      "checking": "Yoxlanılır…",
+      "healthy": "İşləyir",
+      "degraded": "Fasilələrlə",
+      "unhealthy": "Əlçatan deyil"
+    },
+    "currency": "Bütün məbləğlər Azərbaycan manatı (AZN) ilədir.",
+    "legalLabel": "Qeyd",
+    "legal": "Portfolio layihəsi. Lisenziyalı sığortaçı deyil; hesablamalar tarif mühərrikinin işini nümayiş etdirir.",
+    "copyright": "© {{year}} PolisGo"
+  },
+  "landing": {
+    "heroLabel": "Avtomobil sığortası · Azərbaycan",
+    "heroTitleLead": "Sığorta,",
+    "heroTitleAccent": "açıq qiymətlə.",
+    "heroLead": "PolisGo İcbari və KASKO polisləri rəsmiləşdirir, sığorta hadisələrini müraciətdən ödənişədək aparır və qiymətin hər amilini göstərir.",
+    "ctaCalculate": "Haqqı hesabla",
+    "ctaRegister": "Hesab aç",
+    "factsLabel": "Qısaca",
+    "facts": {
+      "products": "Məhsullar",
+      "productsValue": "İcbari · KASKO",
+      "currency": "Valyuta",
+      "currencyValue": "AZN",
+      "roles": "Rollar",
+      "rolesValue": "Müştəri · Agent · Ekspert · Admin",
+      "pricing": "Tarif",
+      "pricingValue": "6 amil, hədd ilə"
+    },
+    "calculatorLabel": "01 — Kalkulyator",
+    "calculatorTitleLead": "Canlı hesablama,",
+    "calculatorTitleAccent": "amil-amil.",
+    "calculatorLead": "Hər dəyişikliyi PolisGo API dərhal hesablayır. Bu səhifədə heç nə imitasiya edilmir.",
+    "methodLabel": "02 — Metodika",
+    "methodTitleLead": "Sığorta haqqı",
+    "methodTitleAccent": "necə yaranır.",
+    "steps": {
+      "factorsTitle": "Altı amil",
+      "factorsBody": "Mühərrikin həcmi, sürücünün yaşı, sürücülük stajı, avtomobilin yaşı, zərər tarixçəsi və müddət — hər biri məhsulun baza tarifinə öz əmsalını verir.",
+      "capTitle": "Risk həddi",
+      "capBody": "Beş risk amili bir-birinə vurulur və nəticə ×0,50 ilə ×3,00 arasında saxlanılır — heç bir profil həddən artıq baha və ya pulsuz olmur.",
+      "issueTitle": "Rəsmiləşdirmədə yenidən hesablama",
+      "issueBody": "Hesablama təxminidir. Polis rəsmiləşdirilərkən API haqqı müştəri, avtomobil və zərərlər üzrə təsdiqlənmiş məlumatlarla yenidən hesablayır."
+    }
+  },
+  "calculator": {
+    "formTitle": "Hesablama parametrləri",
+    "product": "Məhsul",
+    "products": {
+      "MTPL": "İcbari",
+      "MTPLHint": "İcbari mülki məsuliyyət sığortası",
+      "CASCO": "KASKO",
+      "CASCOHint": "Könüllü avtomobil sığortası"
+    },
+    "engine": "Mühərrikin həcmi",
+    "engineUnit": "sm³",
+    "birthDate": "Sürücünün doğum tarixi",
+    "licenceDate": "Vəsiqənin verilmə tarixi",
+    "vehicleYear": "Buraxılış ili",
+    "claims": "Son 3 ildə zərərlər",
+    "term": "Polisin müddəti",
+    "termOption_one": "{{count}} ay",
+    "termOption_other": "{{count}} ay",
+    "resultLabel": "Təxmini sığorta haqqı",
+    "resultFor_one": "{{count}} ay üçün",
+    "resultFor_other": "{{count}} ay üçün",
+    "updating": "Yenilənir",
+    "waiting": "Qiyməti görmək üçün formu doldurun.",
+    "estimate": "Təxmini qiymətləndirmə. Yekun haqq polis rəsmiləşdirilərkən təsdiqlənmiş məlumatlarla yenidən hesablanır.",
+    "diagramTitle": "Amillər diaqramı",
+    "diagramDesc": "Hər ox bir tarif amilidir. Qırıq xətli dairə neytral ×1,00-dır; ondan kənardakı nöqtələr haqqı artırır, içəridəkilər azaldır.",
+    "tabsLabel": "Haqqın təfərrüatı",
+    "tabs": {
+      "breakdown": "Bölgü",
+      "formula": "Düstur"
+    },
+    "factor": {
+      "baseRate": "Baza tarifi",
+      "engineFactor": "Mühərrik",
+      "driverAgeFactor": "Sürücünün yaşı",
+      "experienceFactor": "Staj",
+      "vehicleAgeFactor": "Avtomobilin yaşı",
+      "bonusMalusFactor": "Zərər tarixçəsi",
+      "termFactor": "Müddət",
+      "totalFactor": "Yekun əmsal",
+      "premium": "Sığorta haqqı"
+    },
+    "table": {
+      "caption": "API-dən alınan haqq bölgüsü",
+      "factor": "Komponent",
+      "value": "Dəyər",
+      "effect": "Təsir"
+    },
+    "effect": {
+      "raises": "Artırır",
+      "lowers": "Azaldır",
+      "neutral": "Neytral"
+    },
+    "capApplied": "Risk həddi tətbiq edildi",
+    "capHint": "Ümumi risk əmsalı ×{{raw}} ×{{capped}} səviyyəsinə endirildi.",
+    "formulaCaption": "Baza tarifi × amillər = sığorta haqqı",
+    "howCalculated": "Bu necə hesablanır?",
+    "modal": {
+      "title": "Sığorta haqqı necə hesablanır",
+      "intro": "Kalkulyator cavablarınızı PolisGo tarif mühərrikinə göndərir. Mühərrik məhsulun baza tarifindən başlayır və altı əmsal tətbiq edir.",
+      "risk": "Mühərrikin həcmi, sürücünün yaşı, staj, avtomobilin yaşı və zərər tarixçəsi vahid risk əmsalına vurulur. Bu əmsal ×0,50 ilə ×3,00 arasında məhdudlaşdırılır.",
+      "term": "Müddət əmsalı qiyməti aylara mütənasib bölür. 12 aydan qısa müddətlərə inzibati xərclər üçün 10% əlavə tətbiq olunur.",
+      "rounding": "Haqq yalnız bir dəfə, sonda, AZN ilə iki onluq rəqəmədək yuvarlaqlaşdırılır.",
+      "close": "Bağla"
+    },
+    "errorTitle": "Sığorta haqqını hesablamaq mümkün olmadı",
+    "retry": "Yenidən cəhd et"
+  },
+  "auth": {
+    "login": {
+      "label": "Giriş",
+      "titleLead": "Yenidən",
+      "titleAccent": "xoş gəlmisiniz.",
+      "lead": "Polisləri, ödənişləri və sığorta hadisələrini idarə etmək üçün daxil olun.",
+      "submit": "Daxil ol",
+      "noAccount": "PolisGo-da yenisiniz?",
+      "registerLink": "Hesab aç",
+      "success": "{{name}} kimi daxil oldunuz."
+    },
+    "register": {
+      "label": "Hesab aç",
+      "titleLead": "Avtomobilinizi",
+      "titleAccent": "dəqiqələr ərzində sığortalayın.",
+      "lead": "Müştəri hesabı pulsuzdur. Əməkdaş hesablarını administrator yaradır.",
+      "submit": "Hesab yarat",
+      "haveAccount": "Artıq hesabınız var?",
+      "loginLink": "Daxil ol",
+      "success": "PolisGo-ya xoş gəlmisiniz, {{name}}."
+    },
+    "fields": {
+      "email": "E-poçt",
+      "password": "Şifrə",
+      "passwordHint": "Ən azı 8 simvol, hərf və rəqəm.",
+      "fullName": "Ad, soyad",
+      "phone": "Telefon",
+      "phoneHint": "Məsələn, +994 50 123 45 67",
+      "birthDate": "Doğum tarixi",
+      "licenceDate": "Sürücülük vəsiqəsinin verilmə tarixi"
+    },
+    "showPassword": "Şifrəni göstər",
+    "hidePassword": "Şifrəni gizlət",
+    "sessionExpired": "Sessiya başa çatdı. Yenidən daxil olun.",
+    "signedOut": "Sistemdən çıxdınız.",
+    "checking": "Sessiya yoxlanılır…"
+  },
+  "workspace": {
+    "label": "Kabinet",
+    "greetingLead": "Salam,",
+    "lead": "Siz «{{role}}» rolu ilə daxil olmusunuz.",
+    "profile": "Profil",
+    "email": "E-poçt",
+    "role": "Rol",
+    "userId": "İstifadəçi ID",
+    "sectionsLabel": "Bölmələr",
+    "sections": {
+      "overview": "İcmal",
+      "agent": "Agent masası",
+      "claims": "Zərərlərin tənzimlənməsi",
+      "admin": "İdarəetmə"
+    },
+    "comingSoonTitle": "Bu bölmə plandakı növbəti addımdır",
+    "comingSoonBody": "Bu rol üçün ekranlar hazır olduqdan sonra polislər, avtomobillər və sığorta hadisələri burada görünəcək.",
+    "backToOverview": "İcmala qayıt"
+  },
+  "roles": {
+    "Client": "Müştəri",
+    "Agent": "Agent",
+    "Adjuster": "Ekspert",
+    "Admin": "Administrator"
+  },
+  "forbidden": {
+    "label": "Xəta 403",
+    "title": "Bu bölmə sizin rolunuz üçün əlçatan deyil",
+    "body": "Hesabınızın ({{role}}) bu bölməyə girişi yoxdur. Bunun səhv olduğunu düşünürsünüzsə, administratorla əlaqə saxlayın.",
+    "back": "Kabinetə qayıt"
+  },
+  "notFound": {
+    "label": "Xəta 404",
+    "titleLead": "Burada heç nə",
+    "titleAccent": "sığortalanmayıb.",
+    "body": "Axtardığınız səhifə mövcud deyil və ya köçürülüb.",
+    "home": "Ana səhifəyə keç"
+  },
+  "errors": {
+    "title": "Nəsə səhv getdi",
+    "network": "PolisGo API ilə əlaqə yoxdur. Bağlantını yoxlayın və ya bir az sonra yenidən cəhd edin.",
+    "unknown": "Gözlənilməz xəta baş verdi.",
+    "reference": "İstinad kodu",
+    "http": {
+      "400": "Bəzi məlumatlar düzəldilməlidir.",
+      "401": "Sessiya başa çatdı. Yenidən daxil olun.",
+      "403": "Bu əməliyyat üçün icazəniz yoxdur.",
+      "404": "Sorğulanan qeyd tapılmadı.",
+      "409": "Mövcud məlumatlarla ziddiyyət var.",
+      "429": "Həddən çox sorğu. Bir az gözləyin.",
+      "500": "Serverdə xəta baş verdi. Komanda onu aşağıdakı kodla tapa bilər.",
+      "503": "Xidmət müvəqqəti olaraq əlçatan deyil."
+    },
+    "invalidCredentials": "E-poçt və ya şifrə yanlışdır.",
+    "emailTaken": "Bu e-poçtla hesab artıq mövcuddur.",
+    "unknownProduct": "Bu sığorta məhsulu mövcud deyil."
+  },
+  "validation": {
+    "required": "Mütləq doldurulmalıdır.",
+    "number": "Rəqəm daxil edin.",
+    "integer": "Tam ədəd daxil edin.",
+    "date": "Düzgün tarix daxil edin.",
+    "email": "Düzgün e-poçt ünvanı daxil edin.",
+    "password": "Ən azı 8 simvol, hərf və rəqəm istifadə edin.",
+    "fullNameRequired": "Adınızı və soyadınızı daxil edin.",
+    "phoneRequired": "Telefon nömrəsini daxil edin.",
+    "birthDatePast": "Doğum tarixi keçmişdə olmalıdır.",
+    "engineCapacityPositive": "Mühərrikin həcmi sıfırdan böyük olmalıdır.",
+    "engineCapacityMax": "Mühərrikin həcmi çox böyükdür.",
+    "vehicleYearFuture": "Buraxılış ili gələcəkdə ola bilməz.",
+    "vehicleYearMin": "Buraxılış ili 1950-ci ildən tez olmamalıdır.",
+    "termRange": "Müddət 1 ilə 12 ay arasında olmalıdır.",
+    "claimsNonNegative": "Zərərlərin sayı mənfi ola bilməz.",
+    "claimsMax": "20 və ya daha az daxil edin.",
+    "driverMinAge": "Sürücünün ən azı 18 yaşı olmalıdır.",
+    "licenceFuture": "Vəsiqənin tarixi gələcəkdə ola bilməz.",
+    "licenceAfter18": "Vəsiqə sürücü 18 yaşına çatdıqdan sonra verilməlidir.",
+    "invalidField": "Bu dəyər qəbul edilmir."
+  },
+  "common": {
+    "loading": "Yüklənir",
+    "close": "Bağla",
+    "dismiss": "Bildirişi bağla",
+    "notifications": "Bildirişlər"
+  }
+}
