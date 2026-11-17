@@ -242,14 +242,8 @@ public class PolicyService : IPolicyService
         return Map(policy, code);
     }
 
-    private IQueryable<Policy> ApplyRoleFilter(IQueryable<Policy> query) => _currentUser.Role switch
-    {
-        UserRole.Client => _currentUser.CustomerId.HasValue
-            ? query.Where(p => p.CustomerId == _currentUser.CustomerId!.Value)
-            : query.Where(_ => false),
-        UserRole.Agent => query.Where(p => p.AgentId == _currentUser.UserId),
-        _ => query // Adjuster and Admin see everything
-    };
+    private IQueryable<Policy> ApplyRoleFilter(IQueryable<Policy> query) =>
+        PolicyAccess.VisibleTo(query, _currentUser);
 
     // Loads a tracked policy the current user is allowed to see. Returns
     // NotFoundException both when the row is missing AND when it belongs to
