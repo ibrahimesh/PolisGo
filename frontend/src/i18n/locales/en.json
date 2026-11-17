@@ -1,0 +1,268 @@
+{
+  "app": {
+    "name": "PolisGo",
+    "home": "PolisGo — home"
+  },
+  "nav": {
+    "primary": "Primary",
+    "skipToContent": "Skip to content",
+    "calculator": "Calculator",
+    "method": "Method",
+    "signIn": "Sign in",
+    "register": "Open an account",
+    "workspace": "Workspace",
+    "signOut": "Sign out",
+    "settings": "Display settings"
+  },
+  "theme": {
+    "label": "Theme",
+    "dark": "Dark",
+    "light": "Light",
+    "system": "System"
+  },
+  "language": {
+    "label": "Language",
+    "en": "English",
+    "ru": "Русский",
+    "az": "Azərbaycanca"
+  },
+  "footer": {
+    "about": "Motor insurance management for Azerbaijan: policies, payments and claims in one place.",
+    "statusLabel": "System",
+    "api": "API",
+    "status": {
+      "checking": "Checking…",
+      "healthy": "Operational",
+      "degraded": "Degraded",
+      "unhealthy": "Unavailable"
+    },
+    "currency": "All amounts in Azerbaijani manat (AZN).",
+    "legalLabel": "Notice",
+    "legal": "Portfolio project. Not a licensed insurer; quotes are illustrative of the pricing engine.",
+    "copyright": "© {{year}} PolisGo"
+  },
+  "landing": {
+    "heroLabel": "Motor insurance · Azerbaijan",
+    "heroTitleLead": "Insurance,",
+    "heroTitleAccent": "priced in the open.",
+    "heroLead": "PolisGo issues MTPL and CASCO policies, takes claims from first notice to payout, and shows every factor behind a price.",
+    "ctaCalculate": "Calculate a premium",
+    "ctaRegister": "Open an account",
+    "factsLabel": "At a glance",
+    "facts": {
+      "products": "Products",
+      "productsValue": "MTPL · CASCO",
+      "currency": "Currency",
+      "currencyValue": "AZN",
+      "roles": "Roles",
+      "rolesValue": "Client · Agent · Adjuster · Admin",
+      "pricing": "Pricing",
+      "pricingValue": "6 factors, capped"
+    },
+    "calculatorLabel": "01 — Calculator",
+    "calculatorTitleLead": "A live quote,",
+    "calculatorTitleAccent": "factor by factor.",
+    "calculatorLead": "Each change is priced by the PolisGo API as you type. Nothing on this page is simulated.",
+    "methodLabel": "02 — Method",
+    "methodTitleLead": "How a premium",
+    "methodTitleAccent": "is built.",
+    "steps": {
+      "factorsTitle": "Six factors",
+      "factorsBody": "Engine capacity, driver age, driving experience, vehicle age, claims history and term each contribute one multiplier to the product's base rate.",
+      "capTitle": "A cap on risk",
+      "capBody": "The five risk factors are multiplied together and held between ×0.50 and ×3.00, so no single profile is priced out or given away.",
+      "issueTitle": "Repriced at issue",
+      "issueBody": "A quote is an estimate. When a policy is issued the API recalculates it from verified customer, vehicle and claims records."
+    }
+  },
+  "calculator": {
+    "formTitle": "Quote parameters",
+    "product": "Product",
+    "products": {
+      "MTPL": "MTPL",
+      "MTPLHint": "Compulsory third-party liability",
+      "CASCO": "CASCO",
+      "CASCOHint": "Comprehensive own-damage"
+    },
+    "engine": "Engine capacity",
+    "engineUnit": "cc",
+    "birthDate": "Driver's date of birth",
+    "licenceDate": "Licence issued on",
+    "vehicleYear": "Vehicle model year",
+    "claims": "Claims, last 3 years",
+    "term": "Policy term",
+    "termOption_one": "{{count}} month",
+    "termOption_other": "{{count}} months",
+    "resultLabel": "Indicative premium",
+    "resultFor_one": "for {{count}} month",
+    "resultFor_other": "for {{count}} months",
+    "updating": "Updating",
+    "waiting": "Complete the form to see a price.",
+    "estimate": "Indicative estimate. The final premium is recalculated from verified data when the policy is issued.",
+    "diagramTitle": "Factor diagram",
+    "diagramDesc": "Each axis is one pricing factor. The dashed ring marks a neutral ×1.00; points outside it raise the premium, points inside lower it.",
+    "tabsLabel": "Premium detail",
+    "tabs": {
+      "breakdown": "Breakdown",
+      "formula": "Formula"
+    },
+    "factor": {
+      "baseRate": "Base rate",
+      "engineFactor": "Engine",
+      "driverAgeFactor": "Driver age",
+      "experienceFactor": "Experience",
+      "vehicleAgeFactor": "Vehicle age",
+      "bonusMalusFactor": "Claims history",
+      "termFactor": "Term",
+      "totalFactor": "Total factor",
+      "premium": "Premium"
+    },
+    "table": {
+      "caption": "Premium breakdown returned by the API",
+      "factor": "Component",
+      "value": "Value",
+      "effect": "Effect"
+    },
+    "effect": {
+      "raises": "Raises",
+      "lowers": "Lowers",
+      "neutral": "Neutral"
+    },
+    "capApplied": "Risk cap applied",
+    "capHint": "The combined risk factor ×{{raw}} was limited to ×{{capped}}.",
+    "formulaCaption": "Base rate × factors = premium",
+    "howCalculated": "How is this calculated?",
+    "modal": {
+      "title": "How the premium is calculated",
+      "intro": "The calculator sends your answers to the PolisGo pricing engine. The engine starts from the product's base rate and applies six multipliers.",
+      "risk": "Engine capacity, driver age, driving experience, vehicle age and claims history are multiplied into a single risk factor. That factor is capped between ×0.50 and ×3.00.",
+      "term": "The term factor pro-rates the price by months. Terms shorter than 12 months carry a 10% loading for administration.",
+      "rounding": "The premium is rounded once, at the end, to two decimals in AZN.",
+      "close": "Close"
+    },
+    "errorTitle": "The premium couldn't be calculated",
+    "retry": "Try again"
+  },
+  "auth": {
+    "login": {
+      "label": "Sign in",
+      "titleLead": "Welcome",
+      "titleAccent": "back.",
+      "lead": "Sign in to manage policies, payments and claims.",
+      "submit": "Sign in",
+      "noAccount": "New to PolisGo?",
+      "registerLink": "Open an account",
+      "success": "Signed in as {{name}}."
+    },
+    "register": {
+      "label": "Open an account",
+      "titleLead": "Insure your car",
+      "titleAccent": "in minutes.",
+      "lead": "Client accounts are free. Staff accounts are created by an administrator.",
+      "submit": "Create account",
+      "haveAccount": "Already have an account?",
+      "loginLink": "Sign in",
+      "success": "Welcome to PolisGo, {{name}}."
+    },
+    "fields": {
+      "email": "Email",
+      "password": "Password",
+      "passwordHint": "At least 8 characters, with a letter and a digit.",
+      "fullName": "Full name",
+      "phone": "Phone",
+      "phoneHint": "For example +994 50 123 45 67",
+      "birthDate": "Date of birth",
+      "licenceDate": "Driving licence issued on"
+    },
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "sessionExpired": "Your session has ended. Please sign in again.",
+    "signedOut": "You have been signed out.",
+    "checking": "Checking your session…"
+  },
+  "workspace": {
+    "label": "Workspace",
+    "greetingLead": "Hello,",
+    "lead": "You are signed in with the {{role}} role.",
+    "profile": "Profile",
+    "email": "Email",
+    "role": "Role",
+    "userId": "User ID",
+    "sectionsLabel": "Sections",
+    "sections": {
+      "overview": "Overview",
+      "agent": "Agent desk",
+      "claims": "Claims desk",
+      "admin": "Administration"
+    },
+    "comingSoonTitle": "This area is next on the roadmap",
+    "comingSoonBody": "Policies, vehicles and claims will appear here once the screens for this role are built.",
+    "backToOverview": "Back to overview"
+  },
+  "roles": {
+    "Client": "Client",
+    "Agent": "Agent",
+    "Adjuster": "Adjuster",
+    "Admin": "Admin"
+  },
+  "forbidden": {
+    "label": "Error 403",
+    "title": "This area isn't available for your role",
+    "body": "Your account ({{role}}) doesn't have access to this section. If you think this is wrong, contact an administrator.",
+    "back": "Back to workspace"
+  },
+  "notFound": {
+    "label": "Error 404",
+    "titleLead": "Nothing is",
+    "titleAccent": "insured here.",
+    "body": "The page you were looking for doesn't exist or has moved.",
+    "home": "Go to the home page"
+  },
+  "errors": {
+    "title": "Something went wrong",
+    "network": "The PolisGo API can't be reached. Check your connection, or try again in a moment.",
+    "unknown": "An unexpected error occurred.",
+    "reference": "Reference",
+    "http": {
+      "400": "Some details need attention.",
+      "401": "Your session has ended. Please sign in again.",
+      "403": "You don't have permission to do this.",
+      "404": "The requested record wasn't found.",
+      "409": "This conflicts with existing data.",
+      "429": "Too many requests. Please wait a moment.",
+      "500": "The server ran into a problem. Our team can trace it with the reference below.",
+      "503": "The service is temporarily unavailable."
+    },
+    "invalidCredentials": "The email or password is incorrect.",
+    "emailTaken": "An account with this email already exists.",
+    "unknownProduct": "This insurance product isn't available."
+  },
+  "validation": {
+    "required": "Required.",
+    "number": "Enter a number.",
+    "integer": "Enter a whole number.",
+    "date": "Enter a valid date.",
+    "email": "Enter a valid email address.",
+    "password": "Use at least 8 characters with a letter and a digit.",
+    "fullNameRequired": "Enter your full name.",
+    "phoneRequired": "Enter a phone number.",
+    "birthDatePast": "Date of birth must be in the past.",
+    "engineCapacityPositive": "Engine capacity must be greater than zero.",
+    "engineCapacityMax": "Engine capacity looks too large.",
+    "vehicleYearFuture": "Model year can't be in the future.",
+    "vehicleYearMin": "Model year must be 1950 or later.",
+    "termRange": "Term must be between 1 and 12 months.",
+    "claimsNonNegative": "Claims can't be negative.",
+    "claimsMax": "Enter 20 or fewer.",
+    "driverMinAge": "The driver must be at least 18.",
+    "licenceFuture": "Licence date can't be in the future.",
+    "licenceAfter18": "The licence must be issued after the driver turned 18.",
+    "invalidField": "This value isn't accepted."
+  },
+  "common": {
+    "loading": "Loading",
+    "close": "Close",
+    "dismiss": "Dismiss notification",
+    "notifications": "Notifications"
+  }
+}

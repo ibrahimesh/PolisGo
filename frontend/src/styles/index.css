@@ -1,0 +1,159 @@
+@import '@fontsource-variable/source-serif-4/opsz.css';
+@import '@fontsource-variable/source-serif-4/opsz-italic.css';
+@import '@fontsource-variable/inter-tight/index.css';
+@import '@fontsource-variable/jetbrains-mono/index.css';
+@import 'tailwindcss';
+
+/* Theme is driven by data-theme on <html>, not by the media query, so the
+   user's explicit choice always wins (System mode resolves it in JS). */
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
+/* ---- Design tokens (see DESIGN.md) ---- */
+:root,
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --pg-bg: #050816;
+  --pg-surface: #0b1030;
+  --pg-surface-2: #121842;
+  --pg-line: rgb(255 255 255 / 0.12);
+  --pg-line-strong: rgb(255 255 255 / 0.28);
+  --pg-text: #e8eaf6;
+  --pg-muted: #8a90b8;
+  --pg-accent: #8b93ff;
+  --pg-accent-ink: #050816;
+  --pg-danger: #ff9c9c;
+  --pg-success: #7fe0b5;
+  --pg-warning: #f2c46d;
+  --pg-overlay: rgb(5 8 22 / 0.72);
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+  --pg-bg: #cbcedb;
+  --pg-surface: #ffffff;
+  --pg-surface-2: #f1f2f7;
+  --pg-line: rgb(11 16 48 / 0.16);
+  --pg-line-strong: rgb(11 16 48 / 0.36);
+  --pg-text: #0b1030;
+  --pg-muted: #454b73;
+  --pg-accent: #3840b8;
+  --pg-accent-ink: #ffffff;
+  --pg-danger: #a3122a;
+  --pg-success: #0b5a3d;
+  --pg-warning: #6a4500;
+  --pg-overlay: rgb(11 16 48 / 0.45);
+}
+
+@theme inline {
+  --color-bg: var(--pg-bg);
+  --color-surface: var(--pg-surface);
+  --color-surface-2: var(--pg-surface-2);
+  --color-line: var(--pg-line);
+  --color-line-strong: var(--pg-line-strong);
+  --color-text: var(--pg-text);
+  --color-muted: var(--pg-muted);
+  --color-accent: var(--pg-accent);
+  --color-accent-ink: var(--pg-accent-ink);
+  --color-danger: var(--pg-danger);
+  --color-success: var(--pg-success);
+  --color-warning: var(--pg-warning);
+  --color-overlay: var(--pg-overlay);
+}
+
+@theme {
+  /* Paper cards are white on navy in both themes, so these are constants. */
+  --color-paper: #ffffff;
+  --color-paper-ink: #0b1030;
+  --color-paper-muted: #454b73;
+  --color-paper-accent: #3840b8;
+  --color-paper-line: rgb(11 16 48 / 0.14);
+
+  --font-serif: 'Source Serif 4 Variable', 'Source Serif 4', Georgia, serif;
+  --font-sans: 'Inter Tight Variable', 'Inter Tight', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, monospace;
+
+  --text-label: 0.6875rem;
+  --text-label--line-height: 1rem;
+  --text-label--letter-spacing: 0.08em;
+
+  --radius-sm: 2px;
+  --radius: 3px;
+
+  --ease-institutional: cubic-bezier(0.2, 0.7, 0.2, 1);
+
+  --animate-toast-in: toast-in 200ms var(--ease-institutional);
+
+  @keyframes toast-in {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
+
+@layer base {
+  html {
+    background: var(--pg-bg);
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    @apply bg-bg font-sans text-text antialiased;
+    font-feature-settings: 'ss01', 'cv11';
+  }
+
+  h1,
+  h2,
+  h3 {
+    @apply font-serif font-normal text-balance;
+    font-optical-sizing: auto;
+    letter-spacing: -0.015em;
+  }
+
+  ::selection {
+    background: var(--pg-accent);
+    color: var(--pg-accent-ink);
+  }
+
+  /* One consistent, high-contrast focus ring everywhere; mouse clicks don't show it. */
+  :focus-visible {
+    outline: 2px solid var(--pg-accent);
+    outline-offset: 2px;
+  }
+
+  [hidden] {
+    display: none !important;
+  }
+}
+
+@utility label-mono {
+  font-family: var(--font-mono);
+  font-size: var(--text-label);
+  line-height: var(--text-label--line-height);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+@utility hairline {
+  border-color: var(--pg-line);
+}
+
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
