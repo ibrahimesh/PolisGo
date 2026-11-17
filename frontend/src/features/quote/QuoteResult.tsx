@@ -49,13 +49,9 @@ export function QuoteResult({
           <Label className="text-paper-muted">{t('calculator.resultLabel')}</Label>
         </span>
         <div className="flex items-center gap-2">
-          <span
-            className={cx(
-              'label-mono text-paper-muted transition-opacity duration-200',
-              updating ? 'opacity-100' : 'opacity-0',
-            )}
-            aria-hidden={!updating}
-          >
+          {/* visibility, not an opacity fade: a half-faded label fails contrast,
+              and hidden text must leave the accessibility tree too. */}
+          <span className={cx('label-mono text-paper-muted', !updating && 'invisible')}>
             {t('calculator.updating')}…
           </span>
           <Badge tone="paper">{productLabel}</Badge>
@@ -110,7 +106,9 @@ function ResultBody({
 
   return (
     <div className={cx('transition-opacity duration-200', stale && 'opacity-45')}>
-      <div className="mt-6 grid items-center gap-8 md:grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)]">
+      {/* Price and notes share a row; the diagram gets the full card width
+          below so its axis labels stay legible on every screen size. */}
+      <div className="mt-6 grid items-end gap-6 sm:grid-cols-2 sm:gap-10">
         <div>
           {/* The animated figure is decorative; screen readers get the final value once. */}
           <p className="sr-only" aria-live="polite" aria-atomic="true">
@@ -125,9 +123,11 @@ function ResultBody({
           <p className="mt-3 text-paper-muted">
             {t('calculator.resultFor', { count: termMonths })}
           </p>
+        </div>
 
+        <div className="space-y-3 sm:border-l sm:border-paper-line sm:pl-6">
           {cap && (
-            <div className="mt-5 space-y-2">
+            <div className="space-y-2">
               <Badge tone="paper">{t('calculator.capApplied')}</Badge>
               <p className="text-xs text-paper-muted">
                 {t('calculator.capHint', {
@@ -137,23 +137,20 @@ function ResultBody({
               </p>
             </div>
           )}
-
-          <p className="mt-8 max-w-xs text-xs leading-relaxed text-paper-muted">
-            {t('calculator.estimate')}
-          </p>
+          <p className="text-xs leading-relaxed text-paper-muted">{t('calculator.estimate')}</p>
           <button
             type="button"
             onClick={onExplain}
-            className="mt-3 text-sm text-paper-accent underline decoration-paper-accent/40 underline-offset-4 hover:decoration-paper-accent"
+            className="text-sm text-paper-accent underline decoration-paper-accent/40 underline-offset-4 hover:decoration-paper-accent"
           >
             {t('calculator.howCalculated')}
           </button>
         </div>
-
-        <figure className="mx-auto w-full max-w-md">
-          <FactorDiagram breakdown={breakdown} />
-        </figure>
       </div>
+
+      <figure className="mx-auto mt-8 w-full max-w-lg border-t border-paper-line pt-6">
+        <FactorDiagram breakdown={breakdown} />
+      </figure>
 
       <Tabs
         className="mt-8"

@@ -9,7 +9,15 @@ const CENTER = 200;
 const RADIUS = 140;
 // Largest multiplier in the tariff is ×1.60; leave headroom so it isn't on the rim.
 const SCALE_MAX = 1.7;
+const LABEL_AT = SCALE_MAX + 0.24;
 const RINGS = [0.5, 1, 1.5] as const;
+const LINE_EM = 1.15;
+
+// Font sizes are SVG user units, so they scale with the drawing. Small
+// screens render the drawing at ~55% size, so they get larger units.
+const LABEL_CLASS =
+  'fill-paper-muted font-mono text-[11px] tracking-[0.08em] uppercase max-sm:text-[17px]';
+const VALUE_CLASS = 'fill-paper-ink font-mono text-[13px] tabular max-sm:text-[19px]';
 
 function polar(value: number, index: number, count: number) {
   const angle = -Math.PI / 2 + (index * 2 * Math.PI) / count;
@@ -29,9 +37,14 @@ export function FactorDiagram({ breakdown }: { breakdown: PremiumBreakdown }) {
   const count = FACTOR_KEYS.length;
   const points = values.map((value, i) => polar(value, i, count));
 
+  // The neutral-ring caption sits mid-edge between the first two axes, where
+  // no axis line or data point can run through it.
+  const a = polar(1, 0, count);
+  const b = polar(1, 1, count);
+
   return (
     <svg
-      viewBox="-80 -6 560 412"
+      viewBox="-80 -44 560 488"
       role="img"
       aria-labelledby={`${titleId} ${descId}`}
       className="h-auto w-full text-paper-ink"
@@ -71,11 +84,11 @@ export function FactorDiagram({ breakdown }: { breakdown: PremiumBreakdown }) {
       })}
 
       <text
-        x={CENTER + 4}
-        y={CENTER - (1 / SCALE_MAX) * RADIUS - 4}
-        className="fill-paper-muted font-mono text-[9px] tracking-[0.08em]"
+        x={(a.x + b.x) / 2 + 6}
+        y={(a.y + b.y) / 2 - 6}
+        className="fill-paper-muted font-mono text-[10px] tracking-[0.08em] max-sm:text-[15px]"
       >
-        ×1.00
+        {format.factor(1)}
       </text>
 
       <polygon
@@ -99,16 +112,33 @@ export function FactorDiagram({ breakdown }: { breakdown: PremiumBreakdown }) {
       ))}
 
       {FACTOR_KEYS.map((key, i) => {
-        const { x, y, angle } = polar(SCALE_MAX + 0.24, i, count);
+        const { x, y, angle } = polar(LABEL_AT, i, count);
         const cos = Math.cos(angle);
+        const sin = Math.sin(angle);
         const anchor = Math.abs(cos) < 0.2 ? 'middle' : cos > 0 ? 'start' : 'end';
-        const dy = Math.sin(angle) < -0.5 ? -12 : Math.sin(angle) > 0.5 ? 6 : -4;
+        // One word per line keeps long RU/AZ names inside the drawing.
+        const lines = t(`calculator.factor.${key}`).split(' ');
+        const total = lines.length + 1;
+        const firstDy =
+          sin < -0.5
+            ? -(total - 1) * LINE_EM - 0.3
+            : sin > 0.5
+              ? 0.9
+              : -((total - 1) * LINE_EM) / 2 + 0.35;
+
         return (
-          <text key={key} x={x} y={y + dy} textAnchor={anchor}>
-            <tspan className="fill-paper-muted font-mono text-[10px] tracking-[0.08em] uppercase">
-              {t(`calculator.factor.${key}`)}
-            </tspan>
-            <tspan x={x} dy={15} className="fill-paper-ink font-mono text-[12px] tabular">
+          <text key={key} x={x} y={y} textAnchor={anchor}>
+            {lines.map((line, li) => (
+              <tspan
+                key={li}
+                x={x}
+                dy={`${li === 0 ? firstDy : LINE_EM}em`}
+                className={LABEL_CLASS}
+              >
+                {line}
+              </tspan>
+            ))}
+            <tspan x={x} dy={`${LINE_EM + 0.1}em`} className={VALUE_CLASS}>
               {format.factor(breakdown[key])}
             </tspan>
           </text>

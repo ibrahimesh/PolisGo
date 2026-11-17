@@ -88,7 +88,7 @@
     "engineUnit": "sm³",
     "birthDate": "Sürücünün doğum tarixi",
     "licenceDate": "Vəsiqənin verilmə tarixi",
-    "vehicleYear": "Avtomobilin buraxılış ili",
+    "vehicleYear": "Buraxılış ili",
     "claims": "Son 3 ildə zərərlər",
     "term": "Polisin müddəti",
     "termOption_one": "{{count}} ay",

@@ -88,7 +88,7 @@
     "engineUnit": "см³",
     "birthDate": "Дата рождения водителя",
     "licenceDate": "Дата выдачи прав",
-    "vehicleYear": "Год выпуска автомобиля",
+    "vehicleYear": "Год выпуска",
     "claims": "Убытки за 3 года",
     "term": "Срок полиса",
     "termOption_one": "{{count}} месяц",
@@ -150,8 +150,8 @@
   "auth": {
     "login": {
       "label": "Вход",
-      "titleLead": "С возвращением",
-      "titleAccent": "в PolisGo.",
+      "titleLead": "Рады видеть",
+      "titleAccent": "вас снова.",
       "lead": "Войдите, чтобы управлять полисами, платежами и страховыми случаями.",
       "submit": "Войти",
       "noAccount": "Впервые в PolisGo?",

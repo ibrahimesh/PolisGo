@@ -1,5 +1,6 @@
+import { useCallback, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, NavLink, useNavigate } from 'react-router';
+import { Link, NavLink, useLocation, useNavigate } from 'react-router';
 import { useAuth } from '../../auth/AuthContext';
 import { Button, ButtonLink } from '../ui/Button';
 import { cx } from '../ui/cx';
@@ -19,10 +20,29 @@ export function Header() {
   const { status, user, logout } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const signOutPending = useRef(false);
 
-  function signOut() {
+  const finishSignOut = useCallback(() => {
+    signOutPending.current = false;
     logout();
     toast({ title: t('auth.signedOut'), tone: 'info' });
+  }, [logout, toast, t]);
+
+  // Sign-out is two steps: leave the protected route, then drop the session.
+  // Clearing first lets the route guard re-render while still mounted and
+  // bounce the user to /login. Navigation is a transition, so wait until the
+  // home route has actually committed before logging out.
+  useEffect(() => {
+    if (signOutPending.current && pathname === '/') finishSignOut();
+  }, [pathname, finishSignOut]);
+
+  function signOut() {
+    if (pathname === '/') {
+      finishSignOut();
+      return;
+    }
+    signOutPending.current = true;
     void navigate('/');
   }
 
