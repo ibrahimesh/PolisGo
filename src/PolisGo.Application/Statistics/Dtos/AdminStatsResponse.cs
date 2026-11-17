@@ -1,3 +1,4 @@
+using PolisGo.Application.Common;
 using PolisGo.Domain.Enums;
 
 namespace PolisGo.Application.Statistics.Dtos;
@@ -32,8 +33,6 @@ public record ClaimStats(
     // Mean time from submission to that decision; null until one exists.
     double? AverageResolutionHours
 );
-
-public record StatusCount<TStatus>(TStatus Status, int Count) where TStatus : struct, Enum;
 
 // One row per calendar month (UTC), oldest first, current month last.
 public record MonthlyActivity(int Year, int Month, int NewPolicies, int NewClaims);

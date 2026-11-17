@@ -304,7 +304,7 @@ public class PolicyService : IPolicyService
         }
     }
 
-    private static PolicyResponse Map(Policy p, string code) => new(
+    internal static PolicyResponse Map(Policy p, string code) => new(
         Id: p.Id,
         PolicyNumber: p.PolicyNumber,
         CustomerId: p.CustomerId,

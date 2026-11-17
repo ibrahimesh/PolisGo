@@ -14,6 +14,13 @@ public class CustomerConfiguration : IEntityTypeConfiguration<Customer>
         builder.Property(c => c.Email).IsRequired().HasMaxLength(256);
         builder.Property(c => c.Phone).IsRequired().HasMaxLength(32);
 
+        // Customer directory: each sortable column gets an index so ORDER BY
+        // + OFFSET/FETCH reads a page instead of sorting the whole table.
+        // (Substring search with a leading wildcard can't use an index.)
+        builder.HasIndex(c => c.CreatedAt);
+        builder.HasIndex(c => c.FullName);
+        builder.HasIndex(c => c.Email);
+
         // Optional 1-to-1 with User: a customer may or may not have a login.
         // SetNull on delete so removing the User account does not cascade and
         // destroy the customer record, which holds historical policy data.

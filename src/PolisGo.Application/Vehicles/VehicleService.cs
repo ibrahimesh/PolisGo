@@ -129,6 +129,6 @@ public class VehicleService : IVehicleService
         }
     }
 
-    private static VehicleResponse Map(Vehicle v) => new(
+    internal static VehicleResponse Map(Vehicle v) => new(
         v.Id, v.CustomerId, v.Make, v.Model, v.Year, v.EngineCapacityCc, v.PlateNumber, v.Vin);
 }

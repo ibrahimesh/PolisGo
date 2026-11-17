@@ -336,7 +336,7 @@ public class ClaimService : IClaimService
         return Map(claim, policyNumber);
     }
 
-    private static ClaimResponse Map(DomainClaim c, string policyNumber) => new(
+    internal static ClaimResponse Map(DomainClaim c, string policyNumber) => new(
         Id: c.Id,
         ClaimNumber: c.ClaimNumber,
         PolicyId: c.PolicyId,

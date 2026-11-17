@@ -4,6 +4,7 @@ using PolisGo.Application.Abstractions;
 using PolisGo.Application.Auth;
 using PolisGo.Application.Claims;
 using PolisGo.Application.Claims.Documents;
+using PolisGo.Application.Customers;
 using PolisGo.Application.Policies;
 using PolisGo.Application.Pricing;
 using PolisGo.Application.Statistics;
@@ -32,6 +33,7 @@ public static class DependencyInjection
         services.TryAddSingleton(TimeProvider.System);
         services.AddMemoryCache();
         services.AddScoped<IAdminStatsService, AdminStatsService>();
+        services.AddScoped<ICustomerService, CustomerService>();
 
         return services;
     }

@@ -185,6 +185,12 @@ namespace PolisGo.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("Email");
+
+                    b.HasIndex("FullName");
+
                     b.HasIndex("UserId")
                         .IsUnique()
                         .HasFilter("[UserId] IS NOT NULL");
