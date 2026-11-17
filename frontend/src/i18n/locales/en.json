@@ -170,15 +170,37 @@
       "passwordHint": "At least 8 characters, with a letter and a digit.",
       "fullName": "Full name",
       "phone": "Phone",
-      "phoneHint": "For example +994 50 123 45 67",
+      "phoneHint": "Azerbaijani number — paste it in any format.",
       "birthDate": "Date of birth",
-      "licenceDate": "Driving licence issued on"
+      "licenceDate": "Driving licence issued on",
+      "confirmPassword": "Repeat password"
     },
     "showPassword": "Show password",
     "hidePassword": "Hide password",
     "sessionExpired": "Your session has ended. Please sign in again.",
     "signedOut": "You have been signed out.",
-    "checking": "Checking your session…"
+    "checking": "Checking your session…",
+    "passwordRules": {
+      "title": "Password requirements",
+      "length": "8–64 characters",
+      "lower": "A lowercase letter",
+      "upper": "An uppercase letter",
+      "digit": "A number",
+      "met": "(done)",
+      "notMet": "(missing)"
+    },
+    "strength": {
+      "weak": "Weak",
+      "fair": "Fair",
+      "good": "Good",
+      "strong": "Strong"
+    },
+    "alreadySignedIn": {
+      "title": "You’re already signed in",
+      "body": "This tab is signed in as {{name}} ({{email}}). Continue, or sign out to use another account.",
+      "continue": "Go to workspace",
+      "signOut": "Sign out"
+    }
   },
   "workspace": {
     "label": "Workspace",
@@ -242,10 +264,10 @@
     "number": "Enter a number.",
     "integer": "Enter a whole number.",
     "date": "Enter a valid date.",
-    "email": "Enter a valid email address.",
-    "password": "Use at least 8 characters with a letter and a digit.",
+    "email": "Enter a valid email, like name@example.com.",
+    "password": "Use 8–64 characters with an uppercase letter, a lowercase letter and a number.",
     "fullNameRequired": "Enter your full name.",
-    "phoneRequired": "Enter a phone number.",
+    "phoneRequired": "Enter your phone number.",
     "birthDatePast": "Date of birth must be in the past.",
     "engineCapacityPositive": "Engine capacity must be greater than zero.",
     "engineCapacityMax": "Engine capacity looks too large.",
@@ -257,12 +279,26 @@
     "driverMinAge": "The driver must be at least 18.",
     "licenceFuture": "Licence date can't be in the future.",
     "licenceAfter18": "The licence must be issued after the driver turned 18.",
-    "invalidField": "This value isn't accepted."
+    "invalidField": "This value isn't accepted.",
+    "emailRequired": "Enter your email address.",
+    "passwordRequired": "Enter your password.",
+    "confirmPasswordRequired": "Repeat your password.",
+    "passwordMismatch": "Passwords don’t match.",
+    "fullName": "Use 2–100 letters; spaces, hyphens and apostrophes are fine.",
+    "phone": "Enter an Azerbaijani number: +994 and 9 digits.",
+    "birthDateRequired": "Enter your date of birth.",
+    "licenceDateRequired": "Enter the date your licence was issued.",
+    "adult": "You must be at least 18 to open an account.",
+    "birthDateRange": "Enter a date of birth within the last 100 years."
   },
   "common": {
     "loading": "Loading",
     "close": "Close",
     "dismiss": "Dismiss notification",
     "notifications": "Notifications"
+  },
+  "forms": {
+    "errorSummary_one": "1 field needs attention",
+    "errorSummary_other": "{{count}} fields need attention"
   }
 }

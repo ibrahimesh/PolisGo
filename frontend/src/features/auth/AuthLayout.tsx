@@ -16,7 +16,7 @@ export function AuthLayout({ label, lead, accent, intro, footer, children }: Aut
     <Frame>
       <div className="grid min-h-[calc(100dvh-4rem)] lg:grid-cols-3 lg:divide-x lg:divide-line">
         <div className="flex flex-col justify-between gap-10 border-b border-line px-6 py-12 sm:px-8 lg:border-b-0 lg:py-16">
-          <AccentHeading as="h1" label={label} lead={lead} accent={accent}>
+          <AccentHeading as="h1" id="auth-title" label={label} lead={lead} accent={accent}>
             <p className="max-w-sm leading-relaxed text-muted">{intro}</p>
           </AccentHeading>
           <FramesLineArt className="hidden size-40 lg:block" />

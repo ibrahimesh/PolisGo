@@ -170,15 +170,37 @@
       "passwordHint": "Ən azı 8 simvol, hərf və rəqəm.",
       "fullName": "Ad, soyad",
       "phone": "Telefon",
-      "phoneHint": "Məsələn, +994 50 123 45 67",
+      "phoneHint": "Azərbaycan nömrəsi — istənilən formatda yapışdıra bilərsiniz.",
       "birthDate": "Doğum tarixi",
-      "licenceDate": "Sürücülük vəsiqəsinin verilmə tarixi"
+      "licenceDate": "Sürücülük vəsiqəsinin verilmə tarixi",
+      "confirmPassword": "Şifrəni təkrarlayın"
     },
     "showPassword": "Şifrəni göstər",
     "hidePassword": "Şifrəni gizlət",
     "sessionExpired": "Sessiya başa çatdı. Yenidən daxil olun.",
     "signedOut": "Sistemdən çıxdınız.",
-    "checking": "Sessiya yoxlanılır…"
+    "checking": "Sessiya yoxlanılır…",
+    "passwordRules": {
+      "title": "Şifrə tələbləri",
+      "length": "8–64 simvol",
+      "lower": "Kiçik hərf",
+      "upper": "Böyük hərf",
+      "digit": "Rəqəm",
+      "met": "(yerinə yetirilib)",
+      "notMet": "(çatışmır)"
+    },
+    "strength": {
+      "weak": "Zəif",
+      "fair": "Orta",
+      "good": "Yaxşı",
+      "strong": "Güclü"
+    },
+    "alreadySignedIn": {
+      "title": "Siz artıq daxil olmusunuz",
+      "body": "Bu vərəqdə {{name}} ({{email}}) kimi daxil olmusunuz. Davam edin və ya başqa hesab üçün çıxış edin.",
+      "continue": "Kabinetə keç",
+      "signOut": "Çıxış"
+    }
   },
   "workspace": {
     "label": "Kabinet",
@@ -242,10 +264,10 @@
     "number": "Rəqəm daxil edin.",
     "integer": "Tam ədəd daxil edin.",
     "date": "Düzgün tarix daxil edin.",
-    "email": "Düzgün e-poçt ünvanı daxil edin.",
-    "password": "Ən azı 8 simvol, hərf və rəqəm istifadə edin.",
+    "email": "Düzgün ünvan daxil edin, məsələn name@example.com.",
+    "password": "8–64 simvol: böyük və kiçik hərf, həmçinin rəqəm.",
     "fullNameRequired": "Adınızı və soyadınızı daxil edin.",
-    "phoneRequired": "Telefon nömrəsini daxil edin.",
+    "phoneRequired": "Telefon nömrənizi daxil edin.",
     "birthDatePast": "Doğum tarixi keçmişdə olmalıdır.",
     "engineCapacityPositive": "Mühərrikin həcmi sıfırdan böyük olmalıdır.",
     "engineCapacityMax": "Mühərrikin həcmi çox böyükdür.",
@@ -257,12 +279,26 @@
     "driverMinAge": "Sürücünün ən azı 18 yaşı olmalıdır.",
     "licenceFuture": "Vəsiqənin tarixi gələcəkdə ola bilməz.",
     "licenceAfter18": "Vəsiqə sürücü 18 yaşına çatdıqdan sonra verilməlidir.",
-    "invalidField": "Bu dəyər qəbul edilmir."
+    "invalidField": "Bu dəyər qəbul edilmir.",
+    "emailRequired": "E-poçt ünvanınızı daxil edin.",
+    "passwordRequired": "Şifrənizi daxil edin.",
+    "confirmPasswordRequired": "Şifrəni təkrar daxil edin.",
+    "passwordMismatch": "Şifrələr eyni deyil.",
+    "fullName": "2–100 hərf; boşluq, defis və apostrof olar.",
+    "phone": "Azərbaycan nömrəsi daxil edin: +994 və 9 rəqəm.",
+    "birthDateRequired": "Doğum tarixinizi daxil edin.",
+    "licenceDateRequired": "Vəsiqənin verilmə tarixini daxil edin.",
+    "adult": "Hesab açmaq üçün ən azı 18 yaşınız olmalıdır.",
+    "birthDateRange": "Doğum tarixi son 100 il ərzində olmalıdır."
   },
   "common": {
     "loading": "Yüklənir",
     "close": "Bağla",
     "dismiss": "Bildirişi bağla",
     "notifications": "Bildirişlər"
+  },
+  "forms": {
+    "errorSummary_one": "{{count}} sahə düzəldilməlidir",
+    "errorSummary_other": "{{count}} sahə düzəldilməlidir"
   }
 }

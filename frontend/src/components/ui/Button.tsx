@@ -28,6 +28,10 @@ export function Button({
       className={buttonClasses(variant, size, className)}
       disabled={Boolean(disabled) || loading}
       aria-busy={loading || undefined}
+      // A submit button that takes focus on mouse-down blurs the last field
+      // first; its validation can re-render the form and move the button out
+      // from under the cursor, so the click never lands. Keyboard is unaffected.
+      onMouseDown={type === 'submit' ? (event) => event.preventDefault() : undefined}
       {...rest}
     >
       {loading && <Spinner />}
