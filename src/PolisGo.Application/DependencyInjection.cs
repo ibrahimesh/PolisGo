@@ -6,6 +6,7 @@ using PolisGo.Application.Claims;
 using PolisGo.Application.Claims.Documents;
 using PolisGo.Application.Customers;
 using PolisGo.Application.Policies;
+using PolisGo.Application.PolicyTypes;
 using PolisGo.Application.Pricing;
 using PolisGo.Application.Statistics;
 using PolisGo.Application.Vehicles;
@@ -34,6 +35,7 @@ public static class DependencyInjection
         services.AddMemoryCache();
         services.AddScoped<IAdminStatsService, AdminStatsService>();
         services.AddScoped<ICustomerService, CustomerService>();
+        services.AddScoped<IPolicyTypeService, PolicyTypeService>();
 
         return services;
     }
