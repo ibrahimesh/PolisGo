@@ -71,6 +71,18 @@ public class ExceptionHandlingMiddlewareTests
     }
 
     [Fact]
+    public async Task Problem_responses_use_the_rfc7807_media_type()
+    {
+        var (ctx, _) = NewContext();
+        var middleware = Build(_ => throw new NotFoundException("Claim", Guid.NewGuid()));
+
+        await middleware.InvokeAsync(ctx);
+
+        // Regression: WriteAsJsonAsync used to overwrite this with application/json.
+        Assert.StartsWith("application/problem+json", ctx.Response.ContentType);
+    }
+
+    [Fact]
     public async Task Maps_ConflictException_To_409()
     {
         var (ctx, body) = NewContext();

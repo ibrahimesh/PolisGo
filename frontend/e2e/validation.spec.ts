@@ -120,6 +120,34 @@ test.describe('Register validation', () => {
     await expect(page).toHaveURL(/\/app$/);
   });
 
+  // The client blocks these values, so tamper with the outgoing request to
+  // prove the real API rejects them and the UI maps its 400 onto the fields.
+  test('maps a server-side 400 onto the matching fields, translated', async ({ page }) => {
+    const user = randomUser();
+    await page.route(`${API_URL}/api/auth/register`, async (route) => {
+      const body = route.request().postDataJSON() as Record<string, unknown>;
+      await route.continue({
+        postData: JSON.stringify({ ...body, phone: '1', birthDate: '2015-01-01' }),
+      });
+    });
+    await fillRegister(page, { name: user.fullName, email: user.email });
+
+    const response = page.waitForResponse((r) => r.url().endsWith('/api/auth/register'));
+    await page.getByRole('button', { name: 'Create account' }).click();
+    const problem = await response;
+    expect(problem.status()).toBe(400);
+    expect(problem.headers()['content-type']).toContain('application/problem+json');
+
+    const summary = page.getByTestId('error-summary');
+    await expect(summary).toContainText('2 fields need attention');
+    await expect(summary).toContainText('Phone: Enter an Azerbaijani number: +994 and 9 digits.');
+    await expect(summary).toContainText(
+      'Date of birth: You must be at least 18 to open an account.',
+    );
+    await expect(page.getByLabel('Phone')).toBeFocused();
+    await expect(page).toHaveURL(/\/register$/);
+  });
+
   test('shows the live password checklist and strength', async ({ page }) => {
     const password = page.getByLabel('Password', { exact: true });
     const rules = page.getByRole('list', { name: 'Password requirements' });

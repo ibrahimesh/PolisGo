@@ -125,6 +125,89 @@ public class AuthServiceTests
     }
 
     [Fact]
+    public async Task Register_StoresPhoneInE164_WhateverFormatWasSent()
+    {
+        await using var db = NewDb();
+        var sut = NewSut(db);
+
+        await sut.RegisterAsync(ValidRegister() with { Phone = "050-123-45-67" });
+
+        Assert.Equal("+994501234567", Assert.Single(db.Customers).Phone);
+    }
+
+    [Fact]
+    public async Task Register_ReportsEveryInvalidFieldAtOnce_AndPersistsNothing()
+    {
+        await using var db = NewDb();
+        var sut = NewSut(db);
+        var request = ValidRegister() with
+        {
+            Email = "user@polisgo",
+            Password = "password1",
+            FullName = "x",
+            Phone = "1",
+            BirthDate = DateTime.UtcNow.Date.AddYears(-10)
+        };
+
+        var ex = await Assert.ThrowsAsync<ValidationException>(() => sut.RegisterAsync(request));
+
+        Assert.Equal(
+            new[] { "BirthDate", "Email", "FullName", "Password", "Phone" },
+            ex.Errors.Keys.Order());
+        Assert.Equal(AuthValidation.Messages.Underage, ex.Errors["BirthDate"][0]);
+        Assert.Equal(AuthValidation.Messages.PhoneInvalid, ex.Errors["Phone"][0]);
+        Assert.Empty(db.Users);
+        Assert.Empty(db.Customers);
+    }
+
+    [Fact]
+    public async Task Register_LicenceBefore18_IsRejected()
+    {
+        await using var db = NewDb();
+        var sut = NewSut(db);
+
+        var ex = await Assert.ThrowsAsync<ValidationException>(() => sut.RegisterAsync(
+            ValidRegister() with { DrivingLicenseDate = new DateTime(2005, 1, 1) }));
+
+        Assert.Equal(AuthValidation.Messages.LicenceBefore18, Assert.Single(ex.Errors).Value[0]);
+    }
+
+    [Fact]
+    public async Task CreateStaff_AppliesTheSamePasswordAndNameRules()
+    {
+        await using var db = NewDb();
+        var sut = NewSut(db);
+
+        var ex = await Assert.ThrowsAsync<ValidationException>(() => sut.CreateStaffUserAsync(
+            new CreateStaffUserRequest("agent@polisgo.az", "weakpass1", "A", UserRole.Agent)));
+
+        Assert.Equal(new[] { "FullName", "Password" }, ex.Errors.Keys.Order());
+        Assert.Empty(db.Users);
+    }
+
+    [Fact]
+    public async Task Login_StillAcceptsAccountsCreatedUnderOlderRules()
+    {
+        // Seed directly: this password doesn't meet today's policy.
+        await using var db = NewDb();
+        var hasher = new BcryptPasswordHasher();
+        db.Users.Add(new PolisGo.Domain.Entities.User
+        {
+            Id = Guid.NewGuid(),
+            Email = "legacy@example.com",
+            PasswordHash = hasher.Hash("legacypass1"),
+            FullName = "Legacy User",
+            Role = UserRole.Client,
+            CreatedAt = DateTime.UtcNow
+        });
+        await db.SaveChangesAsync();
+
+        var response = await NewSut(db).LoginAsync(new LoginRequest("legacy@example.com", "legacypass1"));
+
+        Assert.False(string.IsNullOrWhiteSpace(response.Token));
+    }
+
+    [Fact]
     public async Task Login_UnknownEmail_ThrowsUnauthorized()
     {
         await using var db = NewDb();
