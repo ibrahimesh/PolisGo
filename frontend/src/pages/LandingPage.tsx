@@ -1,37 +1,35 @@
 import { useTranslation } from 'react-i18next';
-import { AccentHeading, Frame } from '../components/layout/Section';
-import { SurfaceLineArt } from '../components/layout/LineArt';
+import { AccentHeading } from '../components/layout/Section';
 import { ButtonLink } from '../components/ui/Button';
-import { buttonClasses } from '../components/ui/styles';
 import { ArrowRightIcon } from '../components/ui/icons';
-import { Label } from '../components/ui/Label';
+import { buttonClasses } from '../components/ui/styles';
+import { ClaimsSection } from '../features/landing/ClaimsSection';
+import { CoverageSection } from '../features/landing/CoverageSection';
+import { FaqSection } from '../features/landing/FaqSection';
+import { NumbersStrip } from '../features/landing/NumbersStrip';
+import { PricingSection } from '../features/landing/PricingSection';
 import { QuoteCalculator } from '../features/quote/QuoteCalculator';
-
-const FACTS = ['products', 'currency', 'pricing', 'roles'] as const;
-const STEPS = ['factors', 'cap', 'issue'] as const;
 
 export function LandingPage() {
   const { t } = useTranslation();
 
   return (
     <>
-      <Frame>
-        <section
-          aria-labelledby="hero-title"
-          className="grid lg:grid-cols-3 lg:divide-x lg:divide-line"
-        >
-          <div className="px-6 pt-16 pb-14 sm:px-8 lg:col-span-2 lg:pt-24 lg:pb-20">
-            <AccentHeading
-              as="h1"
-              id="hero-title"
-              size="display"
-              label={t('landing.heroLabel')}
-              lead={t('landing.heroTitleLead')}
-              accent={t('landing.heroTitleAccent')}
-            >
-              <p className="max-w-xl text-lg leading-relaxed text-muted">{t('landing.heroLead')}</p>
-            </AccentHeading>
-            <div className="mt-10 flex flex-wrap gap-3">
+      {/* Hero: an off-centre headline, then the live calculator itself — the
+          product is the hero, not an illustration of it. */}
+      <section aria-labelledby="hero-title" className="border-b border-line">
+        <div className="mx-auto grid max-w-7xl gap-8 px-4 pt-16 pb-12 sm:px-6 lg:grid-cols-12 lg:px-8 lg:pt-24 lg:pb-16">
+          <AccentHeading
+            as="h1"
+            id="hero-title"
+            size="display"
+            lead={t('landing.heroTitleLead')}
+            accent={t('landing.heroTitleAccent')}
+            className="lg:col-span-8"
+          />
+          <div className="flex flex-col justify-end gap-8 lg:col-span-4">
+            <p className="max-w-md text-lg text-muted">{t('landing.heroLead')}</p>
+            <div className="flex flex-wrap gap-4">
               <a href="#calculator" className={buttonClasses('primary', 'lg')}>
                 {t('landing.ctaCalculate')}
                 <ArrowRightIcon />
@@ -41,71 +39,22 @@ export function LandingPage() {
               </ButtonLink>
             </div>
           </div>
-
-          <aside
-            aria-label={t('landing.factsLabel')}
-            className="flex flex-col border-t border-line lg:border-t-0"
-          >
-            <SurfaceLineArt className="h-48 w-full border-b border-line lg:h-auto lg:flex-1" />
-            <dl className="divide-y divide-line">
-              {FACTS.map((fact) => (
-                <div
-                  key={fact}
-                  className="flex items-baseline justify-between gap-6 px-6 py-4 sm:px-8"
-                >
-                  <dt>
-                    <Label>{t(`landing.facts.${fact}`)}</Label>
-                  </dt>
-                  <dd className="text-right text-sm">{t(`landing.facts.${fact}Value`)}</dd>
-                </div>
-              ))}
-            </dl>
-          </aside>
-        </section>
-      </Frame>
-
-      <Frame>
-        <section id="calculator" aria-labelledby="calculator-title" className="scroll-mt-20">
-          <div className="grid border-b border-line lg:grid-cols-3 lg:divide-x lg:divide-line">
-            <div className="px-6 py-12 sm:px-8 lg:col-span-2 lg:py-16">
-              <AccentHeading
-                id="calculator-title"
-                label={t('landing.calculatorLabel')}
-                lead={t('landing.calculatorTitleLead')}
-                accent={t('landing.calculatorTitleAccent')}
-              />
-            </div>
-            <p className="flex items-end px-6 pb-12 leading-relaxed text-muted sm:px-8 lg:py-16">
-              {t('landing.calculatorLead')}
-            </p>
-          </div>
+        </div>
+        <div
+          id="calculator"
+          role="region"
+          aria-label={t('landing.calculatorTitle')}
+          className="mx-auto max-w-7xl scroll-mt-16 border-t border-line"
+        >
           <QuoteCalculator />
-        </section>
-      </Frame>
+        </div>
+      </section>
 
-      <Frame>
-        <section id="method" aria-labelledby="method-title" className="scroll-mt-20">
-          <div className="border-b border-line px-6 py-12 sm:px-8 lg:py-16">
-            <AccentHeading
-              id="method-title"
-              label={t('landing.methodLabel')}
-              lead={t('landing.methodTitleLead')}
-              accent={t('landing.methodTitleAccent')}
-            />
-          </div>
-          <ol className="grid divide-y divide-line lg:grid-cols-3 lg:divide-x lg:divide-y-0">
-            {STEPS.map((step, i) => (
-              <li key={step} className="space-y-4 px-6 py-10 sm:px-8 lg:py-14">
-                <Label as="p" className="text-accent">
-                  {String(i + 1).padStart(2, '0')}
-                </Label>
-                <h3 className="text-2xl">{t(`landing.steps.${step}Title`)}</h3>
-                <p className="leading-relaxed text-muted">{t(`landing.steps.${step}Body`)}</p>
-              </li>
-            ))}
-          </ol>
-        </section>
-      </Frame>
+      <NumbersStrip />
+      <PricingSection />
+      <CoverageSection />
+      <ClaimsSection />
+      <FaqSection />
     </>
   );
 }

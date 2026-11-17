@@ -13,12 +13,20 @@ const SERVER_MESSAGE_KEYS: Record<string, string> = {
   'Driving licence date must not be in the future.': 'validation.licenceFuture',
   'Driving licence date must be after the driver turns 18.': 'validation.licenceAfter18',
   'Driving licence date must be after the customer turns 18.': 'validation.licenceAfter18',
+  // Account rules — AuthValidation.Messages (a contract test keeps these in sync).
+  'Email is required.': 'validation.emailRequired',
   'Email is not a valid address.': 'validation.email',
-  'Password must be at least 8 characters and contain both a letter and a digit.':
+  'Password is required.': 'validation.passwordRequired',
+  'Password must be 8-64 characters and include an uppercase letter, a lowercase letter and a digit.':
     'validation.password',
   'Full name is required.': 'validation.fullNameRequired',
+  'Full name must be 2-100 letters; spaces, hyphens and apostrophes are allowed.':
+    'validation.fullName',
   'Phone is required.': 'validation.phoneRequired',
+  'Phone must be an Azerbaijani number: +994 followed by 9 digits.': 'validation.phone',
   'Birth date must be in the past.': 'validation.birthDatePast',
+  'The customer must be at least 18 years old.': 'validation.adult',
+  'Birth date must be within the last 100 years.': 'validation.birthDateRange',
   'A user with this email already exists.': 'errors.emailTaken',
 };
 

@@ -12,7 +12,14 @@
     "register": "Open an account",
     "workspace": "Workspace",
     "signOut": "Sign out",
-    "settings": "Display settings"
+    "settings": "Display settings",
+    "home": "Home",
+    "pricing": "How pricing works",
+    "coverage": "Coverage",
+    "claims": "Claims",
+    "faq": "Questions",
+    "menu": "Open menu",
+    "closeMenu": "Close menu"
   },
   "theme": {
     "label": "Theme",
@@ -39,40 +46,125 @@
     "currency": "All amounts in Azerbaijani manat (AZN).",
     "legalLabel": "Notice",
     "legal": "Portfolio project. Not a licensed insurer; quotes are illustrative of the pricing engine.",
-    "copyright": "© {{year}} PolisGo"
+    "copyright": "© {{year}} PolisGo",
+    "product": "Product",
+    "account": "Account"
   },
   "landing": {
-    "heroLabel": "Motor insurance · Azerbaijan",
     "heroTitleLead": "Insurance,",
     "heroTitleAccent": "priced in the open.",
-    "heroLead": "PolisGo issues MTPL and CASCO policies, takes claims from first notice to payout, and shows every factor behind a price.",
+    "heroLead": "Motor insurance for Azerbaijan. Change any detail below and the PolisGo pricing engine reprices it instantly — with every factor on the table.",
     "ctaCalculate": "Calculate a premium",
     "ctaRegister": "Open an account",
-    "factsLabel": "At a glance",
-    "facts": {
-      "products": "Products",
-      "productsValue": "MTPL · CASCO",
-      "currency": "Currency",
-      "currencyValue": "AZN",
-      "roles": "Roles",
-      "rolesValue": "Client · Agent · Adjuster · Admin",
-      "pricing": "Pricing",
-      "pricingValue": "6 factors, capped"
+    "calculatorTitle": "Live premium calculator",
+    "pricing": {
+      "titleLead": "How a premium",
+      "titleAccent": "is built.",
+      "lead": "One base rate, six multipliers, a cap on the extremes. The same arithmetic runs when a policy is issued — only then on verified data.",
+      "stepsLabel": "The calculation, in order",
+      "steps": {
+        "base": {
+          "title": "Base rate",
+          "body": "Each product starts from its own rate: the cost of covering an average driver for a year."
+        },
+        "risk": {
+          "title": "Five risk factors",
+          "body": "Engine capacity, driver age, years of experience, vehicle age and claims history each add a multiplier above or below ×1.00."
+        },
+        "cap": {
+          "title": "A cap on risk",
+          "body": "The five risk multipliers are combined and held between ×0.50 and ×3.00, so no profile is priced out or given away."
+        },
+        "term": {
+          "title": "Term",
+          "body": "The price is pro-rated by month. Terms under twelve months carry a 10% loading for administration."
+        },
+        "rounding": {
+          "title": "One rounding",
+          "body": "Everything stays at full precision until the end, then the premium is rounded once, to the qiyəpik."
+        }
+      }
     },
-    "calculatorLabel": "01 — Calculator",
-    "calculatorTitleLead": "A live quote,",
-    "calculatorTitleAccent": "factor by factor.",
-    "calculatorLead": "Each change is priced by the PolisGo API as you type. Nothing on this page is simulated.",
-    "methodLabel": "02 — Method",
-    "methodTitleLead": "How a premium",
-    "methodTitleAccent": "is built.",
-    "steps": {
-      "factorsTitle": "Six factors",
-      "factorsBody": "Engine capacity, driver age, driving experience, vehicle age, claims history and term each contribute one multiplier to the product's base rate.",
-      "capTitle": "A cap on risk",
-      "capBody": "The five risk factors are multiplied together and held between ×0.50 and ×3.00, so no single profile is priced out or given away.",
-      "issueTitle": "Repriced at issue",
-      "issueBody": "A quote is an estimate. When a policy is issued the API recalculates it from verified customer, vehicle and claims records."
+    "coverage": {
+      "titleLead": "What each policy",
+      "titleAccent": "covers.",
+      "lead": "Products and base rates come straight from the PolisGo API.",
+      "caption": "Coverage by product",
+      "rowHeader": "Cover",
+      "fromRate": "from {{amount}} {{currency}} base rate",
+      "mandatory": "Required by law",
+      "voluntary": "Voluntary",
+      "included": "Included",
+      "notIncluded": "Not included",
+      "rows": {
+        "thirdPartyProperty": "Damage to other people’s vehicles and property",
+        "thirdPartyInjury": "Injury to other people",
+        "ownDamage": "Damage to your own car in an accident",
+        "theft": "Theft and attempted theft",
+        "natural": "Fire, flood, hail and other natural events",
+        "glass": "Windscreen and glass"
+      }
+    },
+    "claims": {
+      "titleLead": "From claim",
+      "titleAccent": "to payout.",
+      "lead": "Four steps, each recorded in the claim’s history so you always know where it stands.",
+      "steps": {
+        "submit": {
+          "title": "Submit",
+          "body": "Report the incident online: the date, what happened, the amount, and photos or documents."
+        },
+        "review": {
+          "title": "Review",
+          "body": "An adjuster takes the claim, checks the documents and the policy, and keeps you informed."
+        },
+        "decision": {
+          "title": "Decision",
+          "body": "An approved amount up to what you claimed, or a written reason if the claim is rejected."
+        },
+        "payout": {
+          "title": "Payout",
+          "body": "Approved claims are paid out and marked paid. The full history stays on record."
+        }
+      }
+    },
+    "numbers": {
+      "title": "The numbers behind every quote",
+      "products": "products to choose from",
+      "fromRate": "lowest base rate, {{currency}}",
+      "factors": "pricing factors",
+      "cap": "limit on combined risk",
+      "shortTerm": "for terms under 12 months"
+    },
+    "faq": {
+      "titleLead": "Questions,",
+      "titleAccent": "answered.",
+      "items": {
+        "final": {
+          "q": "Is the price on this page final?",
+          "a": "No — it is an indicative estimate. When a policy is issued, the premium is recalculated from your verified customer and vehicle records."
+        },
+        "differ": {
+          "q": "Why could my final premium differ?",
+          "a": "At issue the engine uses the data stored on your account, including approved or paid claims from the last three years, instead of what was typed into the calculator."
+        },
+        "cap": {
+          "q": "What is the risk cap?",
+          "a": "The five risk factors are multiplied together and the result is kept between ×0.50 and ×3.00. It protects both very low-risk and very high-risk drivers from extreme prices."
+        },
+        "term": {
+          "q": "Can I insure a car for less than a year?",
+          "a": "Yes, for 1 to 12 months. The price is pro-rated by month, plus a 10% loading for terms shorter than a year."
+        },
+        "claim": {
+          "q": "How do I make a claim?",
+          "a": "Sign in, choose the policy, describe the incident and upload photos or documents. An adjuster reviews it, and every status change is recorded."
+        },
+        "licensed": {
+          "q": "Is PolisGo a licensed insurer?",
+          "a": "No. PolisGo is a portfolio project that demonstrates an insurance platform; quotes illustrate its pricing engine."
+        }
+      }
     }
   },
   "calculator": {
@@ -170,15 +262,37 @@
       "passwordHint": "At least 8 characters, with a letter and a digit.",
       "fullName": "Full name",
       "phone": "Phone",
-      "phoneHint": "For example +994 50 123 45 67",
+      "phoneHint": "Azerbaijani number — paste it in any format.",
       "birthDate": "Date of birth",
-      "licenceDate": "Driving licence issued on"
+      "licenceDate": "Driving licence issued on",
+      "confirmPassword": "Repeat password"
     },
     "showPassword": "Show password",
     "hidePassword": "Hide password",
     "sessionExpired": "Your session has ended. Please sign in again.",
     "signedOut": "You have been signed out.",
-    "checking": "Checking your session…"
+    "checking": "Checking your session…",
+    "passwordRules": {
+      "title": "Password requirements",
+      "length": "8–64 characters",
+      "lower": "A lowercase letter",
+      "upper": "An uppercase letter",
+      "digit": "A number",
+      "met": "(done)",
+      "notMet": "(missing)"
+    },
+    "strength": {
+      "weak": "Weak",
+      "fair": "Fair",
+      "good": "Good",
+      "strong": "Strong"
+    },
+    "alreadySignedIn": {
+      "title": "You’re already signed in",
+      "body": "This tab is signed in as {{name}} ({{email}}). Continue, or sign out to use another account.",
+      "continue": "Go to workspace",
+      "signOut": "Sign out"
+    }
   },
   "workspace": {
     "label": "Workspace",
@@ -242,10 +356,10 @@
     "number": "Enter a number.",
     "integer": "Enter a whole number.",
     "date": "Enter a valid date.",
-    "email": "Enter a valid email address.",
-    "password": "Use at least 8 characters with a letter and a digit.",
+    "email": "Enter a valid email, like name@example.com.",
+    "password": "Use 8–64 characters with an uppercase letter, a lowercase letter and a number.",
     "fullNameRequired": "Enter your full name.",
-    "phoneRequired": "Enter a phone number.",
+    "phoneRequired": "Enter your phone number.",
     "birthDatePast": "Date of birth must be in the past.",
     "engineCapacityPositive": "Engine capacity must be greater than zero.",
     "engineCapacityMax": "Engine capacity looks too large.",
@@ -257,12 +371,39 @@
     "driverMinAge": "The driver must be at least 18.",
     "licenceFuture": "Licence date can't be in the future.",
     "licenceAfter18": "The licence must be issued after the driver turned 18.",
-    "invalidField": "This value isn't accepted."
+    "invalidField": "This value isn't accepted.",
+    "emailRequired": "Enter your email address.",
+    "passwordRequired": "Enter your password.",
+    "confirmPasswordRequired": "Repeat your password.",
+    "passwordMismatch": "Passwords don’t match.",
+    "fullName": "Use 2–100 letters; spaces, hyphens and apostrophes are fine.",
+    "phone": "Enter an Azerbaijani number: +994 and 9 digits.",
+    "birthDateRequired": "Enter your date of birth.",
+    "licenceDateRequired": "Enter the date your licence was issued.",
+    "adult": "You must be at least 18 to open an account.",
+    "birthDateRange": "Enter a date of birth within the last 100 years."
   },
   "common": {
     "loading": "Loading",
     "close": "Close",
     "dismiss": "Dismiss notification",
     "notifications": "Notifications"
+  },
+  "forms": {
+    "errorSummary_one": "1 field needs attention",
+    "errorSummary_other": "{{count}} fields need attention"
+  },
+  "palette": {
+    "title": "Command palette",
+    "open": "Search and commands",
+    "placeholder": "Go to a page, change language or theme…",
+    "empty": "Nothing matches.",
+    "hint": "↑ ↓ to move · Enter to choose · Esc to close",
+    "groups": {
+      "navigation": "Go to",
+      "language": "Language",
+      "theme": "Theme",
+      "account": "Account"
+    }
   }
 }

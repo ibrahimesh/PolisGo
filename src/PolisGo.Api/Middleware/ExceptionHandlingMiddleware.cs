@@ -131,7 +131,10 @@ public class ExceptionHandlingMiddleware
 
         // Serialize against the runtime type so ValidationProblemDetails
         // includes its Errors dictionary (the base-type overload would strip it).
-        return context.Response.WriteAsJsonAsync(problem, problem.GetType());
+        // Pass the media type explicitly: WriteAsJsonAsync otherwise resets
+        // Content-Type to application/json, dropping the RFC 7807 type set above.
+        return context.Response.WriteAsJsonAsync(
+            problem, problem.GetType(), options: null, contentType: "application/problem+json");
     }
 
     private static string GetTraceId(HttpContext context)

@@ -23,7 +23,7 @@ export function EmptyState({
     <div className={cx('flex flex-col items-start gap-5 py-12', className)}>
       <EmptyGlyph />
       {label && <Label>{label}</Label>}
-      <Heading className="max-w-xl text-3xl">{title}</Heading>
+      <Heading className="max-w-xl text-xl sm:text-2xl">{title}</Heading>
       {body && <p className="max-w-lg leading-relaxed text-muted">{body}</p>}
       {action}
     </div>

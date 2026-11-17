@@ -14,12 +14,7 @@ export function WorkspaceHome() {
 
   return (
     <div className="space-y-12">
-      <AccentHeading
-        as="h1"
-        label={t('workspace.label')}
-        lead={t('workspace.greetingLead')}
-        accent={user.fullName}
-      >
+      <AccentHeading as="h1" lead={t('workspace.greetingLead')} accent={user.fullName}>
         <p className="text-muted">{t('workspace.lead', { role })}</p>
       </AccentHeading>
 
@@ -43,8 +38,8 @@ export function WorkspaceHome() {
             ['workspace.userId', user.id],
           ].map(([key = '', value]) => (
             <div key={key} className="grid gap-1 py-3 sm:grid-cols-[10rem_1fr]">
-              <dt className="label-mono text-paper-muted">{t(key)}</dt>
-              <dd className="font-mono text-sm break-all">{value}</dd>
+              <dt className="text-sm font-medium text-paper-muted">{t(key)}</dt>
+              <dd className="break-all tabular">{value}</dd>
             </div>
           ))}
         </dl>

@@ -136,16 +136,52 @@ React Router, TanStack Query, React Hook Form + Zod, react-i18next.
   formatting. `src/lib` — dates and hooks. `e2e/` — Playwright suite.
 - Routes are lazy-loaded (`React.lazy` in `App.tsx`); add new pages the same way.
 
-### Design
+### Design (v2)
 
-- `frontend/DESIGN.md` is the source of truth ("Midnight Institutional").
+- `frontend/DESIGN.md` is the source of truth ("Midnight Institutional" v2).
 - Use tokens only (`bg-bg`, `bg-surface`, `text-muted`, `border-line`,
   `bg-paper`, ...), never raw hex in components. Tokens are CSS variables in
   `src/styles/index.css`, exposed to Tailwind via `@theme`.
-- Any new colour pair must meet WCAG AA in both themes; record it in the
-  DESIGN.md contrast table.
+- **Type scale is enforced:** only `text-sm` (14) … `text-4xl` (96) exist;
+  Tailwind's defaults are cleared, so don't reach for `text-xs` or arbitrary
+  `text-[..px]`. Labels are sentence case, `text-sm font-medium` (`<Label>`);
+  no uppercase mono labels, no numbered eyebrows.
+- Source Serif 4 for headlines and the price, Inter Tight for everything
+  else, `tabular` for numbers. No third typeface.
+- **Light theme is warm stone; no pure white anywhere** (the data card is
+  ivory `bg-paper` in both themes). Any new colour pair must meet WCAG AA in
+  both themes and go in the DESIGN.md contrast table.
+- 2px radii, 1px hairlines, 1.5px icon strokes, 8pt spacing; the accent is
+  for the primary action and key data only. No gradients, glows, emoji or
+  icon-in-circle grids.
+- Motion only via `<Reveal>` (scroll), hover and focus; content must stay
+  visible by default and respect `prefers-reduced-motion`.
+- Landing sections are listed once in `components/layout/navigation.ts`;
+  header, mobile menu, command palette (Ctrl/⌘+K) and footer read it.
+- Keep the factor-axes diagram (`features/quote/FactorDiagram.tsx`) and its
+  animations — the owner asked for them to stay.
+- Wrap scrolling tables in a positioned container (`relative overflow-x-auto`):
+  `sr-only` text is absolutely positioned and otherwise widens the page on
+  phones.
 - No mock or placeholder data in the app — screens show real API data or an
-  empty state.
+  empty state. Product data comes from `/api/policy-types`.
+
+### Forms and validation
+
+- Zod schemas with i18n-key messages; React Hook Form in `onTouched` mode;
+  `FormErrorSummary` plus inline errors (`aria-invalid`, `aria-describedby`);
+  focus moves to the first invalid field, including server 400s
+  (`applyServerFieldErrors`).
+- Account rules live twice on purpose: `features/auth/validation.ts` +
+  `authSchemas.ts` (instant feedback) and `AuthValidation.cs` (authority).
+  Change both together. `i18n/apiErrors.test.ts` reads the C# file and fails
+  if a server message has no translation mapping.
+- Phones: `PhoneInput` masks `+994 XX XXX XX XX`; the form submits E.164.
+- Don't use RHF `deps` for linked fields (it shows errors on fields the user
+  hasn't reached); use `useLinkedValidation`. Don't put `abort: true` on Zod
+  checks — it skips every object-level refinement in the form.
+- Sign-in and register never render the form over an existing session; they
+  show `SessionNotice` (checking / already signed in) instead.
 
 ### i18n
 
@@ -165,7 +201,9 @@ Run from `frontend/`:
 - `npm run lint` · `npm run typecheck` · `npm test` (Vitest) · `npm run build`
   — CI runs exactly these.
 - `npm run e2e` — Playwright + axe against the real API (needs the Docker
-  stack on `:8080`; starts the dev server itself). Creates real users with
-  `@polisgo.test` emails. Not run in CI yet.
+  stack on `:8080`, rebuilt from the current branch; starts the dev server
+  itself). Covers happy paths, negative form cases, server-400 mapping,
+  the command palette, the mobile menu and axe in both themes. Creates real
+  users with `@polisgo.test` emails. Not run in CI yet.
 - `npm run e2e:screenshots` — regenerates `frontend/docs/screenshots`.
 - First-time e2e setup: `npx playwright install chromium`.

@@ -43,10 +43,13 @@ export interface TestUser {
 
 export function randomUser(): TestUser {
   const id = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
+  // Names must be letters only (client and server validation), so spell the
+  // unique id with letters: digits 0-9 become a-j.
+  const letters = id.replace(/\d/g, (d) => String.fromCharCode(97 + Number(d)));
   return {
-    fullName: `Leyla Məmmədova ${id}`,
+    fullName: `Leyla Məmmədova ${letters.charAt(0).toUpperCase()}${letters.slice(1)}`,
     email: `e2e.${id}@polisgo.test`,
-    phone: '+994 50 123 45 67',
+    phone: '+994501234567',
     birthDate: '1992-03-14',
     drivingLicenseDate: '2012-07-01',
     password: `Passw0rd${id}`,

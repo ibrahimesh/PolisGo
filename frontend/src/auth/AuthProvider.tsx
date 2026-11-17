@@ -53,10 +53,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const startSession = useCallback(
     async (response: AuthResponse) => {
       tokenStore.set({ token: response.token, expiresAt: response.expiresAt });
-      return queryClient.query({
-        queryKey: ME_QUERY_KEY,
-        queryFn: ({ signal }) => authApi.me(signal),
-      });
+      try {
+        return await queryClient.query({
+          queryKey: ME_QUERY_KEY,
+          queryFn: ({ signal }) => authApi.me(signal),
+        });
+      } catch (error) {
+        // Never leave a half-session behind: a stored token whose /me failed
+        // would later "log in" whoever opens the sign-in page in this tab.
+        tokenStore.clear();
+        queryClient.removeQueries({ queryKey: ME_QUERY_KEY });
+        throw error;
+      }
     },
     [queryClient],
   );

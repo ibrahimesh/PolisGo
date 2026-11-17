@@ -1,27 +1,36 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMemo, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { Link, Navigate, useNavigate } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { useAuth } from '../auth/AuthContext';
 import { Button } from '../components/ui/Button';
 import { ErrorNotice } from '../components/ui/ErrorNotice';
+import { FormErrorSummary } from '../components/ui/FormErrorSummary';
+import type { SummaryField } from '../components/ui/FormErrorSummary';
 import { Input } from '../components/ui/Input';
 import { useToast } from '../components/ui/ToastProvider';
 import { applyServerFieldErrors } from '../features/auth/applyServerErrors';
 import { AuthLayout } from '../features/auth/AuthLayout';
-import { createRegisterSchema } from '../features/auth/authSchemas';
-import type { RegisterValues } from '../features/auth/authSchemas';
-import { PasswordInput } from '../features/auth/PasswordInput';
+import { birthDateBounds, createRegisterSchema } from '../features/auth/authSchemas';
+import type { RegisterInput, RegisterValues } from '../features/auth/authSchemas';
+import { PasswordField } from '../features/auth/PasswordField';
+import { PhoneInput } from '../features/auth/PhoneInput';
+import { SessionNotice } from '../features/auth/SessionNotice';
+import { useLinkedValidation } from '../features/auth/useLinkedValidation';
+import { todayIso } from '../lib/dates';
 
-const FIELDS = [
+const FIELD_ORDER = [
   'fullName',
   'email',
   'phone',
   'birthDate',
   'drivingLicenseDate',
   'password',
-] as const satisfies readonly (keyof RegisterValues)[];
+  'confirmPassword',
+] as const satisfies readonly (keyof RegisterInput)[];
+
+const id = (field: (typeof FIELD_ORDER)[number]) => `register-${field}`;
 
 export function RegisterPage() {
   const { t } = useTranslation();
@@ -29,34 +38,68 @@ export function RegisterPage() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const schema = useMemo(() => createRegisterSchema(), []);
+  const birthBounds = useMemo(() => birthDateBounds(), []);
   const [submitError, setSubmitError] = useState<unknown>(null);
+  const [registering, setRegistering] = useState(false);
 
-  const { register, handleSubmit, setError, formState } = useForm<RegisterValues>({
-    resolver: zodResolver(schema),
-    defaultValues: {
-      fullName: '',
-      email: '',
-      phone: '',
-      birthDate: '',
-      drivingLicenseDate: '',
-      password: '',
-    },
-  });
+  const { register, control, handleSubmit, setError, setFocus, trigger, getFieldState, formState } =
+    useForm<RegisterInput, unknown, RegisterValues>({
+      resolver: zodResolver(schema),
+      mode: 'onTouched',
+      defaultValues: {
+        fullName: '',
+        email: '',
+        phone: '',
+        birthDate: '',
+        drivingLicenseDate: '',
+        password: '',
+        confirmPassword: '',
+      },
+    });
+  const password = useWatch({ control, name: 'password' });
+  useLinkedValidation(control, trigger, getFieldState, 'password', 'confirmPassword');
+  useLinkedValidation(control, trigger, getFieldState, 'birthDate', 'drivingLicenseDate');
 
-  if (status === 'authenticated') return <Navigate to="/app" replace />;
+  const labels: Record<(typeof FIELD_ORDER)[number], string> = {
+    fullName: t('auth.fields.fullName'),
+    email: t('auth.fields.email'),
+    phone: t('auth.fields.phone'),
+    birthDate: t('auth.fields.birthDate'),
+    drivingLicenseDate: t('auth.fields.licenceDate'),
+    password: t('auth.fields.password'),
+    confirmPassword: t('auth.fields.confirmPassword'),
+  };
+  const summaryFields: SummaryField<RegisterInput>[] = FIELD_ORDER.map((name) => ({
+    name,
+    id: id(name),
+    label: labels[name],
+  }));
 
   const onSubmit = handleSubmit(async (values) => {
     setSubmitError(null);
+    setRegistering(true);
     try {
-      const user = await registerAccount(values);
+      // Explicit payload: the confirmation never leaves the browser.
+      const user = await registerAccount({
+        fullName: values.fullName,
+        email: values.email,
+        phone: values.phone,
+        birthDate: values.birthDate,
+        drivingLicenseDate: values.drivingLicenseDate,
+        password: values.password,
+      });
       toast({ title: t('auth.register.success', { name: user.fullName }), tone: 'success' });
       await navigate('/app', { replace: true });
     } catch (error) {
-      if (!applyServerFieldErrors(error, FIELDS, setError)) setSubmitError(error);
+      setRegistering(false);
+      const matched = applyServerFieldErrors(error, FIELD_ORDER, setError);
+      if (matched[0]) setFocus(matched[0]);
+      else setSubmitError(error);
     }
   });
 
-  const { errors, isSubmitting } = formState;
+  const { errors, isSubmitting, submitCount } = formState;
+  const showForm = registering || status === 'anonymous' || status === 'error';
 
   return (
     <AuthLayout
@@ -73,57 +116,91 @@ export function RegisterPage() {
         </>
       }
     >
-      <form noValidate onSubmit={(e) => void onSubmit(e)} className="space-y-6">
-        {submitError !== null && <ErrorNotice error={submitError} />}
-        <Input
-          label={t('auth.fields.fullName')}
-          autoComplete="name"
-          error={errors.fullName?.message}
-          {...register('fullName')}
-        />
-        <div className="grid gap-6 sm:grid-cols-2">
+      {!showForm ? (
+        <SessionNotice />
+      ) : (
+        <form
+          noValidate
+          aria-labelledby="auth-title"
+          onSubmit={(e) => void onSubmit(e)}
+          className="space-y-6"
+        >
+          <FormErrorSummary errors={errors} fields={summaryFields} show={submitCount > 0} />
+          {submitError !== null && <ErrorNotice error={submitError} />}
           <Input
-            label={t('auth.fields.email')}
-            type="email"
-            autoComplete="email"
-            error={errors.email?.message}
-            {...register('email')}
+            id={id('fullName')}
+            label={labels.fullName}
+            autoComplete="name"
+            error={errors.fullName?.message}
+            {...register('fullName')}
           />
-          <Input
-            label={t('auth.fields.phone')}
-            type="tel"
-            autoComplete="tel"
-            hint={t('auth.fields.phoneHint')}
-            error={errors.phone?.message}
-            {...register('phone')}
+          <div className="grid gap-6 sm:grid-cols-2">
+            <Input
+              id={id('email')}
+              label={labels.email}
+              type="email"
+              autoComplete="email"
+              error={errors.email?.message}
+              {...register('email')}
+            />
+            <Controller
+              control={control}
+              name="phone"
+              render={({ field, fieldState }) => (
+                <PhoneInput
+                  id={id('phone')}
+                  label={labels.phone}
+                  hint={t('auth.fields.phoneHint')}
+                  error={fieldState.error?.message}
+                  name={field.name}
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  ref={field.ref}
+                />
+              )}
+            />
+          </div>
+          <div className="grid gap-6 sm:grid-cols-2">
+            <Input
+              id={id('birthDate')}
+              label={labels.birthDate}
+              type="date"
+              autoComplete="bday"
+              min={birthBounds.min}
+              max={birthBounds.max}
+              error={errors.birthDate?.message}
+              {...register('birthDate')}
+            />
+            <Input
+              id={id('drivingLicenseDate')}
+              label={labels.drivingLicenseDate}
+              type="date"
+              max={todayIso()}
+              error={errors.drivingLicenseDate?.message}
+              {...register('drivingLicenseDate')}
+            />
+          </div>
+          <PasswordField
+            id={id('password')}
+            label={labels.password}
+            autoComplete="new-password"
+            policyValue={password}
+            error={errors.password?.message}
+            {...register('password')}
           />
-        </div>
-        <div className="grid gap-6 sm:grid-cols-2">
-          <Input
-            label={t('auth.fields.birthDate')}
-            type="date"
-            autoComplete="bday"
-            error={errors.birthDate?.message}
-            {...register('birthDate', { deps: ['drivingLicenseDate'] })}
+          <PasswordField
+            id={id('confirmPassword')}
+            label={labels.confirmPassword}
+            autoComplete="new-password"
+            error={errors.confirmPassword?.message}
+            {...register('confirmPassword')}
           />
-          <Input
-            label={t('auth.fields.licenceDate')}
-            type="date"
-            error={errors.drivingLicenseDate?.message}
-            {...register('drivingLicenseDate')}
-          />
-        </div>
-        <PasswordInput
-          label={t('auth.fields.password')}
-          autoComplete="new-password"
-          hint={t('auth.fields.passwordHint')}
-          error={errors.password?.message}
-          {...register('password')}
-        />
-        <Button type="submit" size="lg" loading={isSubmitting} className="w-full sm:w-auto">
-          {t('auth.register.submit')}
-        </Button>
-      </form>
+          <Button type="submit" size="lg" loading={isSubmitting} className="w-full sm:w-auto">
+            {t('auth.register.submit')}
+          </Button>
+        </form>
+      )}
     </AuthLayout>
   );
 }

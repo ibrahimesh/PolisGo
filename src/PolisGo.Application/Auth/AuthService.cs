@@ -1,4 +1,3 @@
-using System.Net.Mail;
 using Microsoft.EntityFrameworkCore;
 using PolisGo.Application.Abstractions;
 using PolisGo.Application.Auth.Dtos;
@@ -26,7 +25,7 @@ public class AuthService : IAuthService
 
     public async Task<AuthResponse> RegisterAsync(RegisterRequest request, CancellationToken cancellationToken = default)
     {
-        ValidateRegister(request);
+        var phone = ValidateRegister(request);
 
         // Normalise email so duplicate detection is case-insensitive.
         var email = request.Email.Trim().ToLowerInvariant();
@@ -56,7 +55,7 @@ public class AuthService : IAuthService
             UserId = user.Id,
             FullName = user.FullName,
             Email = user.Email,
-            Phone = request.Phone.Trim(),
+            Phone = phone,
             BirthDate = request.BirthDate.Date,
             DrivingLicenseDate = request.DrivingLicenseDate.Date,
             CreatedAt = now
@@ -114,12 +113,7 @@ public class AuthService : IAuthService
                 "Staff accounts may only have role Agent or Adjuster.");
         }
 
-        ValidateEmail(request.Email);
-        ValidatePassword(request.Password);
-        if (string.IsNullOrWhiteSpace(request.FullName))
-        {
-            throw new ValidationException(nameof(request.FullName), "Full name is required.");
-        }
+        ValidateStaff(request);
 
         var email = request.Email.Trim().ToLowerInvariant();
         if (await _db.Users.AnyAsync(u => u.Email == email, cancellationToken))
@@ -143,93 +137,57 @@ public class AuthService : IAuthService
         return new CurrentUserResponse(user.Id, user.Email, user.FullName, user.Role);
     }
 
-    private static void ValidateRegister(RegisterRequest request)
+    // Returns the phone in E.164 so storage is canonical whatever format the
+    // client sent. Every failing field is reported at once (one 400, all errors).
+    private static string ValidateRegister(RegisterRequest request)
     {
-        var errors = new Dictionary<string, string[]>();
-
-        if (!IsValidEmail(request.Email))
-        {
-            errors[nameof(request.Email)] = new[] { "Email is not a valid address." };
-        }
-
-        if (!IsStrongPassword(request.Password))
-        {
-            errors[nameof(request.Password)] = new[]
-            {
-                "Password must be at least 8 characters and contain both a letter and a digit."
-            };
-        }
-
-        if (string.IsNullOrWhiteSpace(request.FullName))
-        {
-            errors[nameof(request.FullName)] = new[] { "Full name is required." };
-        }
-
-        if (string.IsNullOrWhiteSpace(request.Phone))
-        {
-            errors[nameof(request.Phone)] = new[] { "Phone is required." };
-        }
-
         var today = DateTime.UtcNow.Date;
-
-        if (request.BirthDate.Date >= today)
+        var errors = new Dictionary<string, string[]>();
+        void Check(string field, string? error)
         {
-            errors[nameof(request.BirthDate)] = new[] { "Birth date must be in the past." };
+            if (error is not null) errors[field] = [error];
         }
 
-        // Driver must have been at least 18 years old when the licence was issued.
-        var earliestLicense = request.BirthDate.Date.AddYears(18);
-        if (request.DrivingLicenseDate.Date < earliestLicense)
+        Check(nameof(request.Email), AuthValidation.EmailError(request.Email));
+        Check(nameof(request.Password), AuthValidation.PasswordError(request.Password));
+        Check(nameof(request.FullName), AuthValidation.FullNameError(request.FullName));
+
+        var phone = AuthValidation.NormalizeAzerbaijaniPhone(request.Phone);
+        Check(nameof(request.Phone), string.IsNullOrWhiteSpace(request.Phone)
+            ? AuthValidation.Messages.PhoneRequired
+            : phone is null ? AuthValidation.Messages.PhoneInvalid : null);
+
+        var birthError = AuthValidation.BirthDateError(request.BirthDate, today);
+        Check(nameof(request.BirthDate), birthError);
+        // The licence rule is relative to the birth date; skip it while that is wrong.
+        if (birthError is null)
         {
-            errors[nameof(request.DrivingLicenseDate)] = new[]
-            {
-                "Driving licence date must be after the customer turns 18."
-            };
+            Check(nameof(request.DrivingLicenseDate),
+                AuthValidation.LicenceDateError(request.DrivingLicenseDate, request.BirthDate, today));
         }
 
         if (errors.Count > 0)
         {
             throw new ValidationException(errors);
         }
+        return phone!;
     }
 
-    private static void ValidateEmail(string email)
+    private static void ValidateStaff(CreateStaffUserRequest request)
     {
-        if (!IsValidEmail(email))
+        var errors = new Dictionary<string, string[]>();
+        void Check(string field, string? error)
         {
-            throw new ValidationException(nameof(email), "Email is not a valid address.");
+            if (error is not null) errors[field] = [error];
         }
-    }
 
-    private static void ValidatePassword(string password)
-    {
-        if (!IsStrongPassword(password))
-        {
-            throw new ValidationException(nameof(password),
-                "Password must be at least 8 characters and contain both a letter and a digit.");
-        }
-    }
+        Check(nameof(request.Email), AuthValidation.EmailError(request.Email));
+        Check(nameof(request.Password), AuthValidation.PasswordError(request.Password));
+        Check(nameof(request.FullName), AuthValidation.FullNameError(request.FullName));
 
-    private static bool IsValidEmail(string? email)
-    {
-        if (string.IsNullOrWhiteSpace(email)) return false;
-        // MailAddress is strict enough for our purposes and ships with the BCL.
-        try
+        if (errors.Count > 0)
         {
-            var address = new MailAddress(email);
-            return address.Address == email.Trim();
+            throw new ValidationException(errors);
         }
-        catch (FormatException)
-        {
-            return false;
-        }
-    }
-
-    private static bool IsStrongPassword(string? password)
-    {
-        if (string.IsNullOrWhiteSpace(password) || password.Length < 8) return false;
-        var hasLetter = password.Any(char.IsLetter);
-        var hasDigit = password.Any(char.IsDigit);
-        return hasLetter && hasDigit;
     }
 }

@@ -1,150 +1,154 @@
-# PolisGo — "Midnight Institutional"
+# PolisGo — "Midnight Institutional" v2
 
 A design language for an insurance platform that should feel like a serious
-financial institution, not a growth-hacking startup. Calm, precise, legible.
-Think a well-set annual report on a dark desk, not a neon dashboard.
+financial institution set by a careful editorial designer — not a template.
+Calm, precise, legible. Big serif statements, a quiet sans-serif interface,
+hairlines doing the structural work.
+
+## What changed in v2 (and why)
+
+| v1                                         | v2                                                   | Why                                                    |
+| ------------------------------------------ | ---------------------------------------------------- | ------------------------------------------------------ |
+| Tiny uppercase mono labels, "01 — Section" | Sentence-case labels, 14px medium; no eyebrows       | Read as decoration, not information; too small to read |
+| JetBrains Mono for numbers and labels      | Inter Tight with tabular figures                     | One UI family; numbers still align                     |
+| 12px text in places                        | 14px minimum, 16px body, enforced by the type scale  | Legibility; smaller sizes no longer exist              |
+| Pure white cards, cool grey light theme    | Warm stone light theme, ivory data card              | No glare; owner feedback                               |
+| Decorative wireframe line-art              | Removed                                              | Ornament without information                           |
+| Header with inline settings only           | Sticky header, mobile menu, Ctrl/⌘+K command palette | Navigation that scales with the product                |
+
+Kept on purpose: dark as default, the large Source Serif 4 headline with an
+italic accent, the factor-axes diagram and its animations, hairline grids.
 
 ## Principles
 
-1. **Information first.** Numbers, factors and statuses are the content. Decoration
-   never competes with data.
-2. **Structure is visible.** Layout is built on a grid with 1px hairline dividers.
-   Lines do the work that shadows and gradients do elsewhere.
-3. **Quiet confidence.** Generous whitespace, few colours, one accent. Motion is
-   short, functional and disappears under `prefers-reduced-motion`.
-4. **Original.** No stock illustrations, no "AI look" gradients or glows, no
-   resemblance to any real insurer's, bank's or state brand or emblem.
-5. **Local by default.** Every string is translated (EN / RU / AZ), every font
-   renders Cyrillic and Azerbaijani Latin (ə ş ç ğ ı ö ü), money is AZN.
+1. **Information first.** Numbers, factors and statuses are the content.
+2. **Asymmetric, editorial layout.** 12-column grid; headlines span wide,
+   supporting text sits offset; never a centred symmetrical hero.
+3. **Structure is visible.** 1px hairlines divide. No shadows except the
+   modal and palette; no gradients, glows or blobs.
+4. **One accent, used sparingly.** The primary action and key data only.
+5. **Restrained motion.** Scroll reveal, hover and focus; nothing loops.
+   `prefers-reduced-motion` disables all of it.
+6. **Original.** No stock illustrations, emoji, icon-in-circle feature
+   grids, uniform rounded cards, or resemblance to a real brand or emblem.
+7. **Local by default.** EN / RU / AZ for every string; fonts render
+   Cyrillic and Azerbaijani Latin (ə ş ç ğ ı ö ü); money is AZN.
 
 ## Colour
 
-All colours are CSS variables on `:root[data-theme]` and exposed to Tailwind as
-`bg-bg`, `text-muted`, `border-line`, etc. Components never use raw hex values.
+Tokens are CSS variables on `:root[data-theme]`, exposed to Tailwind as
+`bg-bg`, `text-muted`, `border-line`, … Components never use raw hex.
 
-| Token          | Dark                    | Light                | Use                               |
-| -------------- | ----------------------- | -------------------- | --------------------------------- |
-| `bg`           | `#050816`               | `#CBCEDB`            | Page background                   |
-| `surface`      | `#0B1030`               | `#FFFFFF`            | Panels, inputs, header            |
-| `surface-2`    | `#121842`               | `#F1F2F7`            | Hover / pressed surface           |
-| `line`         | `rgba(255,255,255,.12)` | `rgba(11,16,48,.16)` | Hairline dividers, borders        |
-| `line-strong`  | `rgba(255,255,255,.28)` | `rgba(11,16,48,.36)` | Input borders, focused structure  |
-| `text`         | `#E8EAF6`               | `#0B1030`            | Body and headings                 |
-| `muted`        | `#8A90B8`               | `#454B73`            | Secondary text, labels            |
-| `accent`       | `#8B93FF`               | `#3840B8`            | Links, primary action, focus ring |
-| `accent-ink`   | `#050816`               | `#FFFFFF`            | Text on accent fills              |
-| `paper`        | `#FFFFFF`               | `#FFFFFF`            | Data cards ("white on navy")      |
-| `paper-ink`    | `#0B1030`               | `#0B1030`            | Text on paper                     |
-| `paper-muted`  | `#454B73`               | `#454B73`            | Secondary text on paper           |
-| `paper-accent` | `#3840B8`               | `#3840B8`            | Accent on paper                   |
-| `danger`       | `#FF9C9C`               | `#A3122A`            | Errors                            |
-| `success`      | `#7FE0B5`               | `#0B5A3D`            | Positive states                   |
-| `warning`      | `#F2C46D`               | `#6A4500`            | Caution                           |
+| Token         | Dark                    | Light (warm stone) | Use                              |
+| ------------- | ----------------------- | ------------------ | -------------------------------- |
+| `bg`          | `#050816`               | `#D9D6CF`          | Page                             |
+| `surface`     | `#0B1030`               | `#E6E3DC`          | Inputs, palette, menus           |
+| `surface-2`   | `#121842`               | `#DEDBD3`          | Hover / active row               |
+| `line`        | `rgba(255,255,255,.12)` | `rgba(0,0,0,.14)`  | Hairlines                        |
+| `line-strong` | `rgba(255,255,255,.28)` | `rgba(0,0,0,.32)`  | Input borders                    |
+| `text`        | `#E8EAF6`               | `#14161F`          | Body, headings                   |
+| `muted`       | `#8A90B8`               | `#474A57`          | Secondary text, labels           |
+| `accent`      | `#8B93FF`               | `#343A96`          | Primary action, key data, focus  |
+| `accent-ink`  | `#050816`               | `#EEECE6`          | Text on an accent fill           |
+| `paper`       | `#E9E7E1`               | `#EEECE6`          | Data card (quote result, tables) |
+| `danger`      | `#FF9C9C`               | `#8E1B26`          | Errors                           |
+| `success`     | `#7FE0B5`               | `#1F5B3A`          | Met rules, healthy status        |
+| `warning`     | `#F2C46D`               | `#6B4A00`          | Caution                          |
 
-The light accent is the dark accent darkened to clear WCAG AA on both the
-dusty blue-grey background and white cards.
+Ink on the data card is the same in both themes: `paper-ink #14161F`,
+`paper-muted #474A57`, `paper-accent #343A96`. **No pure white anywhere.**
 
 ### Contrast (WCAG 2.x, measured)
 
-| Pair                          | Ratio  |
-| ----------------------------- | ------ |
-| Dark `text` on `bg`           | 16.7:1 |
-| Dark `muted` on `bg`          | 6.4:1  |
-| Dark `muted` on `surface`     | 6.0:1  |
-| Dark `accent` on `bg`         | 7.3:1  |
-| `accent-ink` on dark `accent` | 7.3:1  |
-| Light `text` on `bg`          | 11.8:1 |
-| Light `muted` on `bg`         | 5.3:1  |
-| Light `muted` on white        | 8.4:1  |
-| Light `danger` on `bg`        | 5.0:1  |
-| Light `success` on `bg`       | 5.3:1  |
-| Light `warning` on `bg`       | 5.4:1  |
-| Dark `danger` on `bg`         | 10.0:1 |
-| Light `accent` on `bg`        | 5.2:1  |
-| White on light `accent`       | 8.1:1  |
-| `paper-ink` on `paper`        | 18.6:1 |
+| Pair                                         | Ratio           |
+| -------------------------------------------- | --------------- |
+| Dark `text` on `bg` / `surface`              | 16.7 / 15.5     |
+| Dark `muted` on `bg` / `surface`             | 6.4 / 6.0       |
+| Dark `accent` on `bg` / `surface`            | 7.3 / 6.8       |
+| `accent-ink` on dark `accent`                | 7.3             |
+| Light `text` on `bg` / `surface`             | 12.4 / 14.1     |
+| Light `muted` on `bg` / `surface`            | 6.1 / 6.9       |
+| Light `accent` on `bg` / `surface`           | 6.6 / 7.5       |
+| `accent-ink` on light `accent`               | 8.1             |
+| Light `danger` / `success` / `warning` on bg | 6.2 / 5.5 / 5.6 |
+| `paper-ink` on dark / light `paper`          | 14.6 / 15.3     |
+| `paper-muted` / `paper-accent` on `paper`    | 7.1+ / 7.8+     |
 
-Body text and labels never drop below 4.5:1. Hairlines are decorative and are
-never the only signal of state.
-
-## Theme
-
-- **Default is dark.** The user can pick Dark, Light or System; System follows
-  `prefers-color-scheme` live.
-- The choice is persisted in `localStorage` (`polisgo.theme`) and applied by an
-  inline script in `index.html` before first paint, so there is no flash.
-- `color-scheme` is set per theme so native controls (date pickers, scrollbars)
-  match.
+Body text and labels never drop below 4.5:1 (most are above 6:1). Hairlines
+are decorative and never the only signal of state. The axe e2e suite checks
+Landing, Login and Register in both themes.
 
 ## Typography
 
-| Role     | Family                        | Notes                                              |
-| -------- | ----------------------------- | -------------------------------------------------- |
-| Headings | **Source Serif 4** (variable) | Optical sizing on. Italic for single-word accents. |
-| UI/body  | **Inter Tight** (variable)    | Tight grotesk; tracking `-0.01em` on large sizes.  |
-| Labels   | **JetBrains Mono** (variable) | Small, uppercase, letter-spacing `.08em`.          |
+| Role             | Family             | Notes                                         |
+| ---------------- | ------------------ | --------------------------------------------- |
+| Headlines, price | **Source Serif 4** | Optical sizing; italic for one-phrase accents |
+| Everything else  | **Inter Tight**    | Labels 14px medium, sentence case             |
 
-All three are self-hosted via `@fontsource-variable` and ship `cyrillic`,
-`cyrillic-ext` and `latin-ext` subsets (latin-ext covers `ə` U+0259, `ğ`, `ş`,
-`ı`). Numbers in data use `tabular-nums`.
+Numbers use tabular figures everywhere (`tabular` utility).
 
-Scale (rem): 0.6875 label · 0.875 small · 1 body · 1.25 lead · 2 h3 · 2.75 h2 ·
-clamp(2.75, 6vw, 5) display.
+**The scale — the only sizes that exist** (Tailwind's defaults are cleared,
+so nothing below 14px can be written):
 
-Heading accent pattern: one or two words in italic serif, coloured `accent`:
+| Token       | Size | Use                                   |
+| ----------- | ---- | ------------------------------------- |
+| `text-sm`   | 14   | Labels, captions, hints (minimum)     |
+| `text-base` | 16   | Body, inputs, tables                  |
+| `text-lg`   | 20   | Lead paragraphs, sub-headings         |
+| `text-xl`   | 28   | Card and modal titles                 |
+| `text-2xl`  | 40   | Section headings on small screens     |
+| `text-3xl`  | 64   | Section headings, the price           |
+| `text-4xl`  | 96   | Display headline, the price (desktop) |
+
+Heading pattern: serif lead plus an italic accent in `accent` —
 "Insurance, _priced in the open._"
+
+## Space, radius, lines
+
+- **8pt grid.** Spacing uses even Tailwind steps (2, 4, 6, 8, 12, 16, 24…).
+  Controls are 36 / 48 / 56px tall.
+- **Radius 2px** on every box. Full circles only for status dots.
+- **1px hairlines** for structure; **1.5px strokes** for icons and the diagram.
 
 ## Layout
 
-- **3-column grid** on desktop (`lg:grid-cols-3`), collapsing to one column.
-  Columns are separated by 1px hairlines (`divide-x divide-line` or borders),
-  never by gutters with shadows.
-- Sections are framed by full-width hairlines top and bottom. Max content width
-  `80rem` with the frame lines running edge to edge.
-- Whitespace is generous: section padding `py-20`+ on desktop.
-- Every block can carry a small mono label (`<Label>`) above it: index number +
-  name, e.g. `01 — CALCULATOR`.
+- 12-column grid inside `max-w-7xl`, 16 / 24 / 32px gutters by breakpoint.
+- Sections separated by full-bleed hairlines.
+- Asymmetric splits (5/7, 4/8, 3/9); never a centred hero.
 
-## Surfaces
+## Signature visual
 
-- `surface` panels sit on `bg` with a hairline border, radius `2px` (near-square:
-  institutional, not bubbly).
-- **Paper cards** (white, navy ink) present data in both themes — the premium
-  result, breakdown tables. They are the brightest thing on a dark page, so the
-  eye goes to the number.
-- No drop shadows except a single soft one on modals.
-
-## Line-art
-
-Thin (1px, `vector-effect: non-scaling-stroke`) wireframe drawings in `line` or
-`accent` at low opacity: coordinate grids, axes, radial plots. The calculator's
-"factor diagram" plots each pricing factor on its own axis around a neutral
-ring at ×1.00. No pictorial illustrations.
+The **factor-axes diagram**: one axis per pricing factor, a dashed ring at
+×1.00, the quote's factors plotted as a polygon that morphs as inputs change,
+with the price easing to its new value. On phones the drawing keeps its axes
+and polygon while the labels move to the breakdown table directly below (at
+~55% scale they would fall under 14px).
 
 ## Motion
 
-- Durations 120–240ms, `cubic-bezier(.2,.7,.2,1)`.
-- Used only for state changes: price tween, polygon morph, toast entry, modal.
-- `prefers-reduced-motion: reduce` disables transitions and tweens globally.
+- 150–480ms, `cubic-bezier(.2,.7,.2,1)`.
+- Scroll reveal (fade and 16px rise, once), hover colour, focus ring, polygon
+  morph, price tween, toast entry.
+- Content is visible by default; JS opts elements into the reveal only when
+  motion is allowed, so no-JS, reduced-motion and tests see everything.
 
 ## Components
 
-`Button` · `Input` · `Select` · `Card` (surface | paper) · `Badge` · `Tabs` ·
-`Table` · `Modal` · `Toast` · `Skeleton` · `EmptyState` · `ThemeToggle` ·
-`LanguageSwitcher` · `Label`.
+`Button` · `Input` · `PhoneInput` · `PasswordField` · `Select` · `Card` ·
+`Badge` · `Tabs` · `Table` · `Modal` · `Toast` · `Skeleton` · `EmptyState` ·
+`FormErrorSummary` · `ThemeToggle` · `LanguageSwitcher` · `CommandPalette` ·
+`Label`.
 
-Rules:
-
-- Visible focus ring on everything focusable: 2px `accent` outline, 2px offset.
-- Form fields always have a visible `<label>`; errors are linked with
-  `aria-describedby` and announced (`role="alert"`).
-- Icon-only buttons carry an `aria-label`.
-- Tabs follow the WAI-ARIA tabs pattern (arrow keys, roving tabindex).
-- Modal uses the native `<dialog>` for focus trapping and `Esc`.
-- Toasts live in a polite `aria-live` region.
+- A visible 2px accent focus ring on everything focusable.
+- Every field has a visible label; errors are linked with `aria-describedby`,
+  marked `aria-invalid`, and listed in a live summary on submit that moves
+  focus to the first invalid field.
+- Icon-only buttons carry an accessible name; where a control shows text
+  (e.g. "Ctrl K") that text is part of its name.
+- Tabs, combobox/listbox (palette) and disclosure (mobile menu, FAQ) follow
+  the WAI-ARIA patterns; modal and palette use native `<dialog>`.
 
 ## Voice
 
-Plain, specific, calm. "Indicative estimate" rather than "Get your best price!".
-Error messages say what happened and what to do, and show the server
-`traceId` as a reference when one exists.
+Plain, specific, calm. "Indicative estimate", not "Get your best price!".
+Errors say what to fix and show the server `traceId` when there is one.

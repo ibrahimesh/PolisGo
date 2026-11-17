@@ -1,14 +1,13 @@
 @import '@fontsource-variable/source-serif-4/opsz.css';
 @import '@fontsource-variable/source-serif-4/opsz-italic.css';
 @import '@fontsource-variable/inter-tight/index.css';
-@import '@fontsource-variable/jetbrains-mono/index.css';
 @import 'tailwindcss';
 
 /* Theme is driven by data-theme on <html>, not by the media query, so the
    user's explicit choice always wins (System mode resolves it in JS). */
 @custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
 
-/* ---- Design tokens (see DESIGN.md) ---- */
+/* ---- Colour tokens (see DESIGN.md for contrast measurements) ---- */
 :root,
 :root[data-theme='dark'] {
   color-scheme: dark;
@@ -25,23 +24,27 @@
   --pg-success: #7fe0b5;
   --pg-warning: #f2c46d;
   --pg-overlay: rgb(5 8 22 / 0.72);
+  /* Data card: warm ivory, the brightest object on navy without white glare. */
+  --pg-paper: #e9e7e1;
 }
 
+/* Warm stone. No pure white anywhere; every text pair is AA or better. */
 :root[data-theme='light'] {
   color-scheme: light;
-  --pg-bg: #cbcedb;
-  --pg-surface: #ffffff;
-  --pg-surface-2: #f1f2f7;
-  --pg-line: rgb(11 16 48 / 0.16);
-  --pg-line-strong: rgb(11 16 48 / 0.36);
-  --pg-text: #0b1030;
-  --pg-muted: #454b73;
-  --pg-accent: #3840b8;
-  --pg-accent-ink: #ffffff;
-  --pg-danger: #a3122a;
-  --pg-success: #0b5a3d;
-  --pg-warning: #6a4500;
-  --pg-overlay: rgb(11 16 48 / 0.45);
+  --pg-bg: #d9d6cf;
+  --pg-surface: #e6e3dc;
+  --pg-surface-2: #dedbd3;
+  --pg-line: rgb(0 0 0 / 0.14);
+  --pg-line-strong: rgb(0 0 0 / 0.32);
+  --pg-text: #14161f;
+  --pg-muted: #474a57;
+  --pg-accent: #343a96;
+  --pg-accent-ink: #eeece6;
+  --pg-danger: #8e1b26;
+  --pg-success: #1f5b3a;
+  --pg-warning: #6b4a00;
+  --pg-overlay: rgb(20 22 31 / 0.4);
+  --pg-paper: #eeece6;
 }
 
 @theme inline {
@@ -58,26 +61,39 @@
   --color-success: var(--pg-success);
   --color-warning: var(--pg-warning);
   --color-overlay: var(--pg-overlay);
+  --color-paper: var(--pg-paper);
 }
 
 @theme {
-  /* Paper cards are white on navy in both themes, so these are constants. */
-  --color-paper: #ffffff;
-  --color-paper-ink: #0b1030;
-  --color-paper-muted: #454b73;
-  --color-paper-accent: #3840b8;
-  --color-paper-line: rgb(11 16 48 / 0.14);
+  /* Ink on the data card is constant: the card is light in both themes. */
+  --color-paper-ink: #14161f;
+  --color-paper-muted: #474a57;
+  --color-paper-accent: #343a96;
+  --color-paper-line: rgb(20 22 31 / 0.14);
 
   --font-serif: 'Source Serif 4 Variable', 'Source Serif 4', Georgia, serif;
   --font-sans: 'Inter Tight Variable', 'Inter Tight', system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, monospace;
 
-  --text-label: 0.6875rem;
-  --text-label--line-height: 1rem;
-  --text-label--letter-spacing: 0.08em;
+  /* The only type sizes that exist (14/16/20/28/40/64/96). Clearing the
+     defaults makes anything smaller than 14px impossible to write. */
+  --text-*: initial;
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.25rem;
+  --text-base: 1rem;
+  --text-base--line-height: 1.5rem;
+  --text-lg: 1.25rem;
+  --text-lg--line-height: 1.75rem;
+  --text-xl: 1.75rem;
+  --text-xl--line-height: 2.25rem;
+  --text-2xl: 2.5rem;
+  --text-2xl--line-height: 2.875rem;
+  --text-3xl: 4rem;
+  --text-3xl--line-height: 4.25rem;
+  --text-4xl: 6rem;
+  --text-4xl--line-height: 6rem;
 
   --radius-sm: 2px;
-  --radius: 3px;
+  --radius: 2px;
 
   --ease-institutional: cubic-bezier(0.2, 0.7, 0.2, 1);
 
@@ -86,7 +102,7 @@
   @keyframes toast-in {
     from {
       opacity: 0;
-      transform: translateY(6px);
+      transform: translateY(8px);
     }
     to {
       opacity: 1;
@@ -103,7 +119,7 @@
   }
 
   body {
-    @apply bg-bg font-sans text-text antialiased;
+    @apply bg-bg font-sans text-base text-text antialiased;
     font-feature-settings: 'ss01', 'cv11';
   }
 
@@ -131,20 +147,24 @@
   }
 }
 
-@utility label-mono {
-  font-family: var(--font-mono);
-  font-size: var(--text-label);
-  line-height: var(--text-label--line-height);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-@utility hairline {
-  border-color: var(--pg-line);
-}
-
 @utility tabular {
   font-variant-numeric: tabular-nums;
+}
+
+/* Scroll reveal: content is visible by default (no-JS, reduced motion, tests);
+   JS adds data-reveal="pending" only when it is going to animate it in. */
+@utility reveal {
+  &[data-reveal='pending'] {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  &[data-reveal='shown'] {
+    opacity: 1;
+    transform: none;
+    transition:
+      opacity 480ms var(--ease-institutional),
+      transform 480ms var(--ease-institutional);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

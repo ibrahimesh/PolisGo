@@ -19,7 +19,10 @@ const SHOTS: { file: string; path: string; theme: Theme }[] = [
 ];
 
 async function settle(page: Page, path: string) {
-  if (path === '/') await waitForPremium(page);
+  if (path === '/') {
+    await waitForPremium(page);
+    await page.locator('#coverage table').waitFor();
+  }
   await page.evaluate(() => document.fonts.ready);
   // Let the price tween and toast-free UI come to rest.
   await page.waitForTimeout(400);
@@ -31,6 +34,9 @@ for (const size of SIZES) {
 
     for (const shot of SHOTS) {
       test(`${shot.file}-${size.label}`, async ({ page }) => {
+        // A full-page capture never scrolls, so the scroll reveal would leave
+        // lower sections blank; reduced motion shows everything at once.
+        await page.emulateMedia({ reducedMotion: 'reduce' });
         await usePreferences(page, { theme: shot.theme, lang: 'en' });
         await page.goto(shot.path);
         await settle(page, shot.path);

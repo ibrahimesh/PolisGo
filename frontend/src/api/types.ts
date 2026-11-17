@@ -56,6 +56,16 @@ export interface CreateStaffUserRequest {
 
 /* ---- Pricing ---- */
 
+// GET /api/policy-types — the product catalogue (seeded PolicyTypes table).
+export interface PolicyTypeResponse {
+  id: Guid;
+  code: string;
+  name: string;
+  description: string;
+  baseRate: number;
+  currency: string;
+}
+
 export interface CalculateQuoteRequest {
   policyTypeCode: PolicyTypeCode;
   engineCapacityCc: number;

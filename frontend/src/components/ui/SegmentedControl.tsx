@@ -42,7 +42,7 @@ export function SegmentedControl<T extends string>({
               lang={segment.lang}
               className={cx(
                 'relative grid cursor-pointer place-items-center border-r border-line transition-colors duration-150 last:border-r-0 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent',
-                size === 'sm' ? 'h-8 min-w-8 px-2' : 'h-11 min-w-11 px-4',
+                size === 'sm' ? 'h-9 min-w-9 px-3' : 'h-12 min-w-12 px-4',
                 checked ? 'bg-surface-2 text-text' : 'text-muted hover:text-text',
               )}
             >

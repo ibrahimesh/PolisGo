@@ -14,7 +14,7 @@ export function LanguageSwitcher() {
       segments={LANGUAGES.map((lng) => ({
         value: lng,
         // Each language names itself, in its own language, for screen readers.
-        label: <span className="label-mono">{lng}</span>,
+        label: <span className="text-sm font-medium">{lng.toUpperCase()}</span>,
         ariaLabel: t(`language.${lng}`),
         lang: lng,
       }))}

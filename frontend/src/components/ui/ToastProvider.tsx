@@ -101,10 +101,10 @@ function Toast({ item, onDismiss }: { item: ToastItem; onDismiss: (id: number) =
         {tone === 'success' ? <CheckIcon /> : <AlertIcon />}
       </span>
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-medium">{item.title}</p>
+        <p className="font-medium">{item.title}</p>
         {item.description && <p className="mt-1 text-sm text-muted">{item.description}</p>}
         {item.traceId && (
-          <p className="mt-2 label-mono break-all text-muted">
+          <p className="mt-2 text-sm break-all text-muted">
             {t('errors.reference')}: <span className="normal-case">{item.traceId}</span>
           </p>
         )}

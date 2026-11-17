@@ -17,6 +17,7 @@ import type {
   PayClaimRequest,
   PayPolicyResponse,
   PolicyResponse,
+  PolicyTypeResponse,
   PremiumBreakdown,
   RegisterRequest,
   RejectClaimRequest,
@@ -43,6 +44,11 @@ export const quotesApi = {
       signal,
       anonymous: true,
     }),
+};
+
+export const policyTypesApi = {
+  list: (signal?: Signal) =>
+    request<PolicyTypeResponse[]>('/api/policy-types', { signal, anonymous: true }),
 };
 
 export const vehiclesApi = {

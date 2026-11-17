@@ -23,6 +23,7 @@ test.describe('Auth', () => {
       await page.getByLabel('Date of birth').fill(user.birthDate);
       await page.getByLabel('Driving licence issued on').fill(user.drivingLicenseDate);
       await page.getByLabel('Password', { exact: true }).fill(user.password);
+      await page.getByLabel('Repeat password').fill(user.password);
 
       const response = page.waitForResponse((r) => r.url().endsWith('/api/auth/register'));
       await page.getByRole('button', { name: 'Create account' }).click();
