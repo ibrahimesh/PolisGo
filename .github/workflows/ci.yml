@@ -94,6 +94,41 @@ jobs:
             echo "- Source: \`$report\`"
           } >> "$GITHUB_STEP_SUMMARY"
 
+  frontend:
+    name: Frontend (lint, typecheck, test, build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 22 LTS
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install (clean, from lockfile)
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      # Unit/component tests only. The Playwright e2e suite needs the API and
+      # SQL Server running, so it stays local for now.
+      - name: Unit tests
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
   docker-build:
     name: Docker build
     needs: build-test
