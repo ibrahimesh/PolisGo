@@ -48,7 +48,7 @@ export function Modal({ open, onClose, title, children, footer }: ModalProps) {
       className="m-auto w-[min(36rem,calc(100vw-2rem))] rounded-sm border border-line bg-surface p-0 text-text shadow-[0_24px_64px_-24px_rgb(0_0_0/0.6)] backdrop:bg-overlay"
     >
       <div className="flex items-start justify-between gap-6 border-b border-line px-6 py-5">
-        <h2 id={titleId} className="text-2xl">
+        <h2 id={titleId} className="text-xl">
           {title}
         </h2>
         <button

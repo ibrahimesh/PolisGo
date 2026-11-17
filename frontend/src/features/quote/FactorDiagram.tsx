@@ -13,11 +13,12 @@ const LABEL_AT = SCALE_MAX + 0.24;
 const RINGS = [0.5, 1, 1.5] as const;
 const LINE_EM = 1.15;
 
-// Font sizes are SVG user units, so they scale with the drawing. Small
-// screens render the drawing at ~55% size, so they get larger units.
-const LABEL_CLASS =
-  'fill-paper-muted font-mono text-[11px] tracking-[0.08em] uppercase max-sm:text-[17px]';
-const VALUE_CLASS = 'fill-paper-ink font-mono text-[13px] tabular max-sm:text-[19px]';
+// Font sizes are SVG user units, scaled with the drawing: at its desktop
+// width (~512px for a 560-unit viewBox) 16/17 units render at ~14.5/15.5px.
+// On phones the drawing is ~55% size, which would put labels under 14px, so
+// they are hidden there; the breakdown table right below lists every factor.
+const LABEL_CLASS = 'fill-paper-muted font-sans text-[16px] font-medium max-sm:hidden';
+const VALUE_CLASS = 'fill-paper-ink font-sans text-[17px] tabular max-sm:hidden';
 
 function polar(value: number, index: number, count: number) {
   const angle = -Math.PI / 2 + (index * 2 * Math.PI) / count;
@@ -86,7 +87,7 @@ export function FactorDiagram({ breakdown }: { breakdown: PremiumBreakdown }) {
       <text
         x={(a.x + b.x) / 2 + 6}
         y={(a.y + b.y) / 2 - 6}
-        className="fill-paper-muted font-mono text-[10px] tracking-[0.08em] max-sm:text-[15px]"
+        className="fill-paper-muted font-sans text-[16px] max-sm:hidden"
       >
         {format.factor(1)}
       </text>

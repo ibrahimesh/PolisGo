@@ -78,7 +78,7 @@ export function QuoteCalculator() {
         </h3>
 
         <fieldset className="space-y-3">
-          <legend className="mb-2 label-mono text-muted">{t('calculator.product')}</legend>
+          <legend className="mb-2 text-sm font-medium text-muted">{t('calculator.product')}</legend>
           <div className="grid grid-cols-2 gap-px overflow-hidden rounded-sm border border-line bg-line">
             {POLICY_TYPE_CODES.map((code) => (
               <label
@@ -92,15 +92,13 @@ export function QuoteCalculator() {
                   {...register('policyTypeCode')}
                 />
                 <span className="flex items-center justify-between">
-                  <span className="font-serif text-xl">{t(`calculator.products.${code}`)}</span>
+                  <span className="font-serif text-lg">{t(`calculator.products.${code}`)}</span>
                   <span
                     aria-hidden="true"
                     className="size-2.5 rounded-full border border-line-strong group-has-checked:border-accent group-has-checked:bg-accent"
                   />
                 </span>
-                <span className="text-xs leading-snug text-muted">
-                  {t(`calculator.products.${code}Hint`)}
-                </span>
+                <span className="text-sm text-muted">{t(`calculator.products.${code}Hint`)}</span>
               </label>
             ))}
           </div>

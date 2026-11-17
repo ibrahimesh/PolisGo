@@ -12,7 +12,14 @@
     "register": "Open an account",
     "workspace": "Workspace",
     "signOut": "Sign out",
-    "settings": "Display settings"
+    "settings": "Display settings",
+    "home": "Home",
+    "pricing": "How pricing works",
+    "coverage": "Coverage",
+    "claims": "Claims",
+    "faq": "Questions",
+    "menu": "Open menu",
+    "closeMenu": "Close menu"
   },
   "theme": {
     "label": "Theme",
@@ -39,7 +46,9 @@
     "currency": "All amounts in Azerbaijani manat (AZN).",
     "legalLabel": "Notice",
     "legal": "Portfolio project. Not a licensed insurer; quotes are illustrative of the pricing engine.",
-    "copyright": "© {{year}} PolisGo"
+    "copyright": "© {{year}} PolisGo",
+    "product": "Product",
+    "account": "Account"
   },
   "landing": {
     "heroLabel": "Motor insurance · Azerbaijan",
@@ -300,5 +309,18 @@
   "forms": {
     "errorSummary_one": "1 field needs attention",
     "errorSummary_other": "{{count}} fields need attention"
+  },
+  "palette": {
+    "title": "Command palette",
+    "open": "Search and commands",
+    "placeholder": "Go to a page, change language or theme…",
+    "empty": "Nothing matches.",
+    "hint": "↑ ↓ to move · Enter to choose · Esc to close",
+    "groups": {
+      "navigation": "Go to",
+      "language": "Language",
+      "theme": "Theme",
+      "account": "Account"
+    }
   }
 }

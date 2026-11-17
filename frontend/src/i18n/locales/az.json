@@ -12,7 +12,14 @@
     "register": "Hesab aç",
     "workspace": "Kabinet",
     "signOut": "Çıxış",
-    "settings": "Görünüş ayarları"
+    "settings": "Görünüş ayarları",
+    "home": "Ana səhifə",
+    "pricing": "Qiymət necə hesablanır",
+    "coverage": "Təminat",
+    "claims": "Sığorta hadisələri",
+    "faq": "Suallar",
+    "menu": "Menyunu aç",
+    "closeMenu": "Menyunu bağla"
   },
   "theme": {
     "label": "Mövzu",
@@ -39,7 +46,9 @@
     "currency": "Bütün məbləğlər Azərbaycan manatı (AZN) ilədir.",
     "legalLabel": "Qeyd",
     "legal": "Portfolio layihəsi. Lisenziyalı sığortaçı deyil; hesablamalar tarif mühərrikinin işini nümayiş etdirir.",
-    "copyright": "© {{year}} PolisGo"
+    "copyright": "© {{year}} PolisGo",
+    "product": "Məhsul",
+    "account": "Hesab"
   },
   "landing": {
     "heroLabel": "Avtomobil sığortası · Azərbaycan",
@@ -300,5 +309,18 @@
   "forms": {
     "errorSummary_one": "{{count}} sahə düzəldilməlidir",
     "errorSummary_other": "{{count}} sahə düzəldilməlidir"
+  },
+  "palette": {
+    "title": "Əmrlər paneli",
+    "open": "Axtarış və əmrlər",
+    "placeholder": "Səhifəyə keçin, dili və ya mövzunu dəyişin…",
+    "empty": "Heç nə tapılmadı.",
+    "hint": "↑ ↓ seçim · Enter təsdiq · Esc bağla",
+    "groups": {
+      "navigation": "Keçid",
+      "language": "Dil",
+      "theme": "Mövzu",
+      "account": "Hesab"
+    }
   }
 }

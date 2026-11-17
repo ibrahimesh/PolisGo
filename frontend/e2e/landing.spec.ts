@@ -17,7 +17,7 @@ test.describe('Landing', () => {
     await chooseSegment(page, 'Light');
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
     const background = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
-    expect(background).toBe('rgb(203, 206, 219)');
+    expect(background).toBe('rgb(217, 214, 207)'); // warm stone #D9D6CF
 
     await page.reload();
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
@@ -31,7 +31,7 @@ test.describe('Landing', () => {
     await chooseSegment(page, 'Русский');
     await expect(h1).toHaveText('Страхование с открытой ценой.');
     await expect(page.locator('html')).toHaveAttribute('lang', 'ru');
-    await expect(page.getByRole('link', { name: 'Войти' })).toBeVisible();
+    await expect(page.getByRole('banner').getByRole('link', { name: 'Войти' })).toBeVisible();
 
     await chooseSegment(page, 'Azərbaycanca');
     await expect(h1).toHaveText('Sığorta, açıq qiymətlə.');

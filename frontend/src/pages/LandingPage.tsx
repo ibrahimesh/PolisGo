@@ -1,6 +1,5 @@
 import { useTranslation } from 'react-i18next';
 import { AccentHeading, Frame } from '../components/layout/Section';
-import { SurfaceLineArt } from '../components/layout/LineArt';
 import { ButtonLink } from '../components/ui/Button';
 import { buttonClasses } from '../components/ui/styles';
 import { ArrowRightIcon } from '../components/ui/icons';
@@ -25,7 +24,6 @@ export function LandingPage() {
               as="h1"
               id="hero-title"
               size="display"
-              label={t('landing.heroLabel')}
               lead={t('landing.heroTitleLead')}
               accent={t('landing.heroTitleAccent')}
             >
@@ -46,7 +44,6 @@ export function LandingPage() {
             aria-label={t('landing.factsLabel')}
             className="flex flex-col border-t border-line lg:border-t-0"
           >
-            <SurfaceLineArt className="h-48 w-full border-b border-line lg:h-auto lg:flex-1" />
             <dl className="divide-y divide-line">
               {FACTS.map((fact) => (
                 <div
@@ -70,7 +67,6 @@ export function LandingPage() {
             <div className="px-6 py-12 sm:px-8 lg:col-span-2 lg:py-16">
               <AccentHeading
                 id="calculator-title"
-                label={t('landing.calculatorLabel')}
                 lead={t('landing.calculatorTitleLead')}
                 accent={t('landing.calculatorTitleAccent')}
               />
@@ -88,7 +84,6 @@ export function LandingPage() {
           <div className="border-b border-line px-6 py-12 sm:px-8 lg:py-16">
             <AccentHeading
               id="method-title"
-              label={t('landing.methodLabel')}
               lead={t('landing.methodTitleLead')}
               accent={t('landing.methodTitleAccent')}
             />

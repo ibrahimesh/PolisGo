@@ -21,7 +21,7 @@ export function ErrorNotice({ error, title, overrides, action, className }: Erro
   return (
     <div
       role="alert"
-      className={cx('flex gap-3 rounded-sm border border-danger/40 p-4 text-sm', className)}
+      className={cx('flex gap-3 rounded-sm border border-danger/50 p-4', className)}
     >
       <span className="mt-0.5 text-danger">
         <AlertIcon />
@@ -30,7 +30,7 @@ export function ErrorNotice({ error, title, overrides, action, className }: Erro
         {title && <p className="font-medium">{title}</p>}
         <p className={title ? 'opacity-80' : undefined}>{t(messageKey)}</p>
         {traceId && (
-          <p className="pt-1 label-mono break-all opacity-70">
+          <p className="pt-1 text-sm break-all opacity-80">
             {t('errors.reference')}: <span className="normal-case">{traceId}</span>
           </p>
         )}

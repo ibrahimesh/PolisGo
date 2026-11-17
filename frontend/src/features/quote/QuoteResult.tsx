@@ -51,7 +51,7 @@ export function QuoteResult({
         <div className="flex items-center gap-2">
           {/* visibility, not an opacity fade: a half-faded label fails contrast,
               and hidden text must leave the accessibility tree too. */}
-          <span className={cx('label-mono text-paper-muted', !updating && 'invisible')}>
+          <span className={cx('text-sm text-paper-muted', !updating && 'invisible')}>
             {t('calculator.updating')}…
           </span>
           <Badge tone="paper">{productLabel}</Badge>
@@ -115,10 +115,10 @@ function ResultBody({
             {t('calculator.resultLabel')}: {format.amount(breakdown.premium)} {breakdown.currency}
           </p>
           <p aria-hidden="true" className="flex items-baseline gap-3">
-            <span className="font-serif text-6xl leading-none tracking-[-0.03em] tabular sm:text-7xl">
+            <span className="font-serif text-3xl leading-none tracking-[-0.03em] tabular sm:text-4xl">
               {format.amount(price)}
             </span>
-            <span className="label-mono text-paper-muted">{breakdown.currency}</span>
+            <span className="text-lg text-paper-muted">{breakdown.currency}</span>
           </p>
           <p className="mt-3 text-paper-muted">
             {t('calculator.resultFor', { count: termMonths })}
@@ -129,7 +129,7 @@ function ResultBody({
           {cap && (
             <div className="space-y-2">
               <Badge tone="paper">{t('calculator.capApplied')}</Badge>
-              <p className="text-xs text-paper-muted">
+              <p className="text-sm text-paper-muted">
                 {t('calculator.capHint', {
                   raw: format.factorPlain(cap.raw),
                   capped: format.factorPlain(cap.capped),
@@ -137,7 +137,7 @@ function ResultBody({
               </p>
             </div>
           )}
-          <p className="text-xs leading-relaxed text-paper-muted">{t('calculator.estimate')}</p>
+          <p className="text-sm text-paper-muted">{t('calculator.estimate')}</p>
           <button
             type="button"
             onClick={onExplain}
@@ -202,7 +202,7 @@ function BreakdownTable({ breakdown }: { breakdown: PremiumBreakdown }) {
           return (
             <Tr key={key}>
               <Th scope="row">{t(`calculator.factor.${key}`)}</Th>
-              <Td className="text-right font-mono">{format.factor(breakdown[key])}</Td>
+              <Td className="text-right tabular">{format.factor(breakdown[key])}</Td>
               <Td className="text-right text-paper-muted">
                 <span aria-hidden="true">{EFFECT_GLYPH[effect]} </span>
                 {t(`calculator.effect.${effect}`)}
@@ -214,7 +214,7 @@ function BreakdownTable({ breakdown }: { breakdown: PremiumBreakdown }) {
       <TFoot>
         <Tr className="border-t border-paper-ink/40">
           <Th scope="row">{t('calculator.factor.totalFactor')}</Th>
-          <Td className="text-right font-mono">{format.factor(breakdown.totalFactor)}</Td>
+          <Td className="text-right tabular">{format.factor(breakdown.totalFactor)}</Td>
           <Td />
         </Tr>
         <Tr>
@@ -245,7 +245,7 @@ function Formula({ breakdown }: { breakdown: PremiumBreakdown }) {
       <figcaption>
         <Label className="text-paper-muted">{t('calculator.formulaCaption')}</Label>
       </figcaption>
-      <p className="font-mono text-sm leading-7 break-words tabular">
+      <p className="text-lg leading-8 break-words tabular">
         {format.amount(breakdown.baseRate)}
         {terms.map((term, i) => (
           <span key={i}>
@@ -258,7 +258,7 @@ function Formula({ breakdown }: { breakdown: PremiumBreakdown }) {
           {format.amount(breakdown.premium)} {breakdown.currency}
         </strong>
       </p>
-      {cap && <p className="text-xs text-paper-muted">* {t('calculator.capApplied')}</p>}
+      {cap && <p className="text-sm text-paper-muted">* {t('calculator.capApplied')}</p>}
     </figure>
   );
 }

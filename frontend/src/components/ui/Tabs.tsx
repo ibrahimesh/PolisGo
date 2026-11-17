@@ -49,7 +49,7 @@ export function Tabs({ items, label, defaultTab, tone = 'surface', className }: 
       <div
         role="tablist"
         aria-label={label}
-        className={cx('flex gap-6 border-b', paper ? 'border-paper-line' : 'border-line')}
+        className={cx('flex gap-8 border-b', paper ? 'border-paper-line' : 'border-line')}
       >
         {items.map((item, index) => {
           const selected = item.id === active;
@@ -69,7 +69,7 @@ export function Tabs({ items, label, defaultTab, tone = 'surface', className }: 
               onClick={() => setActive(item.id)}
               onKeyDown={(event) => onKeyDown(event, index)}
               className={cx(
-                '-mb-px border-b py-3 label-mono transition-colors duration-150',
+                '-mb-px border-b py-3 text-sm font-medium transition-colors duration-150',
                 selected
                   ? paper
                     ? 'border-paper-ink text-paper-ink'
@@ -92,7 +92,7 @@ export function Tabs({ items, label, defaultTab, tone = 'surface', className }: 
           aria-labelledby={`${baseId}-tab-${item.id}`}
           hidden={item.id !== active}
           tabIndex={0}
-          className="pt-5"
+          className="pt-6"
         >
           {item.content}
         </div>

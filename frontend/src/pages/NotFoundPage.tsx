@@ -1,18 +1,22 @@
 import { useTranslation } from 'react-i18next';
-import { FramesLineArt } from '../components/layout/LineArt';
-import { AccentHeading, Frame } from '../components/layout/Section';
+import { AccentHeading } from '../components/layout/Section';
 import { ButtonLink } from '../components/ui/Button';
 
 export function NotFoundPage() {
   const { t } = useTranslation();
   return (
-    <Frame>
-      <div className="grid min-h-[60dvh] items-center lg:grid-cols-3 lg:divide-x lg:divide-line">
-        <div className="space-y-8 px-6 py-20 sm:px-8 lg:col-span-2">
+    <div className="border-b border-line">
+      <div className="mx-auto grid max-w-7xl gap-8 px-4 py-24 sm:px-6 lg:grid-cols-12 lg:px-8 lg:py-32">
+        <p
+          className="font-serif text-3xl text-muted tabular lg:col-span-3 lg:text-4xl"
+          aria-hidden="true"
+        >
+          404
+        </p>
+        <div className="space-y-8 lg:col-span-8 lg:col-start-5">
           <AccentHeading
             as="h1"
-            size="display"
-            label={t('notFound.label')}
+            size="section"
             lead={t('notFound.titleLead')}
             accent={t('notFound.titleAccent')}
           >
@@ -22,10 +26,7 @@ export function NotFoundPage() {
             {t('notFound.home')}
           </ButtonLink>
         </div>
-        <div className="hidden h-full items-center justify-center p-12 lg:flex">
-          <FramesLineArt className="w-full max-w-60" />
-        </div>
       </div>
-    </Frame>
+    </div>
   );
 }

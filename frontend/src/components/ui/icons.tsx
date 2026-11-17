@@ -1,6 +1,6 @@
 import type { SVGProps } from 'react';
 
-// Hairline icon set drawn for PolisGo: 16px grid, 1.25 stroke, no fills.
+// Line icons drawn for PolisGo: 16px grid, 1.5 stroke, no fills.
 function Icon(props: SVGProps<SVGSVGElement>) {
   return (
     <svg
@@ -9,7 +9,7 @@ function Icon(props: SVGProps<SVGSVGElement>) {
       height="16"
       fill="none"
       stroke="currentColor"
-      strokeWidth="1.25"
+      strokeWidth="1.5"
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"
@@ -73,5 +73,30 @@ export const AlertIcon = () => (
 export const CheckIcon = () => (
   <Icon>
     <path d="M3 8.5l3 3 7-7" />
+  </Icon>
+);
+
+export const DashIcon = () => (
+  <Icon>
+    <path d="M4 8h8" />
+  </Icon>
+);
+
+export const MenuIcon = () => (
+  <Icon>
+    <path d="M2 4.5h12M2 8h12M2 11.5h12" />
+  </Icon>
+);
+
+export const SearchIcon = () => (
+  <Icon>
+    <circle cx="7" cy="7" r="4.5" />
+    <path d="M10.5 10.5 14 14" />
+  </Icon>
+);
+
+export const ChevronDownIcon = () => (
+  <Icon>
+    <path d="M4 6l4 4 4-4" />
   </Icon>
 );

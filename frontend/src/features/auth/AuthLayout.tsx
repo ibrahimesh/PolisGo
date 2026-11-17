@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
-import { FramesLineArt } from '../../components/layout/LineArt';
-import { AccentHeading, Frame } from '../../components/layout/Section';
+import { AccentHeading } from '../../components/layout/Section';
 
 interface AuthLayoutProps {
+  // Kept for the document outline; not rendered as an eyebrow label.
   label: string;
   lead: string;
   accent: string;
@@ -11,23 +11,24 @@ interface AuthLayoutProps {
   children: ReactNode;
 }
 
-export function AuthLayout({ label, lead, accent, intro, footer, children }: AuthLayoutProps) {
+// Asymmetric editorial split: a large serif statement on the left, the form
+// on a hairline-ruled column to the right.
+export function AuthLayout({ lead, accent, intro, footer, children }: AuthLayoutProps) {
   return (
-    <Frame>
-      <div className="grid min-h-[calc(100dvh-4rem)] lg:grid-cols-3 lg:divide-x lg:divide-line">
-        <div className="flex flex-col justify-between gap-10 border-b border-line px-6 py-12 sm:px-8 lg:border-b-0 lg:py-16">
-          <AccentHeading as="h1" id="auth-title" label={label} lead={lead} accent={accent}>
-            <p className="max-w-sm leading-relaxed text-muted">{intro}</p>
+    <div className="border-b border-line">
+      <div className="mx-auto grid max-w-7xl gap-12 px-4 py-16 sm:px-6 lg:grid-cols-12 lg:gap-0 lg:px-8 lg:py-24">
+        <div className="lg:col-span-5 lg:pr-12">
+          <AccentHeading as="h1" id="auth-title" size="section" lead={lead} accent={accent}>
+            <p className="max-w-md text-lg text-muted">{intro}</p>
           </AccentHeading>
-          <FramesLineArt className="hidden size-40 lg:block" />
         </div>
-        <div className="px-6 py-12 sm:px-8 lg:col-span-2 lg:py-16">
-          <div className="max-w-lg space-y-8">
+        <div className="lg:col-span-6 lg:col-start-7 lg:border-l lg:border-line lg:pl-12">
+          <div className="max-w-xl space-y-8">
             {children}
-            <div className="border-t border-line pt-6 text-sm text-muted">{footer}</div>
+            <div className="border-t border-line pt-6 text-muted">{footer}</div>
           </div>
         </div>
       </div>
-    </Frame>
+    </div>
   );
 }

@@ -4,10 +4,11 @@ import { cx } from './cx';
 interface LabelProps {
   children: ReactNode;
   className?: string;
-  as?: 'span' | 'p' | 'div';
+  as?: 'span' | 'p' | 'div' | 'dt';
 }
 
-// Small uppercase mono label — the "caption" voice of the design system.
+// Sentence-case caption: 14px, medium weight, muted. Replaces the v1 uppercase
+// monospace labels, which read as decoration rather than information.
 export function Label({ children, className, as: Tag = 'span' }: LabelProps) {
-  return <Tag className={cx('label-mono text-muted', className)}>{children}</Tag>;
+  return <Tag className={cx('text-sm font-medium text-muted', className)}>{children}</Tag>;
 }

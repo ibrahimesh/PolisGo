@@ -7,7 +7,7 @@ import { cx } from './cx';
 export function Table({ className, ...rest }: HTMLAttributes<HTMLTableElement>) {
   return (
     <div className="w-full overflow-x-auto">
-      <table className={cx('w-full border-collapse text-sm tabular', className)} {...rest} />
+      <table className={cx('w-full border-collapse text-base tabular', className)} {...rest} />
     </div>
   );
 }
@@ -39,8 +39,8 @@ export function Th({ className, scope = 'col', ...rest }: ThHTMLAttributes<HTMLT
       scope={scope}
       className={cx(
         scope === 'row'
-          ? 'py-3 pr-4 text-left text-sm font-normal'
-          : 'py-2.5 pr-4 text-left label-mono font-normal opacity-75',
+          ? 'py-3 pr-4 text-left font-normal'
+          : 'py-3 pr-4 text-left text-sm font-medium opacity-80',
         className,
       )}
       {...rest}
