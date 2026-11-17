@@ -15,6 +15,10 @@ public class ClaimStatusHistoryConfiguration : IEntityTypeConfiguration<ClaimSta
         builder.Property(h => h.FromStatus).HasConversion<string>().HasMaxLength(16).IsRequired(false);
         builder.Property(h => h.ToStatus).HasConversion<string>().HasMaxLength(16).IsRequired();
 
+        // Resolution-time stats seek decisions by ToStatus, then group by
+        // claim and take MIN(ChangedAt): this index covers the whole lookup.
+        builder.HasIndex(h => new { h.ToStatus, h.ClaimId, h.ChangedAt });
+
         // Cascade with the parent claim: audit trail dies with the claim.
         builder.HasOne(h => h.Claim)
             .WithMany(c => c.StatusHistory)

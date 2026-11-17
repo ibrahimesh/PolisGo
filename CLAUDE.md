@@ -23,6 +23,38 @@ every change in this repo.
 - **`async` everywhere** for I/O. Return `Task<T>` / `Task<IActionResult>`.
 - **DTOs for all API input/output.** Never expose domain entities through
   controllers — entities are internal, DTOs are the contract.
+- **Authorization has two layers.** `[Authorize(Roles = ...)]` on the
+  controller decides who may call an endpoint (wrong role → 403). Inside the
+  service, `PolicyAccess` / `ClaimAccess` decide which rows a caller sees; a
+  row outside that scope is a 404, never a 403, so existence isn't leaked.
+  Any new endpoint that returns policies or claims must go through them.
+- **Lists are paged** with `PagedResult<T>`; `pageSize` is clamped to 1–50.
+- **Errors** are ProblemDetails with `traceId`, written only by
+  `ExceptionHandlingMiddleware` — throw `ValidationException`,
+  `NotFoundException`, `ConflictException`; no try/catch in controllers.
+- **Swagger:** XML `<summary>` and `<response>` docs plus
+  `[ProducesResponseType]` for every status an endpoint can return.
+
+### Endpoints
+
+| Method | Route | Access |
+| ------ | ----- | ------ |
+| POST | `/api/auth/register` · `/api/auth/login` | Anonymous |
+| GET | `/api/auth/me` | Any signed-in user |
+| POST | `/api/users/staff` | Admin |
+| POST | `/api/quotes/calculate` | Anonymous |
+| GET | `/api/policy-types` | Anonymous (public cache 5 min) |
+| GET, POST | `/api/vehicles` | Signed in; Clients see/create only their own |
+| GET | `/api/policies` · `/api/policies/{id}` | Signed in, scoped by `PolicyAccess` |
+| POST | `/api/policies` · `/api/policies/{id}/pay` | Client, Agent, Admin |
+| POST | `/api/policies/{id}/cancel` | Signed in, scoped by `PolicyAccess` |
+| GET | `/api/claims` · `/{id}` · `/{id}/history` · `/{id}/documents/{docId}` | Signed in, scoped by `ClaimAccess` |
+| POST | `/api/claims` | Client, Agent, Admin |
+| POST | `/api/claims/{id}/documents` | Signed in, scoped by `ClaimAccess` |
+| POST | `/api/claims/{id}/review` · `/approve` · `/reject` · `/pay` | Adjuster, Admin |
+| GET | `/api/customers` (search, sort, paged) · `/api/customers/{id}` | Admin, Agent, Adjuster; nested policies/claims scoped as above |
+| GET | `/api/admin/stats` | Admin (cached 60 s) |
+| GET | `/health` | Anonymous |
 
 ## Persistence
 
@@ -33,6 +65,14 @@ every change in this repo.
 - **Money is `decimal(18,2)`**, currency is **AZN** (Azerbaijani manat).
 - **Primary keys are `Guid`**.
 - **Enums stored as strings** in the database for readability in SQL tools.
+- **Reads:** `AsNoTracking()`, project to DTOs, aggregate in SQL
+  (`GroupBy`/`Count`/`Sum`), a fixed number of queries per request — no N+1.
+- **Stay provider-portable:** tests run on SQLite, production on SQL Server.
+  Avoid `EF.Functions` that exist on only one provider and `DateTime`
+  subtraction in queries (it silently runs client-side); see
+  `AdminStatsService` for a portable date-difference pattern.
+- **Index what new queries filter, group or sort on**, in the entity's
+  configuration, shipped with a migration in the same commit.
 
 ## Code style
 
@@ -51,8 +91,22 @@ every change in this repo.
 ## Migrations
 
 - Startup project: `PolisGo.Api`. Migrations project: `PolisGo.Infrastructure`.
-- Command pattern:
-  `dotnet ef migrations add <Name> -p src/PolisGo.Infrastructure -s src/PolisGo.Api`
+- Command pattern (Development supplies the connection string; `-o` keeps
+  migrations next to the existing ones):
+  `ASPNETCORE_ENVIRONMENT=Development dotnet ef migrations add <Name> -p src/PolisGo.Infrastructure -s src/PolisGo.Api -o Persistence/Migrations`
+- Docker applies pending migrations on startup
+  (`Database__ApplyMigrationsOnStartup`); check the API log for
+  `Applying migration` after `docker compose up --build`.
+
+## Testing (backend)
+
+- `dotnet test PolisGo.slnx` — everything runs in-process; no SQL Server needed.
+- **Service tests** use `SqliteTestDb` (real SQL semantics) and `TestData`
+  builders; pass a `FakeClock` to anything time-dependent.
+- **HTTP tests** use `ApiFactory` (`WebApplicationFactory` + SQLite) and
+  `ClientAs(role)` for a real JWT. Every endpoint gets one: anonymous → 401,
+  each wrong role → 403, happy path and 404 as ProblemDetails.
+- CI builds with `-warnaserror`; keep the build warning-free.
 
 ## Frontend
 
