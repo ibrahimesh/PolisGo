@@ -51,37 +51,120 @@
     "account": "Hesab"
   },
   "landing": {
-    "heroLabel": "Avtomobil sığortası · Azərbaycan",
     "heroTitleLead": "Sığorta,",
     "heroTitleAccent": "açıq qiymətlə.",
-    "heroLead": "PolisGo İcbari və KASKO polisləri rəsmiləşdirir, sığorta hadisələrini müraciətdən ödənişədək aparır və qiymətin hər amilini göstərir.",
+    "heroLead": "Azərbaycanda avtomobil sığortası. Aşağıda istənilən parametri dəyişin — PolisGo tarif mühərriki qiyməti dərhal yenidən hesablayır və hər amili göstərir.",
     "ctaCalculate": "Haqqı hesabla",
     "ctaRegister": "Hesab aç",
-    "factsLabel": "Qısaca",
-    "facts": {
-      "products": "Məhsullar",
-      "productsValue": "İcbari · KASKO",
-      "currency": "Valyuta",
-      "currencyValue": "AZN",
-      "roles": "Rollar",
-      "rolesValue": "Müştəri · Agent · Ekspert · Admin",
-      "pricing": "Tarif",
-      "pricingValue": "6 amil, hədd ilə"
+    "calculatorTitle": "Sığorta haqqı kalkulyatoru",
+    "pricing": {
+      "titleLead": "Sığorta haqqı",
+      "titleAccent": "necə yaranır.",
+      "lead": "Bir baza tarifi, altı əmsal və ifrat qiymətlərə hədd. Polis rəsmiləşdirilərkən eyni hesab işləyir — yalnız təsdiqlənmiş məlumatlarla.",
+      "stepsLabel": "Hesablama ardıcıllıqla",
+      "steps": {
+        "base": {
+          "title": "Baza tarifi",
+          "body": "Hər məhsulun öz tarifi var: orta sürücünün bir illik sığortasının dəyəri."
+        },
+        "risk": {
+          "title": "Beş risk amili",
+          "body": "Mühərrikin həcmi, sürücünün yaşı, staj, avtomobilin yaşı və zərər tarixçəsi ×1,00-dan yuxarı və ya aşağı əmsal verir."
+        },
+        "cap": {
+          "title": "Risk həddi",
+          "body": "Beş risk əmsalı bir-birinə vurulur və nəticə ×0,50 ilə ×3,00 arasında saxlanılır — heç bir profil həddən artıq baha və ya pulsuz olmur."
+        },
+        "term": {
+          "title": "Müddət",
+          "body": "Qiymət aylara mütənasib bölünür. On iki aydan qısa müddətlərə inzibati xərclər üçün 10% əlavə olunur."
+        },
+        "rounding": {
+          "title": "Bir yuvarlaqlaşdırma",
+          "body": "Hesablama sona qədər tam dəqiqliklə aparılır, sonra haqq bir dəfə — qəpiyədək yuvarlaqlaşdırılır."
+        }
+      }
     },
-    "calculatorLabel": "01 — Kalkulyator",
-    "calculatorTitleLead": "Canlı hesablama,",
-    "calculatorTitleAccent": "amil-amil.",
-    "calculatorLead": "Hər dəyişikliyi PolisGo API dərhal hesablayır. Bu səhifədə heç nə imitasiya edilmir.",
-    "methodLabel": "02 — Metodika",
-    "methodTitleLead": "Sığorta haqqı",
-    "methodTitleAccent": "necə yaranır.",
-    "steps": {
-      "factorsTitle": "Altı amil",
-      "factorsBody": "Mühərrikin həcmi, sürücünün yaşı, sürücülük stajı, avtomobilin yaşı, zərər tarixçəsi və müddət — hər biri məhsulun baza tarifinə öz əmsalını verir.",
-      "capTitle": "Risk həddi",
-      "capBody": "Beş risk amili bir-birinə vurulur və nəticə ×0,50 ilə ×3,00 arasında saxlanılır — heç bir profil həddən artıq baha və ya pulsuz olmur.",
-      "issueTitle": "Rəsmiləşdirmədə yenidən hesablama",
-      "issueBody": "Hesablama təxminidir. Polis rəsmiləşdirilərkən API haqqı müştəri, avtomobil və zərərlər üzrə təsdiqlənmiş məlumatlarla yenidən hesablayır."
+    "coverage": {
+      "titleLead": "Hər polis",
+      "titleAccent": "nəyi əhatə edir.",
+      "lead": "Məhsullar və baza tarifləri birbaşa PolisGo API-dən gəlir.",
+      "caption": "Məhsullar üzrə təminat",
+      "rowHeader": "Təminat",
+      "fromRate": "baza tarifi {{amount}} {{currency}}-dən",
+      "mandatory": "Qanunla məcburidir",
+      "voluntary": "Könüllüdür",
+      "included": "Daxildir",
+      "notIncluded": "Daxil deyil",
+      "rows": {
+        "thirdPartyProperty": "Başqalarının avtomobilinə və əmlakına dəyən zərər",
+        "thirdPartyInjury": "Başqalarının sağlamlığına dəyən zərər",
+        "ownDamage": "Qəzada öz avtomobilinizə dəyən zərər",
+        "theft": "Oğurluq və oğurluq cəhdi",
+        "natural": "Yanğın, daşqın, dolu və digər təbii hadisələr",
+        "glass": "Ön şüşə və şüşələr"
+      }
+    },
+    "claims": {
+      "titleLead": "Müraciətdən",
+      "titleAccent": "ödənişədək.",
+      "lead": "Dörd addım, hər biri işin tarixçəsində qeyd olunur — müraciətin hansı mərhələdə olduğunu həmişə bilirsiniz.",
+      "steps": {
+        "submit": {
+          "title": "Müraciət",
+          "body": "Hadisəni onlayn bildirin: tarix, nə baş verdi, məbləğ, foto və ya sənədlər."
+        },
+        "review": {
+          "title": "Baxış",
+          "body": "Ekspert işi götürür, sənədləri və polisi yoxlayır və sizi məlumatlandırır."
+        },
+        "decision": {
+          "title": "Qərar",
+          "body": "Tələb etdiyiniz məbləğ daxilində təsdiq və ya imtinanın yazılı səbəbi."
+        },
+        "payout": {
+          "title": "Ödəniş",
+          "body": "Təsdiqlənmiş müraciətlər ödənilir və ödənilmiş kimi qeyd olunur. Bütün tarixçə saxlanılır."
+        }
+      }
+    },
+    "numbers": {
+      "title": "Hər hesablamanın arxasındakı rəqəmlər",
+      "products": "seçim üçün məhsul",
+      "fromRate": "ən aşağı baza tarifi, {{currency}}",
+      "factors": "tarif amili",
+      "cap": "ümumi risk həddi",
+      "shortTerm": "12 aydan qısa müddətlər üçün"
+    },
+    "faq": {
+      "titleLead": "Suallar",
+      "titleAccent": "və cavablar.",
+      "items": {
+        "final": {
+          "q": "Bu səhifədəki qiymət yekundurmu?",
+          "a": "Xeyr, bu təxmini qiymətləndirmədir. Polis rəsmiləşdirilərkən haqq müştəri və avtomobil üzrə təsdiqlənmiş məlumatlarla yenidən hesablanır."
+        },
+        "differ": {
+          "q": "Yekun haqq niyə fərqlənə bilər?",
+          "a": "Rəsmiləşdirmədə mühərrik kalkulyatora yazılanları deyil, hesabınızdakı məlumatları, o cümlədən son üç ildə təsdiqlənmiş və ya ödənilmiş zərərləri istifadə edir."
+        },
+        "cap": {
+          "q": "Risk həddi nədir?",
+          "a": "Beş risk amili bir-birinə vurulur və nəticə ×0,50 ilə ×3,00 arasında saxlanılır. Bu, həm çox ehtiyatlı, həm də çox riskli sürücüləri ifrat qiymətlərdən qoruyur."
+        },
+        "term": {
+          "q": "Avtomobili bir ildən az müddətə sığortalamaq olarmı?",
+          "a": "Bəli, 1 aydan 12 aya qədər. Qiymət aylara mütənasibdir, bir ildən qısa müddətlərə 10% əlavə olunur."
+        },
+        "claim": {
+          "q": "Sığorta hadisəsini necə bildirim?",
+          "a": "Daxil olun, polisi seçin, hadisəni təsvir edin və foto və ya sənədləri yükləyin. Ekspert müraciətə baxır, hər mərhələ qeyd olunur."
+        },
+        "licensed": {
+          "q": "PolisGo lisenziyalı sığortaçıdırmı?",
+          "a": "Xeyr. PolisGo sığorta platformasını nümayiş etdirən portfolio layihəsidir; hesablamalar tarif mühərrikinin işini göstərir."
+        }
+      }
     }
   },
   "calculator": {

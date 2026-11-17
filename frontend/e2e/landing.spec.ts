@@ -65,7 +65,7 @@ test.describe('Landing', () => {
     await expect(page.getByRole('cell', { name: '×1.60' })).toBeVisible();
 
     // Switching product changes the base rate (MTPL 50 → CASCO 250 AZN).
-    await page.getByText('CASCO', { exact: true }).click();
+    await page.locator('#calculator').getByText('CASCO', { exact: true }).click();
     await expect(page.getByRole('cell', { name: '250.00 AZN' })).toBeVisible();
   });
 

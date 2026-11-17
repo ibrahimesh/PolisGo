@@ -6,7 +6,8 @@ import { cx } from './cx';
 
 export function Table({ className, ...rest }: HTMLAttributes<HTMLTableElement>) {
   return (
-    <div className="w-full overflow-x-auto">
+    // relative contains absolutely positioned sr-only cell text in the scroll clip.
+    <div className="relative w-full overflow-x-auto">
       <table className={cx('w-full border-collapse text-base tabular', className)} {...rest} />
     </div>
   );

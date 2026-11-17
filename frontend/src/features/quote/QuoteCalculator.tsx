@@ -9,7 +9,6 @@ import { POLICY_TYPE_CODES } from '../../api/types';
 import { Button } from '../../components/ui/Button';
 import { ErrorNotice } from '../../components/ui/ErrorNotice';
 import { Input } from '../../components/ui/Input';
-import { Label } from '../../components/ui/Label';
 import { Select } from '../../components/ui/Select';
 import { fieldMessageKey } from '../../i18n/apiErrors';
 import { useDebouncedValue } from '../../lib/hooks';
@@ -66,16 +65,16 @@ export function QuoteCalculator() {
   const product = values.policyTypeCode ?? DEFAULT_QUOTE.policyTypeCode;
 
   return (
-    <div className="grid lg:grid-cols-3 lg:divide-x lg:divide-line">
+    <div className="grid lg:grid-cols-12 lg:divide-x lg:divide-line">
       <form
         noValidate
         aria-labelledby="quote-form-title"
         onSubmit={(event) => event.preventDefault()}
-        className="space-y-7 border-b border-line px-6 py-10 sm:px-8 lg:border-b-0 lg:py-12"
+        className="space-y-8 border-b border-line px-4 py-12 sm:px-6 lg:col-span-4 lg:border-b-0 lg:px-8 lg:py-16"
       >
-        <h3 id="quote-form-title">
-          <Label>{t('calculator.formTitle')}</Label>
-        </h3>
+        <h2 id="quote-form-title" className="font-sans text-lg font-medium tracking-normal">
+          {t('calculator.formTitle')}
+        </h2>
 
         <fieldset className="space-y-3">
           <legend className="mb-2 text-sm font-medium text-muted">{t('calculator.product')}</legend>
@@ -161,7 +160,7 @@ export function QuoteCalculator() {
         </div>
       </form>
 
-      <div className="space-y-4 px-4 py-10 sm:px-8 lg:col-span-2 lg:py-12">
+      <div className="space-y-4 px-4 py-12 sm:px-6 lg:col-span-8 lg:px-8 lg:py-16">
         {showRequestError && (
           <ErrorNotice
             error={quote.error}

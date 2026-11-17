@@ -53,9 +53,7 @@ export function AccentHeading({
         id={id}
         className={cx(
           'tracking-[-0.02em]',
-          size === 'display'
-            ? 'text-2xl sm:text-3xl xl:text-4xl'
-            : 'text-xl sm:text-2xl lg:text-3xl',
+          size === 'display' ? 'text-2xl sm:text-3xl xl:text-4xl' : 'text-2xl lg:text-3xl',
         )}
       >
         {lead}
