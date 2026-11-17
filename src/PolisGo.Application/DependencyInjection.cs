@@ -1,10 +1,12 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using PolisGo.Application.Abstractions;
 using PolisGo.Application.Auth;
 using PolisGo.Application.Claims;
 using PolisGo.Application.Claims.Documents;
 using PolisGo.Application.Policies;
 using PolisGo.Application.Pricing;
+using PolisGo.Application.Statistics;
 using PolisGo.Application.Vehicles;
 
 namespace PolisGo.Application;
@@ -24,6 +26,12 @@ public static class DependencyInjection
         services.AddScoped<IPolicyService, PolicyService>();
         services.AddScoped<IClaimService, ClaimService>();
         services.AddScoped<IClaimDocumentService, ClaimDocumentService>();
+
+        // Injected clock so time-windowed queries (stats) are testable;
+        // TryAdd lets a host or test supply its own.
+        services.TryAddSingleton(TimeProvider.System);
+        services.AddMemoryCache();
+        services.AddScoped<IAdminStatsService, AdminStatsService>();
 
         return services;
     }

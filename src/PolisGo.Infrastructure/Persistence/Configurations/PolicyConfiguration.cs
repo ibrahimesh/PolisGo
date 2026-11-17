@@ -16,6 +16,11 @@ public class PolicyConfiguration : IEntityTypeConfiguration<Policy>
 
         builder.HasIndex(p => p.PolicyNumber).IsUnique();
 
+        // Admin stats: GROUP BY Status, and the monthly window on CreatedAt
+        // (which also serves the default newest-first list ordering).
+        builder.HasIndex(p => p.Status);
+        builder.HasIndex(p => p.CreatedAt);
+
         // Restrict: policies are financial records and must not be lost when a
         // related customer/vehicle/type is removed. The deleter must clean up
         // policies explicitly or archive the referenced record instead.

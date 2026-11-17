@@ -72,7 +72,11 @@ namespace PolisGo.Infrastructure.Persistence.Migrations
                     b.HasIndex("ClaimNumber")
                         .IsUnique();
 
+                    b.HasIndex("CreatedAt");
+
                     b.HasIndex("PolicyId");
+
+                    b.HasIndex("Status");
 
                     b.ToTable("Claims");
                 });
@@ -140,6 +144,8 @@ namespace PolisGo.Infrastructure.Persistence.Migrations
                     b.HasIndex("ChangedByUserId");
 
                     b.HasIndex("ClaimId");
+
+                    b.HasIndex("ToStatus", "ClaimId", "ChangedAt");
 
                     b.ToTable("ClaimStatusHistory");
                 });
@@ -262,12 +268,16 @@ namespace PolisGo.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("AgentId");
 
+                    b.HasIndex("CreatedAt");
+
                     b.HasIndex("CustomerId");
 
                     b.HasIndex("PolicyNumber")
                         .IsUnique();
 
                     b.HasIndex("PolicyTypeId");
+
+                    b.HasIndex("Status");
 
                     b.HasIndex("VehicleId");
 

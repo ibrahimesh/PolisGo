@@ -25,6 +25,10 @@ public class ClaimConfiguration : IEntityTypeConfiguration<Claim>
 
         builder.HasIndex(c => c.ClaimNumber).IsUnique();
 
+        // Admin stats: GROUP BY Status, and the monthly window on CreatedAt.
+        builder.HasIndex(c => c.Status);
+        builder.HasIndex(c => c.CreatedAt);
+
         // Restrict: claims hold legal/accounting weight; a policy owner must
         // resolve open claims before the policy is purgeable.
         builder.HasOne(c => c.Policy)
