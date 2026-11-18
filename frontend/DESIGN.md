@@ -60,23 +60,29 @@ Ink on the data card is the same in both themes: `paper-ink #14161F`,
 
 ### Contrast (WCAG 2.x, measured)
 
-| Pair                                         | Ratio           |
-| -------------------------------------------- | --------------- |
-| Dark `text` on `bg` / `surface`              | 16.7 / 15.5     |
-| Dark `muted` on `bg` / `surface`             | 6.4 / 6.0       |
-| Dark `accent` on `bg` / `surface`            | 7.3 / 6.8       |
-| `accent-ink` on dark `accent`                | 7.3             |
-| Light `text` on `bg` / `surface`             | 12.4 / 14.1     |
-| Light `muted` on `bg` / `surface`            | 6.1 / 6.9       |
-| Light `accent` on `bg` / `surface`           | 6.6 / 7.5       |
-| `accent-ink` on light `accent`               | 8.1             |
-| Light `danger` / `success` / `warning` on bg | 6.2 / 5.5 / 5.6 |
-| `paper-ink` on dark / light `paper`          | 14.6 / 15.3     |
-| `paper-muted` / `paper-accent` on `paper`    | 7.1+ / 7.8+     |
+| Pair                                         | Ratio              |
+| -------------------------------------------- | ------------------ |
+| Dark `text` on `bg` / `surface`              | 16.7 / 15.5        |
+| Dark `muted` on `bg` / `surface`             | 6.4 / 6.0          |
+| Dark `accent` on `bg` / `surface`            | 7.3 / 6.8          |
+| `accent-ink` on dark `accent`                | 7.3                |
+| Light `text` on `bg` / `surface`             | 12.4 / 14.1        |
+| Light `muted` on `bg` / `surface`            | 6.1 / 6.9          |
+| Light `accent` on `bg` / `surface`           | 6.6 / 7.5          |
+| `accent-ink` on light `accent`               | 8.1                |
+| Light `danger` / `success` / `warning` on bg | 6.2 / 5.5 / 5.6    |
+| `paper-ink` on dark / light `paper`          | 14.6 / 15.3        |
+| `paper-muted` / `paper-accent` on `paper`    | 7.1+ / 7.8+        |
+| Dark `text` / `muted` on `surface-2`         | 14.2 / 5.5         |
+| Light `text` / `muted` on `surface-2`        | 13.0 / 6.4         |
+| Dark `success` / `warning` / `danger` on bg  | 12.6 / 12.2 / 10.0 |
+| `danger` on dark / light `surface`           | 9.3 / 7.0          |
 
 Body text and labels never drop below 4.5:1 (most are above 6:1). Hairlines
 are decorative and never the only signal of state. The axe e2e suite checks
-Landing, Login and Register in both themes.
+Landing, Login, Register and every client cabinet page (with the error
+summary, notifications panel and user menu open) in both themes, at 1440px
+and 390px.
 
 ## Typography
 
@@ -137,7 +143,8 @@ and polygon while the labels move to the breakdown table directly below (at
 `Button` · `Input` · `PhoneInput` · `PasswordField` · `Select` · `Card` ·
 `Badge` · `Tabs` · `Table` · `Modal` · `Toast` · `Skeleton` · `EmptyState` ·
 `FormErrorSummary` · `ThemeToggle` · `LanguageSwitcher` · `CommandPalette` ·
-`Label`.
+`Label` · `PageHeader` · `PolicyStatusBadge` · `Stepper` · `QuoteResult`
+(full or compact).
 
 - A visible 2px accent focus ring on everything focusable.
 - Every field has a visible label; errors are linked with `aria-describedby`,
@@ -147,6 +154,53 @@ and polygon while the labels move to the breakdown table directly below (at
   (e.g. "Ctrl K") that text is part of its name.
 - Tabs, combobox/listbox (palette) and disclosure (mobile menu, FAQ) follow
   the WAI-ARIA patterns; modal and palette use native `<dialog>`.
+
+## Signed-in area (client cabinet)
+
+- **Shell.** A 16rem sidebar from `lg` up; below it a fixed bottom bar with
+  at most five sections (`sections.ts` decides which). The active item has an
+  accent rule (left edge in the sidebar, top edge in the bar) as well as a
+  fill, so state never rests on colour alone. The header holds the palette,
+  the reminders bell (Clients), language and theme (from `xl`; in the user
+  menu below that) and the user menu.
+- **Page scale.** `PageHeader`: a serif h1 at 40px (28px on phones) with an
+  optional italic accent, a muted lead and the page's actions. Section titles
+  are 28px. The 64–96px sizes stay on the landing page.
+- **Figures.** Key numbers (stats, prices) use the serif with tabular figures,
+  in a boxed grid drawn by 1px gaps over the line colour, so the hairlines
+  hold at one, two or four columns.
+- **Data card.** `Card variant="paper"` carries the facts of a policy or a
+  payment: ivory in both themes. Status badges on it switch to paper ink
+  (`onPaper`), because the theme's status colours lack contrast there.
+- **Status.** Badge plus a word: Active → success, Unpaid → warning,
+  Expired → neutral, Cancelled → danger. Unread reminders get a warning dot
+  and "Unread" for screen readers. The bell's count is an accent square
+  (`accent-ink` on `accent`), hidden from AT, with the count in the name.
+- **Choices** (product, vehicle) are bordered cards around real radios; the
+  checked card gets an accent border and `surface-2`, focus shows on the card.
+- **Stepper.** Five numbered steps in a hairline row; done steps show a check
+  and can be revisited, the current one is filled with the accent and
+  underlined. Phones get "Step 2 of 5 · Vehicle" and a five-segment bar.
+- **Popovers** (user menu, reminders) are disclosures, not menus: bordered
+  `surface`, no shadow, Escape returns focus to the button. The reminders
+  panel becomes a full-width sheet on phones.
+- **Live premium.** The wizard reuses the calculator's result card and factor
+  diagram in a compact variant (stacked, 64px price) sized for its column.
+- **Empty and loading.** Every list has a real empty state (and a separate
+  "nothing matches" state); skeletons mirror the loaded layout. Nothing is
+  mocked.
+
+## Certificate (PDF)
+
+A4, one page, drawn in the app's own type: Source Serif 4 for the masthead,
+title ("Certificate of _insurance._" with the italic accent) and the policy
+number and premium; Inter Tight for everything else. Ivory `paper`
+background, `paper-ink` text, `paper-muted` labels, `paper-accent` section
+headings and the wordmark, hairline rules (ink at 14%). The layout: masthead,
+title and product, policy number with status, a two-column grid (holder,
+vehicle, period, payment), then coverage beside the frozen premium breakdown,
+and a disclaimer that PolisGo is a portfolio project. Measured on the ivory:
+ink 15.3, muted 7.5, accent 8.1.
 
 ## Voice
 
