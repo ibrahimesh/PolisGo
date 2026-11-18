@@ -22,18 +22,22 @@ public class VehiclesController : ControllerBase
     /// </summary>
     /// <remarks>
     /// Clients always register for themselves (any <c>customerId</c> in the
-    /// body is ignored); staff must pass one. Plate and VIN are upper-cased;
-    /// the plate must be unique across the registry.
+    /// body is ignored); Agents and Admins must pass one, and an Agent only for
+    /// a customer assigned to them. Plate and VIN are upper-cased; the plate
+    /// must be unique across the registry.
     /// </remarks>
     /// <response code="201">The vehicle.</response>
     /// <response code="400">One or more fields are invalid (errors keyed by field).</response>
     /// <response code="401">No or invalid bearer token.</response>
-    /// <response code="404">Staff passed an unknown customer id.</response>
+    /// <response code="403">The caller is an Adjuster.</response>
+    /// <response code="404">Staff passed an unknown customer id, or one outside their scope.</response>
     /// <response code="409">The plate number is already registered.</response>
     [HttpPost]
+    [Authorize(Roles = "Client,Agent,Admin")]
     [ProducesResponseType<VehicleResponse>(StatusCodes.Status201Created)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
     public async Task<ActionResult<VehicleResponse>> Create(
@@ -48,7 +52,8 @@ public class VehiclesController : ControllerBase
     /// </summary>
     /// <remarks>
     /// Clients see only their own (the <c>customerId</c> filter is ignored for
-    /// them); staff may filter by customer.
+    /// them); staff see the vehicles of customers in their scope (as in
+    /// GET /api/customers) and may filter by customer.
     /// </remarks>
     /// <response code="200">The vehicles.</response>
     /// <response code="401">No or invalid bearer token.</response>

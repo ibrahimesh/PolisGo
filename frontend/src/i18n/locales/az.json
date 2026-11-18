@@ -305,14 +305,15 @@
     "sectionsLabel": "Bölmələr",
     "sections": {
       "overview": "İcmal",
-      "agent": "Agent masası",
-      "claims": "Zərərlərin tənzimlənməsi",
+      "claims": "Zərər növbəsi",
       "admin": "İdarəetmə",
       "policies": "Polislərim",
       "buy": "Polis al",
       "profile": "Profil və ayarlar",
       "help": "Kömək və suallar",
-      "myClaims": "Zərərlərim"
+      "myClaims": "Zərərlərim",
+      "customers": "Müştərilər",
+      "sales": "Satışlar"
     },
     "comingSoonTitle": "Bu bölmə plandakı növbəti addımdır",
     "comingSoonBody": "Bu rol üçün ekranlar hazır olduqdan sonra polislər, avtomobillər və sığorta hadisələri burada görünəcək.",
@@ -321,12 +322,13 @@
       "overview": "İcmal",
       "policies": "Polislər",
       "buy": "Al",
-      "agent": "Agent",
-      "claims": "Zərərlər",
+      "claims": "Növbə",
       "admin": "Admin",
       "profile": "Profil",
       "help": "Kömək",
-      "myClaims": "Zərərlər"
+      "myClaims": "Zərərlər",
+      "customers": "Müştərilər",
+      "sales": "Satışlar"
     }
   },
   "roles": {
@@ -377,7 +379,10 @@
     "fileRequired": "Yükləmək üçün fayl seçin.",
     "fileSize": "Fayl 5 MB-dan kiçik olmalıdır.",
     "fileType": "Yalnız JPG, PNG və ya PDF faylları qəbul edilir.",
-    "fileContent": "Faylın məzmunu onun növünə uyğun deyil."
+    "fileContent": "Faylın məzmunu onun növünə uyğun deyil.",
+    "concurrentUpdate": "Siz baxarkən bu qeydi başqası dəyişdi.",
+    "tooManyRows": "Bu, 5 000 sətirdən çoxdur. Filtrləri daraldıb yenidən ixrac edin.",
+    "agentNotFound": "Bu hesab agent deyil."
   },
   "validation": {
     "required": "Mütləq doldurulmalıdır.",
@@ -444,7 +449,13 @@
     "amountPrecision": "Ən çoxu iki onluq rəqəm olsun.",
     "claimAcceptRequired": "Bildirişi göndərməzdən əvvəl məlumatları təsdiqləyin.",
     "reasonTooLong": "Səbəb ən çoxu 500 simvol olsun.",
-    "commentTooLong": "Şərh ən çoxu 1000 simvol olsun."
+    "commentTooLong": "Şərh ən çoxu 1000 simvol olsun.",
+    "decisionRequired": "Təsdiq və ya rədd seçin.",
+    "approvedAmountRequired": "Təsdiq ediləcək məbləği yazın.",
+    "approvedAmountPositive": "Təsdiq edilən məbləğ sıfırdan böyük olmalıdır.",
+    "approvedAmountPrecision": "Vergüldən sonra ən çox iki rəqəm.",
+    "approvedAmountAboveClaimed": "Təsdiq edilən məbləğ tələb ediləndən çox ola bilməz.",
+    "rejectionReasonRequired": "Rədd səbəbini yazın — müştəri onu görəcək."
   },
   "common": {
     "loading": "Yüklənir",
@@ -1108,6 +1119,332 @@
       "Rejected": "{{number}} zərəri rədd edildi",
       "Paid": "{{number}} zərəri üzrə ödəniş edildi",
       "Withdrawn": "{{number}} zərəri geri götürüldü"
+    }
+  },
+  "staff": {
+    "export": {
+      "button": "CSV ixrac et",
+      "failed": "İxrac alınmadı"
+    },
+    "overview": {
+      "greeting": "Salam, {{name}}",
+      "lead": {
+        "Agent": "Müştəriləriniz və satışlarınız qısaca.",
+        "Adjuster": "Zərər növbəsində gözləyənlər və son qərarlarınız.",
+        "Admin": "Bütün PolisGo üzrə zərərlərin tənzimlənməsi və satışlar."
+      },
+      "claimsTitle": "Zərərlərin tənzimlənməsi",
+      "oldestWaiting_zero": "Növbədə ən çox gözləyən zərər bu gün bildirilib.",
+      "oldestWaiting_one": "Növbədə ən çox gözləyən zərər {{count}} gün əvvəl bildirilib.",
+      "oldestWaiting_other": "Növbədə ən çox gözləyən zərər {{count}} gün əvvəl bildirilib.",
+      "queueClear": "Növbədə zərər yoxdur.",
+      "openQueue": "Növbəni aç",
+      "openList": "siyahını aç",
+      "tiles": {
+        "waiting": "Baxılmağı gözləyir",
+        "inReview": "Baxılır",
+        "toPay": "Təsdiqlənib, ödənişə",
+        "decided": "30 gündə qərar"
+      },
+      "recentDecisions": "Son qərarlar",
+      "noDecisions": "Hələ qərar yoxdur.",
+      "salesTitle": "Satışlar",
+      "openCustomers": "Müştərilər",
+      "openSales": "Bütün satışlar",
+      "recentSales": "Son polislər",
+      "noSales": "Hələ satılmış polis yoxdur."
+    },
+    "queue": {
+      "title": "Zərər növbəsi",
+      "lead": "Ən çox gözləyən zərərləri götürün, öz baxdıqlarınız üzrə qərar verin.",
+      "viewsLabel": "Növbə bölmələri",
+      "views": {
+        "waiting": "Baxılmağı gözləyir",
+        "mine": "Məndə",
+        "toPay": "Ödənişə",
+        "all": "Bütün zərərlər"
+      },
+      "filters": "Növbədə axtarış və sıralama",
+      "search": "Axtarış",
+      "searchPlaceholder": "Zərər və ya polis nömrəsi, müştərinin adı",
+      "sort": {
+        "oldest": "Ən çox gözləyənlər",
+        "newest": "Əvvəlcə yenilər",
+        "amountHigh": "Məbləğ: çoxdan aza",
+        "amountLow": "Məbləğ: azdan çoxa",
+        "incidentLatest": "Hadisə: əvvəlcə sonuncular",
+        "number": "Zərər nömrəsi"
+      },
+      "caption": "Növbədəki zərərlər: müştəri, məbləğ, gözləmə müddəti və status",
+      "columns": {
+        "customer": "Müştəri",
+        "age": "Gözləyir"
+      },
+      "ageDays_zero": "Bu gün",
+      "ageDays_one": "{{count}} gün",
+      "ageDays_other": "{{count}} gün",
+      "overdue": "bir həftə və ya daha çox gözləyir",
+      "unassigned": "Hələ götürülməyib",
+      "noMatchTitle": "Heç nə tapılmadı",
+      "noMatchBody": "Sorğunu dəyişin və ya filtrləri sıfırlayın.",
+      "empty": {
+        "waiting": {
+          "title": "Növbə boşdur",
+          "body": "Müştərilər zərər bildirdikcə burada görünür."
+        },
+        "mine": {
+          "title": "Sizdə baxılan zərər yoxdur",
+          "body": "“Baxılmağı gözləyir” bölməsindən zərər götürün."
+        },
+        "toPay": {
+          "title": "Ödəniləcək zərər yoxdur",
+          "body": "Təsdiqlənmiş zərərlər ödənişi burada gözləyir."
+        },
+        "all": {
+          "title": "Hələ zərər yoxdur",
+          "body": "Müştərilər zərər bildirdikcə burada görünür."
+        }
+      }
+    },
+    "review": {
+      "back": "Növbəyə qayıt",
+      "notFoundTitle": "Bu zərər növbənizdə deyil",
+      "notFoundBody": "Onu başqa tənzimləyici götürmüş ola bilər və ya keçid səhvdir.",
+      "adjuster": "Tənzimləyici",
+      "context": "Müştəri və polis",
+      "customer": "Müştəri",
+      "contact": "Əlaqə",
+      "cover": "Sığorta müddəti",
+      "noDocuments": "Müştəri sənəd əlavə etməyib.",
+      "preview": "Bax",
+      "previewAlt": "Sənəd {{name}}",
+      "actor": {
+        "Client": "müştəri {{name}}",
+        "Agent": "agent {{name}}",
+        "Adjuster": "tənzimləyici {{name}}",
+        "Admin": "{{name}}, administrator"
+      },
+      "actions": {
+        "Review": "Baxışa götür",
+        "Approve": "Təsdiq et",
+        "Reject": "Rədd et",
+        "Pay": "Ödə",
+        "Withdraw": "Geri götür"
+      },
+      "decision": {
+        "title": "Qərar",
+        "reviewHelp": "Zərər sizə təhkim olunacaq və ümumi növbədən çıxacaq. Bundan sonra onun üzrə qərarı yalnız siz və ya administrator verə bilər.",
+        "startReview": "Baxışa götür",
+        "reviewToast": "Zərər sizin baxışınızdadır",
+        "outcome": "Qərar",
+        "approve": "Təsdiq et",
+        "reject": "Rədd et",
+        "approvedAmount": "Təsdiq ediləcək məbləğ",
+        "amountHint": "Tələb edilən {{amount}}-dan çox olmamaqla.",
+        "note": "Qeyd (istəyə bağlı)",
+        "noteHint": "Zərərin tarixçəsində saxlanılır və müştəriyə görünür.",
+        "reason": "Rədd səbəbi",
+        "reasonHint": "Mütləqdir. Müştəri onu zərər səhifəsində görəcək.",
+        "submit": "Qərarı qeyd et",
+        "submitApprove": "Zərəri təsdiq et",
+        "submitReject": "Zərəri rədd et",
+        "approvedToast": "{{amount}} təsdiq edildi",
+        "rejectedToast": "Zərər rədd edildi",
+        "payHelp": "{{amount}} ödəniş xidməti vasitəsilə müştəriyə köçürülür. Bunu burada geri qaytarmaq olmur.",
+        "pay": "{{amount}} ödə",
+        "paidToast": "Zərər ödənildi"
+      },
+      "unavailable": {
+        "title": "Hazırda mümkün deyil",
+        "AlreadyInReview": "Zərərə artıq baxılır.",
+        "StartReviewFirst": "Əvvəlcə zərəri baxışa götürün.",
+        "AssignedToAnother": "Bu zərərə başqa tənzimləyici baxır.",
+        "AlreadyDecided": "Zərər üzrə artıq qərar var.",
+        "NotApproved": "Yalnız təsdiqlənmiş zərərlər ödənilir.",
+        "AlreadyPaid": "Zərər artıq ödənilib.",
+        "Withdrawn": "Müştəri zərəri geri götürüb.",
+        "Closed": "Zərər bağlanıb."
+      },
+      "conflict": {
+        "title": "Siz baxarkən bu zərəri başqası dəyişdi",
+        "bodyEditable": "Ekranda son versiyadır. Qeydiniz saxlanılıb — zərəri yoxlayın və qərarı yenidən qeyd edin.",
+        "bodyClosed": "Ekranda son versiyadır və bu qərar artıq mümkün deyil. Qeydiniz aşağıda saxlanılıb, onu köçürə bilərsiniz.",
+        "keptNote": "Qeydiniz (göndərilməyib)"
+      }
+    },
+    "customers": {
+      "title": "Müştərilər",
+      "lead": "Sizə təhkim olunmuş müştərilər, onların polisləri və zərərləri.",
+      "filters": "Müştərilərdə axtarış və sıralama",
+      "search": "Axtarış",
+      "searchHint": "Ad, e-poçt və ya telefon rəqəmləri.",
+      "sort": {
+        "newest": "Əvvəlcə yenilər",
+        "nameAsc": "Ad: A–Z",
+        "nameDesc": "Ad: Z–A",
+        "email": "E-poçt",
+        "oldest": "Əvvəlcə köhnələr"
+      },
+      "results": "Müştərilər",
+      "count_one": "{{count}} müştəri",
+      "count_other": "{{count}} müştəri",
+      "caption": "Müştəriləriniz: əlaqə, polislər və zərərlər",
+      "columns": {
+        "name": "Ad",
+        "contact": "Əlaqə",
+        "policies": "Polislər (qüvvədə / hamısı)",
+        "claims": "Zərərlər",
+        "since": "Müştəridir"
+      },
+      "activeOfTotal": "{{active}} / {{total}}",
+      "cardSummary": "Polislər {{active}} / {{total}} · zərərlər {{claims}}",
+      "pagination": "Müştəri səhifələri",
+      "noMatchTitle": "Müştəri tapılmadı",
+      "noMatchBody": "Adın bir hissəsini, e-poçtu və ya telefonun bir neçə rəqəmini yazın.",
+      "emptyTitle": "Hələ müştəri yoxdur",
+      "emptyBody": "Müştəriləri sizə administrator təhkim edir — onlar burada görünəcək.",
+      "back": "Müştərilərə qayıt",
+      "notFoundTitle": "Bu müştəri siyahınızda yoxdur",
+      "notFoundBody": "O, başqa agentə təhkim olunmuş ola bilər və ya keçid səhvdir.",
+      "since": "{{date}} tarixindən müştəridir",
+      "profile": "Məlumatlar",
+      "phone": "Telefon",
+      "birthDate": "Doğum tarixi",
+      "licenceDate": "Sürücülük vəsiqəsinin verilmə tarixi",
+      "account": "Onlayn hesab",
+      "hasAccount": "Var",
+      "noAccount": "Yoxdur",
+      "agent": "Agent",
+      "noAgent": "Təhkim olunmayıb",
+      "vehicles": "Avtomobillər",
+      "noVehicles": "Avtomobil yoxdur.",
+      "policies": "Polislər",
+      "policiesScope": "Bu müştəriyə sizin satdığınız polislər.",
+      "noPolicies": "Hələ polis yoxdur.",
+      "claims": "Zərərlər",
+      "noClaims": "Bu polislər üzrə zərər yoxdur.",
+      "paidOut": "Ödənilib"
+    },
+    "sales": {
+      "title": "Satışlar",
+      "lead": "Sizin satdığınız polislər, onların haqqı və statusu.",
+      "summary": "Satış göstəriciləri",
+      "tiles": {
+        "written": "Yığılmış haqq",
+        "recent": "Son 30 gündə haqq",
+        "soldRecently_one": "{{count}} polis ödənilib",
+        "soldRecently_other": "{{count}} polis ödənilib",
+        "active": "Qüvvədə olan polislər",
+        "customers": "Müştərilər",
+        "openClaims_one": "{{count}} açıq zərər",
+        "openClaims_other": "{{count}} açıq zərər"
+      },
+      "filters": "Satışlarda axtarış, filtr və sıralama",
+      "search": "Axtarış",
+      "searchPlaceholder": "Polis nömrəsi, nişan və ya müştəri",
+      "listTitle": "Polislər",
+      "count_one": "{{count}} polis",
+      "count_other": "{{count}} polis",
+      "caption": "Sizin satdığınız polislər: müştəri, müddət, haqq və status",
+      "columns": {
+        "policy": "Polis",
+        "customer": "Müştəri",
+        "period": "Müddət",
+        "premium": "Haqq"
+      },
+      "pagination": "Polis səhifələri",
+      "noMatchTitle": "Polis tapılmadı",
+      "noMatchBody": "Sorğunu dəyişin və ya filtrləri sıfırlayın.",
+      "emptyTitle": "Hələ satış yoxdur",
+      "emptyBody": "Müştərilərinizə satdığınız polislər burada görünəcək."
+    },
+    "sell": {
+      "start": "Polis rəsmiləşdir",
+      "title": "Polis rəsmiləşdir",
+      "lead": "{{name}} üçün. Haqq müştərinin sistemdəki məlumatlarına görə hesablanır — onlayn alışda olduğu kimi.",
+      "back": "Müştəriyə qayıt",
+      "vehicle": "Avtomobil",
+      "noVehicles": "Hələ avtomobil yoxdur. Davam etmək üçün müştərinin avtomobilini əlavə edin.",
+      "addVehicle": "Avtomobil əlavə et",
+      "createDraft": "Polisi rəsmiləşdir",
+      "quoteWaiting": "Haqqı görmək üçün avtomobil, sığorta növü, başlama tarixi və müddət seçin.",
+      "quoteNote": "Müştərinin məlumatlarına görə hesablanıb: o, məhz bu haqqı ödəyəcək.",
+      "draftTitle": "{{number}} polisi ödənişə hazırdır",
+      "draftBody": "Polis ödənişdən sonra qüvvəyə minir. Ödənişi indi qəbul edə və ya polisi ödənilməmiş saxlaya bilərsiniz — müştəri onu başlama tarixinədək ödəyəcək.",
+      "takePayment": "{{amount}} ödənişi qəbul et",
+      "leaveDraft": "Ödənilməmiş saxla",
+      "paidToast": "Polis ödənildi və qüvvədədir",
+      "doneTitle": "{{number}} polisi qüvvədədir",
+      "doneBody": "{{name}} sığortalanıb. {{amount}} ödəniş {{reference}} nömrəsi ilə qeydə alınıb.",
+      "backToCustomer": "Müştəriyə qayıt",
+      "toSales": "Bütün satışlar"
+    },
+    "help": {
+      "lead": "Əməkdaş bölmələri necə işləyir: zərər növbəsi, qərarlar, müştəriləriniz və ixrac.",
+      "groups": {
+        "decisions": "Zərərlər və qərarlar",
+        "book": "Müştərilər və satışlar",
+        "exports": "İxrac",
+        "statuses": "Zərər statuslarının mənası"
+      },
+      "items": {
+        "queue": {
+          "q": "Hansı zərərləri görürəm?",
+          "a": "Hələ heç kimin götürmədiyi zərərlərin ümumi növbəsini və sizin götürdüyünüz zərərləri. Başqa tənzimləyicinin baxdığı zərər onundur, ona görə siyahınızda yoxdur."
+        },
+        "takeReview": {
+          "q": "Zərəri baxışa götürəndə nə olur?",
+          "a": "Zərər sizə təhkim olunur və ümumi növbədən çıxır. Bundan sonra onu yalnız siz və ya administrator təsdiq və ya rədd edə bilər."
+        },
+        "decide": {
+          "q": "Necə təsdiq və ya rədd edim?",
+          "a": "Zərəri “Məndə” bölməsindən açın, qərarı seçin və qeyd edin. Tələb edilən məbləği və ya daha azını, vergüldən sonra ən çox iki rəqəmlə təsdiq etmək olar."
+        },
+        "reason": {
+          "q": "Səbəb mütləqdirmi?",
+          "a": "Rədd üçün bəli: müştəri onu zərər səhifəsində görür. Təsdiq üçün qeyd istəyə bağlıdır və o da müştəriyə görünür."
+        },
+        "unavailable": {
+          "q": "Niyə əməliyyat mümkün deyil?",
+          "a": "Qərar paneli zərərin statusuna uyğundur: əvvəl baxışa götürmək, sonra təsdiq və ya rədd, sonra ödəniş. Hər mümkün olmayan addımın yanında səbəbi yazılıb, məsələn, “Əvvəlcə zərəri baxışa götürün”."
+        },
+        "conflict": {
+          "q": "Mən işləyərkən zərəri başqası dəyişsə nə olur?",
+          "a": "Qərarınız görmədiyiniz məlumatlara tətbiq edilmir. Səhifə son versiyanı yükləyir və qeydinizi saxlayır — yoxlayıb yenidən qərar verin."
+        },
+        "pay": {
+          "q": "Zərər nə vaxt ödənilir?",
+          "a": "Təsdiqdən sonra, zərər səhifəsindən. Təsdiq edilən məbləğ ödəniş xidməti ilə köçürülür; bu versiyada o nümayişdir, pul köçürülmür."
+        },
+        "book": {
+          "q": "Hansı müştərilər mənimdir?",
+          "a": "Administratorun sizə təhkim etdiyi müştərilər. Onların məlumatlarını, sizin satdığınız polisləri və bu polislər üzrə zərərləri görürsünüz — başqalarınınkını yox."
+        },
+        "sell": {
+          "q": "Müştəriyə polisi necə rəsmiləşdirim?",
+          "a": "Müştərini açın və “Polis rəsmiləşdir”i seçin. Haqq onun məlumatlarına görə, onlayn alışda olduğu kimi hesablanır. Ödənişi dərhal qəbul edin və ya polisi ödənilməmiş saxlayın."
+        },
+        "agentClaims": {
+          "q": "Müştərilərimin zərərləri üzrə qərar verə bilərəmmi?",
+          "a": "Xeyr, qərarları tənzimləyicilər verir; statusları müştəri səhifəsində görünür. Sizin satdığınız polis üzrə müştəri adından zərər bildirə bilərsiniz."
+        },
+        "export": {
+          "q": "CSV ixracına nə daxildir?",
+          "a": "Cari filtrlərə və sıralamaya uyğun bütün sətirlər, yalnız ekrandakı səhifə yox — 5 000 sətrədək."
+        },
+        "exportExcel": {
+          "q": "Excel Azərbaycan və rus hərflərini göstərəcəkmi?",
+          "a": "Bəli: fayl bayt sırası işarəsi ilə UTF-8-dədir. Dəyərlər vergüllə ayrılıb; Excel-iniz nöqtəli vergül gözləyirsə, faylı “Məlumat → Mətn/CSV-dən” ilə açın."
+        }
+      },
+      "statuses": {
+        "Submitted": "Müştəri bildirib, ümumi növbədə gözləyir.",
+        "UnderReview": "Tənzimləyici onu götürüb və qərar verir.",
+        "Approved": "Tələb ediləndən çox olmayan məbləğə təsdiqlənib; ödənişi gözləyir.",
+        "Rejected": "Rədd edilib, səbəbi müştəriyə görünür. Son.",
+        "Paid": "Təsdiq edilən məbləğ ödənilib. Son.",
+        "Withdrawn": "Müştəri qərardan əvvəl geri götürüb. Son."
+      }
     }
   }
 }

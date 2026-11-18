@@ -216,3 +216,16 @@ export const TrashIcon = () => (
     <path d="M2.5 4h11M6 4V2.5h4V4M4 4l.75 9.5h6.5L12 4M6.75 6.5v4.5M9.25 6.5v4.5" />
   </Icon>
 );
+
+export const UsersIcon = () => (
+  <Icon>
+    <circle cx="6" cy="5.5" r="2.25" />
+    <path d="M1.75 13.5c.4-2.4 2.1-3.75 4.25-3.75s3.85 1.35 4.25 3.75M10.5 3.4a2.25 2.25 0 0 1 0 4.2M12 9.9c1.25.5 2 1.7 2.25 3.6" />
+  </Icon>
+);
+
+export const ChartIcon = () => (
+  <Icon>
+    <path d="M2 2v12h12M5 11V8M8 11V5M11 11V7" />
+  </Icon>
+);

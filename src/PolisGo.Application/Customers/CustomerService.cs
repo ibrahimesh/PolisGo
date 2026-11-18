@@ -19,6 +19,7 @@ public class CustomerService : ICustomerService
     // Shorter digit runs would match almost every phone number.
     private const int MinPhoneDigits = 3;
     private const string LikeEscape = "\\";
+    private const string PhoneSeparators = " +-()";
 
     private readonly IApplicationDbContext _db;
     private readonly ICurrentUser _currentUser;
@@ -37,13 +38,16 @@ public class CustomerService : ICustomerService
         var page = Math.Max(1, query.Page);
         var pageSize = Math.Clamp(query.PageSize, 1, MaxPageSize);
 
-        var customers = ApplySearch(_db.Customers.AsNoTracking(), query.Search);
+        var customers = ApplySearch(
+            CustomerAccess.VisibleTo(_db.Customers.AsNoTracking(), _currentUser), query.Search);
         var totalCount = await customers.CountAsync(cancellationToken);
 
         // Counts are correlated subqueries in the same statement (no N+1),
         // filtered by the caller's usual policy/claim visibility.
         var visiblePolicies = PolicyAccess.VisibleTo(_db.Policies.AsNoTracking(), _currentUser);
         var visibleClaims = ClaimAccess.VisibleTo(_db.Claims.AsNoTracking(), _currentUser);
+        // Effective status: an Active policy past its end date is Expired.
+        var startOfToday = _clock.GetUtcNow().UtcDateTime.Date;
 
         var items = await ApplySort(customers, query.SortBy, query.SortDirection)
             .Skip((page - 1) * pageSize)
@@ -57,7 +61,8 @@ public class CustomerService : ICustomerService
                 c.UserId != null,
                 c.Vehicles.Count(),
                 visiblePolicies.Count(p => p.CustomerId == c.Id),
-                visiblePolicies.Count(p => p.CustomerId == c.Id && p.Status == PolicyStatus.Active),
+                visiblePolicies.Count(p => p.CustomerId == c.Id
+                    && p.Status == PolicyStatus.Active && p.EndDate >= startOfToday),
                 visibleClaims.Count(cl => cl.Policy.CustomerId == c.Id)))
             .ToListAsync(cancellationToken);
 
@@ -67,9 +72,13 @@ public class CustomerService : ICustomerService
     public async Task<CustomerDetailResponse> GetByIdAsync(
         Guid id, CancellationToken cancellationToken = default)
     {
-        var customer = await _db.Customers.AsNoTracking()
-            .FirstOrDefaultAsync(c => c.Id == id, cancellationToken)
+        // Outside the caller's book is a 404, the same as no such customer.
+        var row = await CustomerAccess.VisibleTo(_db.Customers.AsNoTracking(), _currentUser)
+            .Where(c => c.Id == id)
+            .Select(c => new { Customer = c, AgentName = c.Agent != null ? c.Agent.FullName : null })
+            .FirstOrDefaultAsync(cancellationToken)
             ?? throw new NotFoundException(nameof(Customer), id);
+        var customer = row.Customer;
 
         // One query per collection, each bounded to this customer.
         var vehicles = await _db.Vehicles.AsNoTracking()
@@ -122,10 +131,30 @@ public class CustomerService : ICustomerService
             DateOnly.FromDateTime(customer.DrivingLicenseDate),
             customer.CreatedAt,
             customer.UserId != null,
+            customer.AgentId,
+            row.AgentName,
             vehicles.Select(VehicleService.Map).ToList(),
             policies.Select(p => p.ToResponse(today)).ToList(),
             summary);
     }
+
+    public async Task AssignAgentAsync(
+        Guid customerId, AssignAgentRequest request, CancellationToken cancellationToken = default)
+    {
+        var customer = await _db.Customers.FirstOrDefaultAsync(c => c.Id == customerId, cancellationToken)
+            ?? throw new NotFoundException(nameof(Customer), customerId);
+
+        if (request.AgentId is { } agentId
+            && !await _db.Users.AnyAsync(u => u.Id == agentId && u.Role == UserRole.Agent, cancellationToken))
+        {
+            throw new ValidationException("agentId", AgentNotFound);
+        }
+
+        customer.AgentId = request.AgentId;
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    public const string AgentNotFound = "No agent with this id.";
 
     private static IQueryable<Customer> ApplySearch(IQueryable<Customer> customers, string? search)
     {
@@ -143,7 +172,11 @@ public class CustomerService : ICustomerService
         var pattern = $"%{EscapeLike(term)}%";
         var digits = new string(term.Where(char.IsAsciiDigit).ToArray());
 
-        if (digits.Length < MinPhoneDigits)
+        // Digits are compared as a phone only when the term is written like
+        // one. An email or a name with digits in it ("e2e.k3o4@...") would
+        // otherwise match every phone that happens to contain them.
+        var looksLikePhone = term.All(c => char.IsAsciiDigit(c) || PhoneSeparators.Contains(c));
+        if (!looksLikePhone || digits.Length < MinPhoneDigits)
         {
             return customers.Where(c =>
                 EF.Functions.Like(c.FullName, pattern, LikeEscape)

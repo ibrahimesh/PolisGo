@@ -25,9 +25,20 @@ every change in this repo.
   controllers — entities are internal, DTOs are the contract.
 - **Authorization has two layers.** `[Authorize(Roles = ...)]` on the
   controller decides who may call an endpoint (wrong role → 403). Inside the
-  service, `PolicyAccess` / `ClaimAccess` decide which rows a caller sees; a
-  row outside that scope is a 404, never a 403, so existence isn't leaked.
-  Any new endpoint that returns policies or claims must go through them.
+  service, `PolicyAccess` / `ClaimAccess` / `CustomerAccess` decide which
+  rows a caller sees; a row outside that scope is a 404, never a 403, so
+  existence isn't leaked. Any new endpoint that returns policies, claims or
+  customers must go through them. An agent's customers are those with
+  `Customer.AgentId` = the agent (an Admin assigns them); adjusters see a
+  customer only through a claim in their reach.
+- **Claim decisions take the `rowVersion`** the caller loaded; a stale one is
+  a 409 titled "Concurrent update" (`ConcurrencyConflictException`), which
+  the SPA tells apart from other 409s. The claim detail's `actions` list says
+  what the caller may do and why not (`ClaimActionBlock` codes): add a code
+  there and a translation in the same change.
+- **CSV exports** reuse the list's filter (`Filter(...)` in the service), are
+  capped at 5000 rows, and build cells only through `Csv.Text` /
+  `Csv.Number` / `Csv.Date` (formula-safe, UTF-8 with BOM).
 - **Lists are paged** with `PagedResult<T>`; `pageSize` is clamped to 1–50.
 - **Errors** are ProblemDetails with `traceId`, written only by
   `ExceptionHandlingMiddleware` — throw `ValidationException`,
@@ -48,15 +59,20 @@ every change in this repo.
 | POST | `/api/users/staff` | Admin |
 | POST | `/api/quotes/calculate` | Anonymous |
 | GET | `/api/policy-types` | Anonymous (public cache 5 min) |
-| GET, POST | `/api/vehicles` | Signed in; Clients see/create only their own |
+| GET | `/api/vehicles` | Signed in; Clients see only their own, staff those of customers in `CustomerAccess` |
+| POST | `/api/vehicles` | Client, Agent, Admin (an Agent only for their own customers) |
 | GET | `/api/policies` (status, type, search, sort, paged) · `/api/policies/{id}` (detail) | Signed in, scoped by `PolicyAccess` |
 | POST | `/api/policies/quote` · `/api/policies` · `/api/policies/{id}/pay` | Client, Agent, Admin |
 | POST | `/api/policies/{id}/cancel` | Signed in, scoped by `PolicyAccess` |
+| GET | `/api/policies/export` (list filters, CSV) | Agent, Admin; scoped by `PolicyAccess` |
 | GET | `/api/claims` (status, open, search, sort, paged) · `/{id}` · `/{id}/history` · `/{id}/documents/{docId}` | Signed in, scoped by `ClaimAccess` |
 | POST | `/api/claims` · `/api/claims/{id}/withdraw` | Client, Agent, Admin (withdraw scoped by `ClaimAccess`) |
 | POST | `/api/claims/{id}/documents` | Signed in, scoped by `ClaimAccess` |
-| POST | `/api/claims/{id}/review` · `/approve` · `/reject` · `/pay` | Adjuster, Admin |
-| GET | `/api/customers` (search, sort, paged) · `/api/customers/{id}` | Admin, Agent, Adjuster; nested policies/claims scoped as above |
+| POST | `/api/claims/{id}/review` · `/approve` · `/reject` · `/pay` (optional `rowVersion`) | Adjuster, Admin |
+| GET | `/api/claims/export` (list filters, CSV) | Adjuster, Admin; scoped by `ClaimAccess` |
+| GET | `/api/customers` (search, sort, paged) · `/api/customers/{id}` | Admin, Agent, Adjuster; rows by `CustomerAccess`, nested policies/claims scoped as above |
+| PUT | `/api/customers/{id}/agent` | Admin |
+| GET | `/api/staff/overview` | Agent, Adjuster, Admin (a block per desk) |
 | GET | `/api/admin/stats` | Admin (cached 60 s) |
 | GET | `/health` | Anonymous |
 
@@ -163,7 +179,11 @@ React Router, TanStack Query, React Hook Form + Zod, react-i18next.
   queries under the `['cabinet']` key prefix), `overview`, `policies`,
   `wizard` (purchase), `claims` (list, `wizard/`, detail, `upload/`),
   `reminders` (bell: reminders and claim updates), `profile`, `help`,
-  `vehicles`, `certificate` (PDF).
+  `vehicles`, `certificate` (PDF). Staff desks: `staff` (overview,
+  `queue/`, `review/` with the decision panel, `customers/`, `sales/`
+  with selling on a customer's behalf, CSV `ExportButton`); queries under
+  `staffKeys.all`, inside the same `['cabinet']` prefix. `/app`,
+  `/app/claims` and `/app/claims/:id` pick the client or staff page by role.
 - Every private query lives under `cabinetKeys.all`; a write invalidates
   that prefix (`useInvalidateCabinet`), and sign-out clears the cache.
 - `src/i18n` — setup, `locales/{en,ru,az}.json`, API error mapping, number
@@ -259,16 +279,21 @@ Run from `frontend/`:
   itself). Covers happy paths, negative form cases, server-400 mapping,
   the command palette, the mobile menu and axe in both themes, and the client
   cabinet (`cabinet-*.spec.ts`: purchase, certificate, renewal, account,
-  notifications, forbidden access, axe and 390px width). The `mobile`
-  project reruns the cabinet specs at 390×844. Arrange data through the API
+  notifications, forbidden access, axe and 390px width) and the staff desks
+  (`staff-*.spec.ts`: decisions, conflicts, exports, the agent's book,
+  forbidden pages, axe). The `mobile` project reruns `cabinet-*` and
+  `staff-*` at 390×844. Staff accounts come from `adminApi(page).createStaff`.
+  Run locally with `--workers=4` or fewer: more Chromium workers than that
+  crash on a laptop. Arrange data through the API
   (`registerSession`, `openSession`, `cabinetApi` in `e2e/helpers.ts`;
   no `use…` names there: ESLint's hooks rules cover `e2e/` too);
   test through the UI only what the test is about. Creates real users with
   `@polisgo.test` emails. Runs in CI (the `e2e` job) against a fresh
   `docker compose` stack. Adjuster steps use the dev seed admin
   (`E2E_ADMIN_EMAIL`/`E2E_ADMIN_PASSWORD`, or `SEED_ADMIN_*` from `../.env`).
-  `claims-api.spec.ts` checks length limits and uploads against SQL Server.
+  `claims-api.spec.ts` and `api-staff.spec.ts` check length limits, uploads,
+  decisions, concurrency and scoping against SQL Server.
 - `npm run e2e:screenshots` — regenerates `frontend/docs/screenshots`
-  (landing full page; cabinet pages first screen, dark and light, desktop and
-  mobile).
+  (landing full page; cabinet and staff pages first screen, dark and light,
+  desktop and mobile).
 - First-time e2e setup: `npx playwright install chromium`.

@@ -146,7 +146,8 @@ and polygon while the labels move to the breakdown table directly below (at
 `FormErrorSummary` · `ThemeToggle` · `LanguageSwitcher` · `CommandPalette` ·
 `Label` · `PageHeader` · `PolicyStatusBadge` · `ClaimStatusBadge` · `StepNav`
 (both wizards) · `QuoteResult` (full or compact) · `Textarea` (with a live
-count) · `Pagination` · `FileUploader`.
+count) · `Pagination` · `FileUploader` · `ExportButton` · `Modal`
+(`size="wide"` for document previews).
 
 - A visible 2px accent focus ring on everything focusable.
 - Every field has a visible label; errors are linked with `aria-describedby`,
@@ -205,6 +206,19 @@ count) · `Pagination` · `FileUploader`.
   thumbnail (or a file icon), name, size, a 4px accent progress bar with
   `role="progressbar"`, and its error in `danger` with the trace id.
   Rejected files are named with the reason; nothing is dropped silently.
+- **Staff desks.** Same shell; each role's sidebar, bottom bar and palette
+  list only its own sections. Queue views are bordered link chips (accent
+  border on the current one, `aria-current="page"`) with a muted count. A
+  claim waiting a week or more gets a `warning` badge with its age; the
+  word, not the colour, carries it.
+- **Decision panel.** A `surface` card beside the claim from `xl` (sticky),
+  right under the facts on smaller screens. Outcomes are choice cards around
+  real radios; the reason field turns required for a rejection. Every
+  unavailable action is listed under "Not available now" with its reason in
+  plain words. A concurrent change shows a `warning`-bordered notice with
+  the kept note in a read-only field; nothing is lost silently.
+- **Document preview.** The wide modal shows an image (`object-contain`,
+  70dvh) or a PDF in a titled iframe; the blob URL is revoked on close.
 - **Empty and loading.** Every list has a real empty state (and a separate
   "nothing matches" state); skeletons mirror the loaded layout. Nothing is
   mocked.

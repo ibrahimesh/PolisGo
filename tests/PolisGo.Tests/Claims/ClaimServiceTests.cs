@@ -265,7 +265,7 @@ public class ClaimServiceTests
     }
 
     [Fact]
-    public async Task Approve_AboveClaimedAmount_Throws()
+    public async Task Approve_AboveClaimedAmount_IsAFieldError()
     {
         using var fixture = new SqliteTestDb();
         var seed = SeedActiveClient(fixture.Db);
@@ -276,13 +276,15 @@ public class ClaimServiceTests
         await NewSut(fixture, new FakeCurrentUser { UserId = adjusterId, Role = UserRole.Adjuster })
             .ReviewAsync(submitted.Id, new ReviewClaimRequest(null));
 
-        await Assert.ThrowsAsync<InvalidStateTransitionException>(() =>
+        // A 400 on the field (the form shows it inline), not a state conflict.
+        var error = await Assert.ThrowsAsync<ValidationException>(() =>
             NewSut(fixture, new FakeCurrentUser { UserId = adjusterId, Role = UserRole.Adjuster })
                 .ApproveAsync(submitted.Id, new ApproveClaimRequest(600m, "too high")));
+        Assert.Equal([ClaimValidation.Messages.ApprovedAmountAboveClaimed], error.Errors["approvedAmount"]);
     }
 
     [Fact]
-    public async Task Reject_WithoutComment_Throws()
+    public async Task Reject_WithoutReason_IsAFieldError()
     {
         using var fixture = new SqliteTestDb();
         var seed = SeedActiveClient(fixture.Db);
@@ -292,9 +294,10 @@ public class ClaimServiceTests
         await NewSut(fixture, new FakeCurrentUser { UserId = adjusterId, Role = UserRole.Adjuster })
             .ReviewAsync(submitted.Id, new ReviewClaimRequest(null));
 
-        await Assert.ThrowsAsync<InvalidStateTransitionException>(() =>
+        var error = await Assert.ThrowsAsync<ValidationException>(() =>
             NewSut(fixture, new FakeCurrentUser { UserId = adjusterId, Role = UserRole.Adjuster })
-                .RejectAsync(submitted.Id, new RejectClaimRequest("")));
+                .RejectAsync(submitted.Id, new RejectClaimRequest("   ")));
+        Assert.Equal([ClaimValidation.Messages.RejectionReasonRequired], error.Errors["comment"]);
     }
 
     // ---------- Pay flow ----------

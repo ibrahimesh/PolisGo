@@ -305,14 +305,15 @@
     "sectionsLabel": "Sections",
     "sections": {
       "overview": "Overview",
-      "agent": "Agent desk",
-      "claims": "Claims desk",
+      "claims": "Claims queue",
       "admin": "Administration",
       "policies": "My policies",
       "buy": "Buy a policy",
       "profile": "Profile and settings",
       "help": "Help and questions",
-      "myClaims": "My claims"
+      "myClaims": "My claims",
+      "customers": "Customers",
+      "sales": "Sales"
     },
     "comingSoonTitle": "This area is next on the roadmap",
     "comingSoonBody": "Policies, vehicles and claims will appear here once the screens for this role are built.",
@@ -321,12 +322,13 @@
       "overview": "Overview",
       "policies": "Policies",
       "buy": "Buy",
-      "agent": "Agent",
-      "claims": "Claims",
+      "claims": "Queue",
       "admin": "Admin",
       "profile": "Profile",
       "help": "Help",
-      "myClaims": "Claims"
+      "myClaims": "Claims",
+      "customers": "Customers",
+      "sales": "Sales"
     }
   },
   "roles": {
@@ -377,7 +379,10 @@
     "fileRequired": "Choose a file to upload.",
     "fileSize": "Files must be under 5 MB.",
     "fileType": "Only JPG, PNG or PDF files are accepted.",
-    "fileContent": "The file's content doesn't match its type."
+    "fileContent": "The file's content doesn't match its type.",
+    "concurrentUpdate": "Someone else changed this record while you had it open.",
+    "tooManyRows": "That is more than 5,000 rows. Narrow the filters and export again.",
+    "agentNotFound": "That account is not an agent."
   },
   "validation": {
     "required": "Required.",
@@ -444,7 +449,13 @@
     "amountPrecision": "Use at most two decimal places.",
     "claimAcceptRequired": "Confirm the details before filing the claim.",
     "reasonTooLong": "Keep the reason to 500 characters.",
-    "commentTooLong": "Keep the comment to 1,000 characters."
+    "commentTooLong": "Keep the comment to 1,000 characters.",
+    "decisionRequired": "Choose approve or reject.",
+    "approvedAmountRequired": "Enter the amount to approve.",
+    "approvedAmountPositive": "The approved amount must be greater than zero.",
+    "approvedAmountPrecision": "Use at most two decimal places.",
+    "approvedAmountAboveClaimed": "The approved amount can’t be more than the claimed amount.",
+    "rejectionReasonRequired": "Give the reason for the rejection; the customer will read it."
   },
   "common": {
     "loading": "Loading",
@@ -1108,6 +1119,332 @@
       "Rejected": "Claim {{number}} was rejected",
       "Paid": "Claim {{number}} was paid out",
       "Withdrawn": "Claim {{number}} was withdrawn"
+    }
+  },
+  "staff": {
+    "export": {
+      "button": "Export CSV",
+      "failed": "The export didn’t work"
+    },
+    "overview": {
+      "greeting": "Hello, {{name}}",
+      "lead": {
+        "Agent": "Your customers and sales at a glance.",
+        "Adjuster": "What is waiting in the claims queue, and your latest decisions.",
+        "Admin": "The claims desk and sales across PolisGo."
+      },
+      "claimsTitle": "Claims desk",
+      "oldestWaiting_zero": "The oldest claim waiting for review was filed today.",
+      "oldestWaiting_one": "The oldest claim waiting for review was filed {{count}} day ago.",
+      "oldestWaiting_other": "The oldest claim waiting for review was filed {{count}} days ago.",
+      "queueClear": "No claims are waiting for review.",
+      "openQueue": "Open the queue",
+      "openList": "open the list",
+      "tiles": {
+        "waiting": "Waiting for review",
+        "inReview": "In review",
+        "toPay": "Approved, to pay out",
+        "decided": "Decided in 30 days"
+      },
+      "recentDecisions": "Recent decisions",
+      "noDecisions": "No decisions yet.",
+      "salesTitle": "Sales",
+      "openCustomers": "Customers",
+      "openSales": "All sales",
+      "recentSales": "Latest policies",
+      "noSales": "No policies sold yet."
+    },
+    "queue": {
+      "title": "Claims queue",
+      "lead": "Pick up the claims that have waited longest, and decide the ones in your review.",
+      "viewsLabel": "Queue views",
+      "views": {
+        "waiting": "Waiting for review",
+        "mine": "In my review",
+        "toPay": "Approved, to pay out",
+        "all": "All claims"
+      },
+      "filters": "Search and sort the queue",
+      "search": "Search",
+      "searchPlaceholder": "Claim or policy number, customer name",
+      "sort": {
+        "oldest": "Waiting longest first",
+        "newest": "Newest first",
+        "amountHigh": "Amount: high to low",
+        "amountLow": "Amount: low to high",
+        "incidentLatest": "Incident: latest first",
+        "number": "Claim number"
+      },
+      "caption": "Claims in the queue, with customer, amount, age and status",
+      "columns": {
+        "customer": "Customer",
+        "age": "Waiting"
+      },
+      "ageDays_zero": "Today",
+      "ageDays_one": "{{count}} day",
+      "ageDays_other": "{{count}} days",
+      "overdue": "waiting a week or more",
+      "unassigned": "Not taken yet",
+      "noMatchTitle": "No claims match",
+      "noMatchBody": "Try another search, or clear the filters.",
+      "empty": {
+        "waiting": {
+          "title": "Nothing is waiting",
+          "body": "New claims appear here as customers file them."
+        },
+        "mine": {
+          "title": "No claims in your review",
+          "body": "Take a claim from “Waiting for review” to start."
+        },
+        "toPay": {
+          "title": "Nothing to pay out",
+          "body": "Approved claims wait here until they are paid."
+        },
+        "all": {
+          "title": "No claims yet",
+          "body": "Claims appear here as customers file them."
+        }
+      }
+    },
+    "review": {
+      "back": "Back to the queue",
+      "notFoundTitle": "This claim isn’t in your queue",
+      "notFoundBody": "It may have been taken by another adjuster, or the link is wrong.",
+      "adjuster": "Adjuster",
+      "context": "Customer and policy",
+      "customer": "Customer",
+      "contact": "Contact",
+      "cover": "Cover",
+      "noDocuments": "The customer hasn’t added any documents.",
+      "preview": "View",
+      "previewAlt": "Document {{name}}",
+      "actor": {
+        "Client": "by the customer, {{name}}",
+        "Agent": "by agent {{name}}",
+        "Adjuster": "by adjuster {{name}}",
+        "Admin": "by {{name}}, administrator"
+      },
+      "actions": {
+        "Review": "Start the review",
+        "Approve": "Approve",
+        "Reject": "Reject",
+        "Pay": "Pay out",
+        "Withdraw": "Withdraw"
+      },
+      "decision": {
+        "title": "Decision",
+        "reviewHelp": "Taking the claim assigns it to you and moves it out of the shared queue. Only you (or an administrator) can then decide it.",
+        "startReview": "Start the review",
+        "reviewToast": "The claim is in your review",
+        "outcome": "Outcome",
+        "approve": "Approve",
+        "reject": "Reject",
+        "approvedAmount": "Amount to approve",
+        "amountHint": "Up to the claimed {{amount}}.",
+        "note": "Note (optional)",
+        "noteHint": "Kept in the claim history and shown to the customer.",
+        "reason": "Reason for the rejection",
+        "reasonHint": "Required. The customer reads it on their claim page.",
+        "submit": "Record the decision",
+        "submitApprove": "Approve the claim",
+        "submitReject": "Reject the claim",
+        "approvedToast": "Approved for {{amount}}",
+        "rejectedToast": "The claim is rejected",
+        "payHelp": "Sends {{amount}} to the customer through the payout service. This can’t be undone here.",
+        "pay": "Pay out {{amount}}",
+        "paidToast": "The claim is paid out"
+      },
+      "unavailable": {
+        "title": "Not available now",
+        "AlreadyInReview": "The claim is already in review.",
+        "StartReviewFirst": "Start the review first.",
+        "AssignedToAnother": "Another adjuster is reviewing this claim.",
+        "AlreadyDecided": "The claim already has a decision.",
+        "NotApproved": "Only approved claims are paid out.",
+        "AlreadyPaid": "The claim is already paid out.",
+        "Withdrawn": "The customer withdrew the claim.",
+        "Closed": "The claim is closed."
+      },
+      "conflict": {
+        "title": "Someone else changed this claim while you had it open",
+        "bodyEditable": "The latest version is now on screen. Your note is kept; check the claim and record the decision again.",
+        "bodyClosed": "The latest version is now on screen and it can’t take this decision any more. Your note is kept below so you can copy it.",
+        "keptNote": "Your note (not sent)"
+      }
+    },
+    "customers": {
+      "title": "Customers",
+      "lead": "The customers assigned to you, with their cover and claims.",
+      "filters": "Search and sort customers",
+      "search": "Search",
+      "searchHint": "Name, email or phone digits.",
+      "sort": {
+        "newest": "Newest first",
+        "nameAsc": "Name: A to Z",
+        "nameDesc": "Name: Z to A",
+        "email": "Email",
+        "oldest": "Oldest first"
+      },
+      "results": "Customers",
+      "count_one": "{{count}} customer",
+      "count_other": "{{count}} customers",
+      "caption": "Your customers, with contact details, policies and claims",
+      "columns": {
+        "name": "Name",
+        "contact": "Contact",
+        "policies": "Policies (active / all)",
+        "claims": "Claims",
+        "since": "Customer since"
+      },
+      "activeOfTotal": "{{active}} / {{total}}",
+      "cardSummary": "Policies {{active}} / {{total}} · claims {{claims}}",
+      "pagination": "Customer pages",
+      "noMatchTitle": "No customers match",
+      "noMatchBody": "Try part of the name, the email, or a few digits of the phone.",
+      "emptyTitle": "No customers yet",
+      "emptyBody": "An administrator assigns customers to you; they appear here.",
+      "back": "Back to customers",
+      "notFoundTitle": "This customer isn’t in your list",
+      "notFoundBody": "They may be assigned to another agent, or the link is wrong.",
+      "since": "Customer since {{date}}",
+      "profile": "Details",
+      "phone": "Phone",
+      "birthDate": "Date of birth",
+      "licenceDate": "Driving licence issued",
+      "account": "Online account",
+      "hasAccount": "Has an account",
+      "noAccount": "No account",
+      "agent": "Agent",
+      "noAgent": "None",
+      "vehicles": "Vehicles",
+      "noVehicles": "No vehicles on file.",
+      "policies": "Policies",
+      "policiesScope": "Policies you sold to this customer.",
+      "noPolicies": "No policies yet.",
+      "claims": "Claims",
+      "noClaims": "No claims on these policies.",
+      "paidOut": "Paid out"
+    },
+    "sales": {
+      "title": "Sales",
+      "lead": "The policies you sold, with their premium and status.",
+      "summary": "Sales figures",
+      "tiles": {
+        "written": "Premium written",
+        "recent": "Premium, last 30 days",
+        "soldRecently_one": "{{count}} policy paid",
+        "soldRecently_other": "{{count}} policies paid",
+        "active": "Active policies",
+        "customers": "Customers",
+        "openClaims_one": "{{count}} open claim",
+        "openClaims_other": "{{count}} open claims"
+      },
+      "filters": "Search, filter and sort sales",
+      "search": "Search",
+      "searchPlaceholder": "Policy number, plate or customer",
+      "listTitle": "Policies",
+      "count_one": "{{count}} policy",
+      "count_other": "{{count}} policies",
+      "caption": "Policies you sold, with customer, period, premium and status",
+      "columns": {
+        "policy": "Policy",
+        "customer": "Customer",
+        "period": "Period",
+        "premium": "Premium"
+      },
+      "pagination": "Policy pages",
+      "noMatchTitle": "No policies match",
+      "noMatchBody": "Try another search, or clear the filters.",
+      "emptyTitle": "No sales yet",
+      "emptyBody": "Policies you sell to your customers appear here."
+    },
+    "sell": {
+      "start": "Sell a policy",
+      "title": "Sell a policy",
+      "lead": "For {{name}}. The premium comes from the customer’s details on file, as when they buy online.",
+      "back": "Back to the customer",
+      "vehicle": "Vehicle",
+      "noVehicles": "No vehicles on file yet. Add the customer’s vehicle to continue.",
+      "addVehicle": "Add a vehicle",
+      "createDraft": "Create the policy",
+      "quoteWaiting": "Choose a vehicle, the cover, a start date and a term to see the premium.",
+      "quoteNote": "Priced from the customer’s details: this is the premium they will pay.",
+      "draftTitle": "Policy {{number}} is ready to pay",
+      "draftBody": "The policy starts once it is paid. You can take the payment now, or leave it unpaid for the customer to pay before the start date.",
+      "takePayment": "Take payment of {{amount}}",
+      "leaveDraft": "Leave unpaid",
+      "paidToast": "The policy is paid and active",
+      "doneTitle": "Policy {{number}} is active",
+      "doneBody": "{{name}} is covered. Payment of {{amount}} is recorded with reference {{reference}}.",
+      "backToCustomer": "Back to the customer",
+      "toSales": "All sales"
+    },
+    "help": {
+      "lead": "How the staff desks work: the claims queue, decisions, your customers and exports.",
+      "groups": {
+        "decisions": "Claims and decisions",
+        "book": "Customers and sales",
+        "exports": "Exports",
+        "statuses": "What the claim statuses mean"
+      },
+      "items": {
+        "queue": {
+          "q": "Which claims do I see?",
+          "a": "The shared queue of claims nobody has taken yet, and the claims you have taken. A claim another adjuster is reviewing is theirs, so it is not in your list."
+        },
+        "takeReview": {
+          "q": "What happens when I start a review?",
+          "a": "The claim is assigned to you and leaves the shared queue. From then on only you, or an administrator, can approve or reject it."
+        },
+        "decide": {
+          "q": "How do I approve or reject?",
+          "a": "Open the claim from “In my review”, choose the outcome and record it. An approval can be for the claimed amount or less, with at most two decimals."
+        },
+        "reason": {
+          "q": "Is a reason required?",
+          "a": "For a rejection, yes: the customer reads it on their claim page. For an approval a note is optional and also visible to the customer."
+        },
+        "unavailable": {
+          "q": "Why is an action unavailable?",
+          "a": "The decision panel follows the claim’s status: review first, then approve or reject, then pay out. Each unavailable step says why, for example “Start the review first”."
+        },
+        "conflict": {
+          "q": "What if someone changes the claim while I’m on it?",
+          "a": "Your decision is refused rather than applied to facts you haven’t seen. The page loads the latest version and keeps your note, so you can check it and decide again."
+        },
+        "pay": {
+          "q": "When is a claim paid out?",
+          "a": "After it is approved, from the claim page. The payout goes through the payment service for the approved amount; in this build it is a demonstration and no money moves."
+        },
+        "book": {
+          "q": "Which customers are mine?",
+          "a": "The customers an administrator assigned to you. You see their details, the policies you sold them and the claims on those policies, and nobody else’s."
+        },
+        "sell": {
+          "q": "How do I sell a policy to a customer?",
+          "a": "Open the customer and choose Sell a policy. The premium is calculated from their details, as when they buy online. Take the payment then, or leave the policy unpaid for them to pay."
+        },
+        "agentClaims": {
+          "q": "Can I decide my customers’ claims?",
+          "a": "No. Adjusters decide claims; you see their status on the customer’s page. You can file a claim for a customer on a policy you sold."
+        },
+        "export": {
+          "q": "What does Export CSV include?",
+          "a": "Every row that matches the current filters and sort, not just the page on screen, up to 5,000 rows."
+        },
+        "exportExcel": {
+          "q": "Will Excel show Azerbaijani and Russian letters?",
+          "a": "Yes: the file is UTF-8 with a byte-order mark. Values are comma-separated; if your Excel uses semicolons, open the file through Data → From Text/CSV."
+        }
+      },
+      "statuses": {
+        "Submitted": "Filed by the customer and waiting in the shared queue.",
+        "UnderReview": "An adjuster has taken it and is deciding it.",
+        "Approved": "Approved for an amount up to the claimed one; waiting to be paid out.",
+        "Rejected": "Rejected, with the reason shown to the customer. Final.",
+        "Paid": "The approved amount has been paid out. Final.",
+        "Withdrawn": "The customer withdrew it before a decision. Final."
+      }
     }
   }
 }

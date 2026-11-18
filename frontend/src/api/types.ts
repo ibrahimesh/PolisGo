@@ -187,6 +187,8 @@ export interface PolicyResponse {
   status: PolicyStatus;
   createdAt: IsoDateTime;
   vehicle: PolicyVehicleSummary;
+  // The policyholder as recorded on the customer.
+  customerName: string;
 }
 
 export type PaymentMethod = 'Cash' | 'Card' | 'BankTransfer' | 'Online';
@@ -280,6 +282,11 @@ export interface ClaimResponse {
   createdAt: IsoDateTime;
   // The latest status change.
   updatedAt: IsoDateTime;
+  customerId: Guid;
+  customerName: string;
+  assignedAdjusterName: string | null;
+  // Sent back with a decision; a stale one is a 409 "Concurrent update".
+  rowVersion: Guid;
 }
 
 export interface ClaimHistoryEntry {
@@ -309,15 +316,47 @@ export interface ClaimPolicySummary {
   vehicle: PolicyVehicleSummary;
 }
 
+export interface ClaimCustomerSummary {
+  id: Guid;
+  fullName: string;
+  email: string;
+  phone: string;
+}
+
+export const CLAIM_ACTIONS = ['Review', 'Approve', 'Reject', 'Pay', 'Withdraw'] as const;
+export type ClaimAction = (typeof CLAIM_ACTIONS)[number];
+
+// ClaimActionBlock.cs: why an action is unavailable now.
+export const CLAIM_ACTION_BLOCKS = [
+  'AlreadyInReview',
+  'StartReviewFirst',
+  'AssignedToAnother',
+  'AlreadyDecided',
+  'NotApproved',
+  'AlreadyPaid',
+  'Withdrawn',
+  'Closed',
+] as const;
+export type ClaimActionBlock = (typeof CLAIM_ACTION_BLOCKS)[number];
+
+export interface ClaimActionState {
+  action: ClaimAction;
+  allowed: boolean;
+  blockedReason: ClaimActionBlock | null;
+}
+
 export interface ClaimDetailResponse {
   claim: ClaimResponse;
   policy: ClaimPolicySummary;
+  customer: ClaimCustomerSummary;
   // Oldest first.
   history: ClaimHistoryEntry[];
   documents: ClaimDocumentResponse[];
   canWithdraw: boolean;
   canAddDocuments: boolean;
   maxDocuments: number;
+  // Every action of the caller's role, allowed or not.
+  actions: ClaimActionState[];
 }
 
 export type ClaimSortBy = 'CreatedAt' | 'IncidentDate' | 'ClaimedAmount' | 'ClaimNumber';
@@ -339,18 +378,116 @@ export interface ListClaimsQuery {
 export interface WithdrawClaimRequest {
   reason?: string | null;
 }
+// rowVersion: the claim's version as the caller last saw it.
 export interface ReviewClaimRequest {
   comment?: string | null;
+  rowVersion?: Guid;
 }
 export interface ApproveClaimRequest {
   approvedAmount: number;
-  comment: string;
+  comment?: string | null;
+  rowVersion?: Guid;
 }
 export interface RejectClaimRequest {
   comment: string;
+  rowVersion?: Guid;
 }
 export interface PayClaimRequest {
   comment?: string | null;
+  rowVersion?: Guid;
+}
+
+/* ---- Staff: customers and overview ---- */
+
+export type CustomerSortBy = 'CreatedAt' | 'FullName' | 'Email';
+
+export interface ListCustomersQuery {
+  search?: string;
+  sortBy?: CustomerSortBy;
+  sortDir?: SortDirection;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface CustomerListItem {
+  id: Guid;
+  fullName: string;
+  email: string;
+  phone: string;
+  createdAt: IsoDateTime;
+  hasAccount: boolean;
+  vehicleCount: number;
+  // Counts follow the caller's visibility (an agent's own sales).
+  policyCount: number;
+  activePolicyCount: number;
+  claimCount: number;
+}
+
+export interface StatusCount<T extends string> {
+  status: T;
+  count: number;
+}
+
+export interface CustomerClaimsSummary {
+  total: number;
+  byStatus: StatusCount<ClaimStatus>[];
+  claimedAmount: number;
+  paidAmount: number;
+  recent: ClaimResponse[];
+}
+
+export interface CustomerDetailResponse {
+  id: Guid;
+  fullName: string;
+  email: string;
+  phone: string;
+  birthDate: IsoDate;
+  drivingLicenseDate: IsoDate;
+  createdAt: IsoDateTime;
+  hasAccount: boolean;
+  agentId: Guid | null;
+  agentName: string | null;
+  vehicles: VehicleResponse[];
+  policies: PolicyResponse[];
+  claims: CustomerClaimsSummary;
+}
+
+export interface RecentDecision {
+  claimId: Guid;
+  claimNumber: string;
+  customerName: string;
+  status: ClaimStatus;
+  claimedAmount: number;
+  approvedAmount: number | null;
+  decidedBy: string;
+  decidedAt: IsoDateTime;
+}
+
+export interface ClaimsDeskSummary {
+  waitingForReview: number;
+  oldestWaitingSince: IsoDateTime | null;
+  inReview: number;
+  awaitingPayment: number;
+  decidedLast30Days: number;
+  recentDecisions: RecentDecision[];
+}
+
+export interface SalesSummary {
+  customers: number;
+  policiesByStatus: StatusCount<PolicyStatus>[];
+  premiumWritten: number;
+  premiumLast30Days: number;
+  policiesSoldLast30Days: number;
+  openClaims: number;
+  recentPolicies: PolicyResponse[];
+}
+
+// GET /api/staff/overview: a block per desk the caller works, else null.
+export interface StaffOverviewResponse {
+  generatedAt: IsoDateTime;
+  currency: string;
+  claims: ClaimsDeskSummary | null;
+  sales: SalesSummary | null;
 }
 
 /* ---- Client cabinet (/api/me) ---- */

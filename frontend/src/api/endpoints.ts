@@ -13,7 +13,10 @@ import type {
   CreateStaffUserRequest,
   CreateVehicleRequest,
   CurrentUserResponse,
+  CustomerDetailResponse,
+  CustomerListItem,
   Guid,
+  ListCustomersQuery,
   ListPoliciesQuery,
   ListClaimsQuery,
   LoginRequest,
@@ -29,6 +32,7 @@ import type {
   ReminderResponse,
   RejectClaimRequest,
   ReviewClaimRequest,
+  StaffOverviewResponse,
   SubmitClaimRequest,
   UpdateProfileRequest,
   WithdrawClaimRequest,
@@ -85,7 +89,9 @@ export const policyTypesApi = {
 };
 
 export const vehiclesApi = {
-  list: (signal?: Signal) => request<VehicleResponse[]>('/api/vehicles', { signal }),
+  // Staff pass a customer of theirs; Clients always get their own.
+  list: (signal?: Signal, customerId?: Guid) =>
+    request<VehicleResponse[]>('/api/vehicles', { query: { customerId }, signal }),
   create: (body: CreateVehicleRequest) =>
     request<VehicleResponse>('/api/vehicles', { method: 'POST', body }),
 };
@@ -102,6 +108,9 @@ export const policiesApi = {
     request<PolicyResponse>('/api/policies', { method: 'POST', body }),
   pay: (id: Guid) => request<PayPolicyResponse>(`/api/policies/${id}/pay`, { method: 'POST' }),
   cancel: (id: Guid) => request<PolicyResponse>(`/api/policies/${id}/cancel`, { method: 'POST' }),
+  // Agents and Admins: the list's filters as a UTF-8 CSV.
+  exportCsv: (query: ListPoliciesQuery = {}) =>
+    request<Blob>('/api/policies/export', { query: { ...query }, responseType: 'blob' }),
 };
 
 export const claimsApi = {
@@ -125,6 +134,21 @@ export const claimsApi = {
     request<ClaimResponse>(`/api/claims/${id}/reject`, { method: 'POST', body }),
   pay: (id: Guid, body: PayClaimRequest) =>
     request<ClaimResponse>(`/api/claims/${id}/pay`, { method: 'POST', body }),
+  // Adjusters and Admins: the queue's filters as a UTF-8 CSV.
+  exportCsv: (query: ListClaimsQuery = {}) =>
+    request<Blob>('/api/claims/export', { query: { ...query }, responseType: 'blob' }),
+};
+
+// Staff only; rows are scoped to the caller's book or reach (404 outside it).
+export const customersApi = {
+  list: (query: ListCustomersQuery = {}, signal?: Signal) =>
+    request<PagedResult<CustomerListItem>>('/api/customers', { query: { ...query }, signal }),
+  get: (id: Guid, signal?: Signal) =>
+    request<CustomerDetailResponse>(`/api/customers/${id}`, { signal }),
+};
+
+export const staffApi = {
+  overview: (signal?: Signal) => request<StaffOverviewResponse>('/api/staff/overview', { signal }),
 };
 
 export const usersApi = {

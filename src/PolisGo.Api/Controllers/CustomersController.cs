@@ -6,8 +6,10 @@ using PolisGo.Application.Customers.Dtos;
 
 namespace PolisGo.Api.Controllers;
 
-// Staff-only directory. Clients get 403 here; they keep using the
-// self-scoped /api/vehicles, /api/policies and /api/claims endpoints.
+// Staff-only directory, scoped by CustomerAccess: Agents see the customers
+// assigned to them, Adjusters those with a claim in their reach, Admins all.
+// A customer outside the scope is a 404. Clients get 403 here; they keep using
+// the self-scoped /api/vehicles, /api/policies and /api/claims endpoints.
 [ApiController]
 [Route("api/customers")]
 [Authorize(Roles = "Admin,Agent,Adjuster")]
@@ -23,15 +25,17 @@ public class CustomersController : ControllerBase
     /// <summary>
     /// Paged customer directory with optional search and sorting.
     /// </summary>
-    /// <param name="search">Matches name, email or phone (phone ignores spaces, dashes and brackets). Max 100 characters.</param>
+    /// <param name="search">Matches name, email or phone; a term written like a phone (digits, spaces, + - ( )) matches phone digits. Max 100 characters.</param>
     /// <param name="sortBy">CreatedAt (default), FullName or Email.</param>
     /// <param name="sortDir">Asc or Desc (default).</param>
     /// <param name="page">1-based page number.</param>
     /// <param name="pageSize">Items per page; capped at 50.</param>
     /// <param name="cancellationToken">Request cancellation.</param>
     /// <remarks>
-    /// Policy and claim counts follow the caller's visibility: Agents count
-    /// only policies they sold, Adjusters only claims open to them.
+    /// Rows: Agents get their own customers, Adjusters the customers with a
+    /// claim in the queue or assigned to them, Admins everyone. Policy and
+    /// claim counts follow the same visibility as GET /api/policies and
+    /// GET /api/claims; the active count uses the effective status.
     /// </remarks>
     /// <response code="200">A page of customers.</response>
     /// <response code="400">Invalid sort value or search too long.</response>
@@ -65,7 +69,7 @@ public class CustomersController : ControllerBase
     /// <response code="200">The customer.</response>
     /// <response code="401">No or invalid bearer token.</response>
     /// <response code="403">The caller is a Client.</response>
-    /// <response code="404">No customer with this id.</response>
+    /// <response code="404">No customer with this id, or one outside the caller's scope.</response>
     [HttpGet("{id:guid}")]
     [ProducesResponseType<CustomerDetailResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -75,5 +79,29 @@ public class CustomersController : ControllerBase
         Guid id, CancellationToken cancellationToken)
     {
         return Ok(await _customers.GetByIdAsync(id, cancellationToken));
+    }
+
+    /// <summary>Assigns a customer to an agent, or releases them with a null agentId.</summary>
+    /// <remarks>
+    /// The agent then sees the customer in their directory and can sell to
+    /// them; policies already sold stay with the agent who sold them.
+    /// </remarks>
+    /// <response code="204">Assigned.</response>
+    /// <response code="400">agentId is not an Agent account.</response>
+    /// <response code="401">No or invalid bearer token.</response>
+    /// <response code="403">The caller is not an Admin.</response>
+    /// <response code="404">No customer with this id.</response>
+    [HttpPut("{id:guid}/agent")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> AssignAgent(
+        Guid id, [FromBody] AssignAgentRequest request, CancellationToken cancellationToken)
+    {
+        await _customers.AssignAgentAsync(id, request, cancellationToken);
+        return NoContent();
     }
 }

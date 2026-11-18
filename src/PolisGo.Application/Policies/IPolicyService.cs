@@ -28,6 +28,11 @@ public interface IPolicyService
         ListPoliciesQuery query,
         CancellationToken cancellationToken = default);
 
+    // Every row the list would page through, for the CSV export (capped).
+    Task<IReadOnlyList<PolicyResponse>> ExportAsync(
+        ListPoliciesQuery query,
+        CancellationToken cancellationToken = default);
+
     Task<PayPolicyResponse> PayAsync(
         Guid policyId,
         CancellationToken cancellationToken = default);

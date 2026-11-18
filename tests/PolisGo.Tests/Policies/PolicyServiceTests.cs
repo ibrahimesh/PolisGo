@@ -454,14 +454,40 @@ public class PolicyServiceTests
         var agent1Id = SeedUser(fixture.Db, "agent1@example.com", UserRole.Agent);
         var agent2Id = SeedUser(fixture.Db, "agent2@example.com", UserRole.Agent);
 
+        // The customer moves from one agent's book to the other's in between.
+        AssignAgent(fixture.Db, customerId, agent1Id);
         await NewSut(fixture.Db, Agent(agent1Id))
             .CreateAsync(new CreatePolicyRequest(vehicleId, "MTPL", Today, 12, customerId));
+        AssignAgent(fixture.Db, customerId, agent2Id);
         await NewSut(fixture.Db, Agent(agent2Id))
             .CreateAsync(new CreatePolicyRequest(vehicleId, "CASCO", Today, 12, customerId));
 
         var agent1View = await NewSut(fixture.Db, Agent(agent1Id)).ListAsync(new ListPoliciesQuery(PageSize: 10));
         Assert.Single(agent1View.Items);
         Assert.Equal(agent1Id, agent1View.Items.Single().AgentId);
+    }
+
+    [Fact]
+    public async Task Agent_cannot_quote_or_sell_to_a_customer_outside_their_book()
+    {
+        using var fixture = new SqliteTestDb();
+        var customerId = SeedCustomer(fixture.Db);
+        var vehicleId = SeedVehicle(fixture.Db, customerId);
+        var mine = SeedUser(fixture.Db, "agent1@example.com", UserRole.Agent);
+        var other = SeedUser(fixture.Db, "agent2@example.com", UserRole.Agent);
+        AssignAgent(fixture.Db, customerId, other);
+        var request = new CreatePolicyRequest(vehicleId, "MTPL", Today, 12, customerId);
+
+        // 404, as for an unknown customer: whose book it is stays private.
+        await Assert.ThrowsAsync<NotFoundException>(() => NewSut(fixture.Db, Agent(mine)).QuoteAsync(request));
+        await Assert.ThrowsAsync<NotFoundException>(() => NewSut(fixture.Db, Agent(mine)).CreateAsync(request));
+        Assert.Empty(fixture.Db.Policies);
+    }
+
+    private static void AssignAgent(AppDbContext db, Guid customerId, Guid agentId)
+    {
+        db.Customers.Single(c => c.Id == customerId).AgentId = agentId;
+        db.SaveChanges();
     }
 
     private static Guid SeedUser(AppDbContext db, string email, UserRole role)

@@ -59,6 +59,7 @@ const detail: PolicyDetailResponse = {
       year: 2019,
       plateNumber: '10-AA-123',
     },
+    customerName: 'Leyla Məmmədova',
   },
   holderName: 'Leyla Məmmədova',
   vehicle: {

@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using PolisGo.Application.Abstractions;
 using PolisGo.Application.Common.Exceptions;
+using PolisGo.Application.Customers;
 using PolisGo.Application.Vehicles.Dtos;
 using PolisGo.Domain.Entities;
 using PolisGo.Domain.Enums;
@@ -25,7 +26,10 @@ public class VehicleService : IVehicleService
 
         ValidateInput(request);
 
-        if (!await _db.Customers.AnyAsync(c => c.Id == customerId, cancellationToken))
+        // Staff register only for customers in their scope: an agent for
+        // their own book, never someone else's (404, as for an unknown id).
+        if (!await CustomerAccess.VisibleTo(_db.Customers, _currentUser)
+                .AnyAsync(c => c.Id == customerId, cancellationToken))
         {
             throw new NotFoundException(nameof(Customer), customerId);
         }
@@ -73,9 +77,15 @@ public class VehicleService : IVehicleService
             }
             query = query.Where(v => v.CustomerId == _currentUser.CustomerId);
         }
-        else if (customerId.HasValue)
+        else
         {
-            query = query.Where(v => v.CustomerId == customerId.Value);
+            // Staff see vehicles of the customers in their scope only.
+            var visible = CustomerAccess.VisibleTo(_db.Customers.AsNoTracking(), _currentUser);
+            query = query.Where(v => visible.Any(c => c.Id == v.CustomerId));
+            if (customerId.HasValue)
+            {
+                query = query.Where(v => v.CustomerId == customerId.Value);
+            }
         }
 
         var vehicles = await query.OrderBy(v => v.PlateNumber).ToListAsync(cancellationToken);

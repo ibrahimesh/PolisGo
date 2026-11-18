@@ -38,12 +38,14 @@ internal sealed class TestData
         string? email = null,
         string phone = "+994 50 123 45 67",
         DateTime? createdAt = null,
-        Guid? userId = null)
+        Guid? userId = null,
+        Guid? agentId = null)
     {
         var customer = new Customer
         {
             Id = Guid.NewGuid(),
             UserId = userId,
+            AgentId = agentId,
             FullName = fullName,
             Email = email ?? $"customer{Next()}@polisgo.test",
             Phone = phone,

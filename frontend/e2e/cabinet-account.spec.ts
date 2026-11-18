@@ -156,7 +156,7 @@ test.describe('Cabinet account', () => {
     await openSession(page, session);
 
     // /app/claims is the client's own claims page; the staff desks are not.
-    for (const path of ['/app/admin', '/app/agent']) {
+    for (const path of ['/app/admin', '/app/customers', '/app/sales']) {
       await page.goto(path);
       await expect(
         page.getByRole('heading', { name: "This area isn't available for your role" }),

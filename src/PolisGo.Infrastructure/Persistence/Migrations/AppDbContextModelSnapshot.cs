@@ -191,6 +191,9 @@ namespace PolisGo.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid?>("AgentId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<DateTime>("BirthDate")
                         .HasColumnType("datetime2");
 
@@ -219,6 +222,8 @@ namespace PolisGo.Infrastructure.Persistence.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("AgentId");
 
                     b.HasIndex("CreatedAt");
 
@@ -590,10 +595,17 @@ namespace PolisGo.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("PolisGo.Domain.Entities.Customer", b =>
                 {
+                    b.HasOne("PolisGo.Domain.Entities.User", "Agent")
+                        .WithMany()
+                        .HasForeignKey("AgentId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
                     b.HasOne("PolisGo.Domain.Entities.User", "User")
                         .WithOne("Customer")
                         .HasForeignKey("PolisGo.Domain.Entities.Customer", "UserId")
                         .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Agent");
 
                     b.Navigation("User");
                 });

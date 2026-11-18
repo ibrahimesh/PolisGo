@@ -59,6 +59,20 @@ public class CustomerServiceTests : IDisposable
         Assert.Equal(1, result.TotalCount);
     }
 
+    [Theory]
+    [InlineData("rauf123@mail.az")]   // an email with digits is not a phone
+    [InlineData("Unit 501234")]       // nor a name or text with digits
+    public async Task List_search_uses_phone_digits_only_for_phone_like_terms(string search)
+    {
+        // Both phones contain "1234" / "501234"; only text matches may count.
+        var byEmail = _data.Customer("Rauf Aliyev", "rauf123@mail.az", "+994 55 765 43 21");
+        _data.Customer("Aysel Hasanova", "aysel.h@mail.az", "+994 50 123 45 67");
+
+        var result = await Sut(Admin()).ListAsync(new ListCustomersQuery(Search: search));
+
+        Assert.Equal(search.Contains('@') ? [byEmail.Id] : Array.Empty<Guid>(), result.Items.Select(c => c.Id));
+    }
+
     [Fact]
     public async Task List_search_treats_wildcards_literally()
     {
@@ -105,7 +119,8 @@ public class CustomerServiceTests : IDisposable
         var adjuster = _data.User(UserRole.Adjuster);
         var otherAdjuster = _data.User(UserRole.Adjuster);
 
-        var customer = _data.Customer(userId: _data.User(UserRole.Client).Id);
+        // Assigned to agent; otherAgent sold one policy before that.
+        var customer = _data.Customer(userId: _data.User(UserRole.Client).Id, agentId: agent.Id);
         var vehicle = _data.Vehicle(customer.Id);
         _data.Vehicle(customer.Id);
         var mine = _data.Policy(customer, vehicle, PolicyStatus.Active, agentId: agent.Id);
@@ -186,7 +201,7 @@ public class CustomerServiceTests : IDisposable
     public async Task Detail_for_an_agent_shows_only_their_policies_and_claims()
     {
         var agent = _data.User(UserRole.Agent);
-        var customer = _data.Customer();
+        var customer = _data.Customer(agentId: agent.Id);
         var vehicle = _data.Vehicle(customer.Id);
         var mine = _data.Policy(customer, vehicle, agentId: agent.Id);
         var theirs = _data.Policy(customer, vehicle, agentId: _data.User(UserRole.Agent).Id);
@@ -197,7 +212,7 @@ public class CustomerServiceTests : IDisposable
 
         Assert.Equal(mine.Id, Assert.Single(detail.Policies).Id);
         Assert.Equal(1, detail.Claims.Total);
-        Assert.Single(detail.Vehicles); // vehicles are visible to all staff, as in /api/vehicles
+        Assert.Single(detail.Vehicles); // the customer is theirs, so all of the customer's vehicles
     }
 
     [Fact]

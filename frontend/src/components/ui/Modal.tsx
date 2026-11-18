@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
+import { cx } from './cx';
 import { CloseIcon } from './icons';
 
 interface ModalProps {
@@ -9,11 +10,13 @@ interface ModalProps {
   title: ReactNode;
   children: ReactNode;
   footer?: ReactNode;
+  // A document preview needs the room; dialogs stay narrow.
+  size?: 'default' | 'wide';
 }
 
 // Native <dialog> gives a real focus trap, inert background, Esc to close and
 // focus return to the opener — no hand-rolled focus management needed.
-export function Modal({ open, onClose, title, children, footer }: ModalProps) {
+export function Modal({ open, onClose, title, children, footer, size = 'default' }: ModalProps) {
   const { t } = useTranslation();
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
@@ -45,7 +48,10 @@ export function Modal({ open, onClose, title, children, footer }: ModalProps) {
       onClick={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}
-      className="m-auto w-[min(36rem,calc(100vw-2rem))] rounded-sm border border-line bg-surface p-0 text-text shadow-[0_24px_64px_-24px_rgb(0_0_0/0.6)] backdrop:bg-overlay"
+      className={cx(
+        'm-auto rounded-sm border border-line bg-surface p-0 text-text shadow-[0_24px_64px_-24px_rgb(0_0_0/0.6)] backdrop:bg-overlay',
+        size === 'wide' ? 'w-[min(64rem,calc(100vw-2rem))]' : 'w-[min(36rem,calc(100vw-2rem))]',
+      )}
     >
       <div className="flex items-start justify-between gap-6 border-b border-line px-6 py-5">
         <h2 id={titleId} className="text-xl">

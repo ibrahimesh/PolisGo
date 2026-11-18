@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using PolisGo.Application.Abstractions;
 using PolisGo.Application.Common;
 using PolisGo.Application.Common.Exceptions;
+using PolisGo.Application.Customers;
 using PolisGo.Application.Policies.Dtos;
 using PolisGo.Application.Pricing;
 using PolisGo.Application.Vehicles.Dtos;
@@ -123,7 +124,7 @@ public class PolicyService : IPolicyService
                 Response = new PolicyRow(
                     p.Id, p.PolicyNumber, p.CustomerId, p.VehicleId, p.PolicyTypeId, p.PolicyType.Code,
                     p.AgentId, p.StartDate, p.EndDate, p.Premium, p.Status, p.CreatedAt,
-                    p.Vehicle.Make, p.Vehicle.Model, p.Vehicle.Year, p.Vehicle.PlateNumber),
+                    p.Vehicle.Make, p.Vehicle.Model, p.Vehicle.Year, p.Vehicle.PlateNumber, p.Customer.FullName),
                 HolderName = p.Customer.FullName,
                 p.Vehicle.Vin,
                 p.Vehicle.EngineCapacityCc,
@@ -175,6 +176,36 @@ public class PolicyService : IPolicyService
         var pageSize = Math.Clamp(query.PageSize, 1, MaxPageSize);
         var today = Today;
 
+        var policies = Filter(query, today);
+        var totalCount = await policies.CountAsync(cancellationToken);
+
+        var rows = await Project(Sort(policies, query.SortBy, query.SortDir)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize))
+            .ToListAsync(cancellationToken);
+
+        var items = rows.Select(r => r.ToResponse(today)).ToList();
+        return new PagedResult<PolicyResponse>(items, page, pageSize, totalCount);
+    }
+
+    public async Task<IReadOnlyList<PolicyResponse>> ExportAsync(
+        ListPoliciesQuery query, CancellationToken cancellationToken = default)
+    {
+        var today = Today;
+        var policies = Filter(query, today);
+        if (await policies.CountAsync(cancellationToken) > ExportLimits.MaxRows)
+        {
+            throw new ValidationException("export", ExportLimits.TooManyRows);
+        }
+
+        var rows = await Project(Sort(policies, query.SortBy, query.SortDir)).ToListAsync(cancellationToken);
+        return rows.Select(r => r.ToResponse(today)).ToList();
+    }
+
+    // The list's filters, shared by the page and the CSV export so a download
+    // holds exactly what the screen shows.
+    private IQueryable<Policy> Filter(ListPoliciesQuery query, DateOnly today)
+    {
         var policies = PolicyAccess.VisibleTo(_db.Policies.AsNoTracking(), _currentUser);
 
         if (query.Status is { } status)
@@ -198,19 +229,13 @@ public class PolicyService : IPolicyService
             // Policy numbers and plates are stored upper-case, so an
             // upper-cased needle makes the match case-insensitive on any provider.
             var needle = term.ToUpperInvariant();
+            // Names keep their case, so they are compared upper-cased on both sides.
             policies = policies.Where(p =>
-                p.PolicyNumber.Contains(needle) || p.Vehicle.PlateNumber.Contains(needle));
+                p.PolicyNumber.Contains(needle) || p.Vehicle.PlateNumber.Contains(needle)
+                || p.Customer.FullName.ToUpper().Contains(needle));
         }
 
-        var totalCount = await policies.CountAsync(cancellationToken);
-
-        var rows = await Project(Sort(policies, query.SortBy, query.SortDir)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize))
-            .ToListAsync(cancellationToken);
-
-        var items = rows.Select(r => r.ToResponse(today)).ToList();
-        return new PagedResult<PolicyResponse>(items, page, pageSize, totalCount);
+        return policies;
     }
 
     public async Task<PayPolicyResponse> PayAsync(
@@ -291,7 +316,9 @@ public class PolicyService : IPolicyService
         var customerId = ResolveCustomerId(request.CustomerId);
         ValidateRequest(request, today);
 
-        var customer = await _db.Customers.AsNoTracking()
+        // An agent sells only to their own customers; anyone else's is a 404,
+        // the same as an unknown id.
+        var customer = await CustomerAccess.VisibleTo(_db.Customers.AsNoTracking(), _currentUser)
             .Where(c => c.Id == customerId)
             .Select(c => new { c.BirthDate, c.DrivingLicenseDate })
             .FirstOrDefaultAsync(cancellationToken)
@@ -399,7 +426,7 @@ public class PolicyService : IPolicyService
         query.Select(p => new PolicyRow(
             p.Id, p.PolicyNumber, p.CustomerId, p.VehicleId, p.PolicyTypeId, p.PolicyType.Code,
             p.AgentId, p.StartDate, p.EndDate, p.Premium, p.Status, p.CreatedAt,
-            p.Vehicle.Make, p.Vehicle.Model, p.Vehicle.Year, p.Vehicle.PlateNumber));
+            p.Vehicle.Make, p.Vehicle.Model, p.Vehicle.Year, p.Vehicle.PlateNumber, p.Customer.FullName));
 
     private async Task<PolicyResponse> LoadResponseAsync(
         Guid policyId, DateOnly today, CancellationToken cancellationToken)
@@ -472,7 +499,8 @@ internal sealed record PolicyRow(
     string Make,
     string Model,
     int Year,
-    string PlateNumber)
+    string PlateNumber,
+    string CustomerName)
 {
     public PolicyResponse ToResponse(DateOnly today)
     {
@@ -483,6 +511,7 @@ internal sealed record PolicyRow(
             Id, PolicyNumber, CustomerId, VehicleId, PolicyTypeId, PolicyTypeCode, AgentId,
             DateOnly.FromDateTime(StartDate), DateOnly.FromDateTime(EndDate), Premium, Tariff.Currency,
             effective, CreatedAt,
-            new PolicyVehicleSummary(VehicleId, Make, Model, Year, PlateNumber));
+            new PolicyVehicleSummary(VehicleId, Make, Model, Year, PlateNumber),
+            CustomerName);
     }
 }
