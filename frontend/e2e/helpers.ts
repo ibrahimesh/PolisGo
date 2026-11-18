@@ -244,9 +244,93 @@ export async function adminApi(page: Page) {
     page.request.post(`${API_URL}${path}`, { headers, data });
   return {
     post,
+    headers,
     async act(claimId: string, action: 'review' | 'approve' | 'reject', data: unknown = {}) {
       const response = await post(`/api/claims/${claimId}/${action}`, data);
       expect(response.status(), await response.text()).toBe(200);
+    },
+    // A staff account through POST /api/users/staff, signed in.
+    async createStaff(role: StaffRole, fullName = staffName(role)) {
+      const user = randomUser();
+      const created = await post('/api/users/staff', {
+        email: user.email,
+        password: user.password,
+        fullName,
+        role,
+      });
+      expect(created.status(), await created.text()).toBe(201);
+      const { id } = (await created.json()) as { id: string };
+      const login = await page.request.post(`${API_URL}/api/auth/login`, {
+        data: { email: user.email, password: user.password },
+      });
+      expect(login.status(), await login.text()).toBe(200);
+      const body = (await login.json()) as Session;
+      return {
+        id,
+        fullName,
+        email: user.email,
+        session: { token: body.token, expiresAt: body.expiresAt },
+      };
+    },
+    // The customer record behind a registered client (the directory finds
+    // them by email; an admin sees everyone).
+    async customerIdFor(email: string) {
+      const response = await page.request.get(`${API_URL}/api/customers`, {
+        headers,
+        params: { search: email },
+      });
+      expect(response.status(), await response.text()).toBe(200);
+      const { items } = (await response.json()) as { items: { id: string }[] };
+      expect(items).toHaveLength(1);
+      return items[0]?.id ?? '';
+    },
+    async assignAgent(customerId: string, agentId: string | null) {
+      const response = await page.request.put(`${API_URL}/api/customers/${customerId}/agent`, {
+        headers,
+        data: { agentId },
+      });
+      expect(response.status(), await response.text()).toBe(204);
+    },
+  };
+}
+
+/* ---------- Staff ---------- */
+
+export type StaffRole = 'Agent' | 'Adjuster';
+
+// Letters only (the API's name rule), unique enough to search for.
+function staffName(role: StaffRole) {
+  const id = Math.random()
+    .toString(36)
+    .slice(2, 8)
+    .replace(/\d/g, (d) => 'abcdefghij'.charAt(Number(d)));
+  return `${role === 'Agent' ? 'Leyla Agent' : 'Rauf Adjuster'} ${id.charAt(0).toUpperCase()}${id.slice(1)}`;
+}
+
+// A client with an active policy and a Submitted claim (the claim's location
+// can be set, e.g. to a formula for the export test).
+export async function clientWithClaim(page: Page, claimPatch: Record<string, unknown> = {}) {
+  const { session, user } = await registerSession(page);
+  const { policy, vehicle } = await cabinetApi(page, session).activePolicy();
+  const claim = await claimsApi(page, session).file(policy.id, claimPatch);
+  return { session, user, policy, vehicle, claim };
+}
+
+// Staff API calls with a staff session, returning the raw response so tests
+// can assert on the status.
+export function staffApi(page: Page, session: Session) {
+  const headers = { Authorization: `Bearer ${session.token}` };
+  return {
+    headers,
+    get: (path: string) => page.request.get(`${API_URL}${path}`, { headers }),
+    post: (path: string, data: unknown = {}) =>
+      page.request.post(`${API_URL}${path}`, { headers, data }),
+    async claim(claimId: string) {
+      const response = await page.request.get(`${API_URL}/api/claims/${claimId}`, { headers });
+      expect(response.status(), await response.text()).toBe(200);
+      return (await response.json()) as {
+        claim: { status: string; rowVersion: string; claimedAmount: number };
+      };
     },
   };
 }
