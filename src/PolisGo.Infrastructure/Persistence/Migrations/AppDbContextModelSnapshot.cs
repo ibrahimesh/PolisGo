@@ -53,6 +53,14 @@ namespace PolisGo.Infrastructure.Persistence.Migrations
                     b.Property<DateTime>("IncidentDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("IncidentType")
+                        .HasMaxLength(24)
+                        .HasColumnType("nvarchar(24)");
+
+                    b.Property<string>("Location")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
                     b.Property<Guid>("PolicyId")
                         .HasColumnType("uniqueidentifier");
 
@@ -73,6 +81,8 @@ namespace PolisGo.Infrastructure.Persistence.Migrations
                         .IsUnique();
 
                     b.HasIndex("CreatedAt");
+
+                    b.HasIndex("IncidentDate");
 
                     b.HasIndex("PolicyId");
 
@@ -143,11 +153,36 @@ namespace PolisGo.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("ChangedByUserId");
 
-                    b.HasIndex("ClaimId");
+                    b.HasIndex("ClaimId", "ChangedAt");
 
                     b.HasIndex("ToStatus", "ClaimId", "ChangedAt");
 
                     b.ToTable("ClaimStatusHistory");
+                });
+
+            modelBuilder.Entity("PolisGo.Domain.Entities.ClaimUpdateRead", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ClaimId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("ReadAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("ClaimId", "UserId")
+                        .IsUnique();
+
+                    b.ToTable("ClaimUpdateReads");
                 });
 
             modelBuilder.Entity("PolisGo.Domain.Entities.Customer", b =>
@@ -532,6 +567,23 @@ namespace PolisGo.Infrastructure.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("ChangedByUser");
+
+                    b.Navigation("Claim");
+                });
+
+            modelBuilder.Entity("PolisGo.Domain.Entities.ClaimUpdateRead", b =>
+                {
+                    b.HasOne("PolisGo.Domain.Entities.Claim", "Claim")
+                        .WithMany()
+                        .HasForeignKey("ClaimId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PolisGo.Domain.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.Navigation("Claim");
                 });

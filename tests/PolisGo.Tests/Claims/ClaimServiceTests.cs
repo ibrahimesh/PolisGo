@@ -118,7 +118,8 @@ public class ClaimServiceTests
     };
 
     private static SubmitClaimRequest ValidSubmit(SeededClient seed, decimal amount = 1_000m) =>
-        new(seed.PolicyId, Today.AddDays(-3), "Rear-end collision at intersection.", amount, null);
+        new(seed.PolicyId, Today.AddDays(-3), "Rear-end collision at intersection.", amount, null,
+            IncidentType.Collision, "Baku, Nizami street");
 
     // ---------- Submit ----------
 

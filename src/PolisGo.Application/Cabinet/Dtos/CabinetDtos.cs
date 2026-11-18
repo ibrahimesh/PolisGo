@@ -1,4 +1,5 @@
 using PolisGo.Application.Policies.Dtos;
+using PolisGo.Domain.Enums;
 
 namespace PolisGo.Application.Cabinet.Dtos;
 
@@ -31,7 +32,11 @@ public record ClientOverviewResponse(
     string Currency,
     int UnreadReminders,
     // Newest first.
-    IReadOnlyList<ActivityEntry> RecentActivity
+    IReadOnlyList<ActivityEntry> RecentActivity,
+    // Submitted or UnderReview.
+    int OpenClaims,
+    int UnreadClaimUpdates,
+    LatestClaimUpdate? LatestClaimUpdate
 );
 
 public record NextRenewalResponse(
@@ -56,5 +61,30 @@ public record ActivityEntry(
     string Reference,
     string? FromStatus,
     string ToStatus,
+    DateTime At
+);
+
+// The latest status change a staff member (or the system acting for them)
+// made on one of the customer's claims, within the updates window. Computed
+// from the claim history on read; only the read mark is stored.
+public record ClaimUpdateResponse(
+    Guid ClaimId,
+    string ClaimNumber,
+    string PolicyNumber,
+    ClaimStatus? FromStatus,
+    ClaimStatus ToStatus,
+    // The adjuster's note, if any.
+    string Comment,
+    DateTime ChangedAt,
+    // Null while unread: no mark, or a mark older than this change.
+    DateTime? ReadAt
+);
+
+// The newest step on any of the customer's claims, their own included.
+public record LatestClaimUpdate(
+    Guid ClaimId,
+    string ClaimNumber,
+    ClaimStatus? FromStatus,
+    ClaimStatus ToStatus,
     DateTime At
 );

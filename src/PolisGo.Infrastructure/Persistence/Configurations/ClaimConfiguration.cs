@@ -12,6 +12,8 @@ public class ClaimConfiguration : IEntityTypeConfiguration<Claim>
 
         builder.Property(c => c.ClaimNumber).IsRequired().HasMaxLength(32);
         builder.Property(c => c.Description).IsRequired().HasMaxLength(2000);
+        builder.Property(c => c.IncidentType).HasConversion<string>().HasMaxLength(24);
+        builder.Property(c => c.Location).HasMaxLength(200);
         builder.Property(c => c.Status).HasConversion<string>().HasMaxLength(16).IsRequired();
 
         builder.Property(c => c.ClaimedAmount).HasColumnType("decimal(18,2)");
@@ -28,6 +30,8 @@ public class ClaimConfiguration : IEntityTypeConfiguration<Claim>
         // Admin stats: GROUP BY Status, and the monthly window on CreatedAt.
         builder.HasIndex(c => c.Status);
         builder.HasIndex(c => c.CreatedAt);
+        // The claims list filters and sorts by incident date.
+        builder.HasIndex(c => c.IncidentDate);
 
         // Restrict: claims hold legal/accounting weight; a policy owner must
         // resolve open claims before the policy is purgeable.

@@ -203,4 +203,36 @@ public class ClaimEntityTests
         Assert.Equal(new[] { ClaimStatus.UnderReview, ClaimStatus.Approved, ClaimStatus.Paid },
             claim.StatusHistory.Select(h => h.ToStatus));
     }
+
+    // ---------- Withdraw ----------
+
+    [Theory]
+    [InlineData(ClaimStatus.Submitted)]
+    [InlineData(ClaimStatus.UnderReview)]
+    public void Withdraw_FromAnOpenClaim_RecordsTheReason(ClaimStatus from)
+    {
+        var customer = Guid.NewGuid();
+        var claim = NewClaim(from);
+
+        claim.Withdraw(customer, "Settled with the other driver.");
+
+        Assert.Equal(ClaimStatus.Withdrawn, claim.Status);
+        Assert.False(claim.IsOpen);
+        var history = claim.StatusHistory.Single();
+        Assert.Equal(from, history.FromStatus);
+        Assert.Equal(customer, history.ChangedByUserId);
+        Assert.Equal("Settled with the other driver.", history.Comment);
+    }
+
+    [Theory]
+    [InlineData(ClaimStatus.Approved)]
+    [InlineData(ClaimStatus.Rejected)]
+    [InlineData(ClaimStatus.Paid)]
+    [InlineData(ClaimStatus.Withdrawn)]
+    public void Withdraw_AfterADecision_Throws(ClaimStatus from)
+    {
+        var claim = NewClaim(from);
+        Assert.Throws<InvalidStateTransitionException>(() => claim.Withdraw(Guid.NewGuid()));
+        Assert.Empty(claim.StatusHistory);
+    }
 }

@@ -16,6 +16,10 @@ public class Claim
     public DateTime IncidentDate { get; set; }
     public string Description { get; set; } = null!;
 
+    // Null only on claims filed before these were collected.
+    public IncidentType? IncidentType { get; set; }
+    public string? Location { get; set; }
+
     public decimal ClaimedAmount { get; set; }
 
     // Nullable until an adjuster finalises the decision.
@@ -39,6 +43,19 @@ public class Claim
     public ICollection<ClaimDocument> Documents { get; set; } = new List<ClaimDocument>();
 
     // ---------- Workflow ----------
+
+    // Open = no decision yet; the customer can still add documents or withdraw.
+    public bool IsOpen => Status is ClaimStatus.Submitted or ClaimStatus.UnderReview;
+
+    public void Withdraw(Guid userId, string? reason = null)
+    {
+        if (!IsOpen)
+        {
+            throw new InvalidStateTransitionException(
+                $"Claim {ClaimNumber} cannot be withdrawn from status {Status}; only Submitted or UnderReview is allowed.");
+        }
+        TransitionTo(ClaimStatus.Withdrawn, userId, reason);
+    }
 
     public void StartReview(Guid adjusterId, string? comment = null)
     {

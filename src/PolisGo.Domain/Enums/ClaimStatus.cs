@@ -6,5 +6,7 @@ public enum ClaimStatus
     UnderReview,
     Approved,
     Rejected,
-    Paid
+    Paid,
+    // The customer took the claim back before a decision. Final.
+    Withdrawn
 }
