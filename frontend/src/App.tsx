@@ -21,6 +21,12 @@ const NotFoundPage = lazy(() =>
 const CabinetHome = lazy(() =>
   import('./features/overview/CabinetHome').then((m) => ({ default: m.CabinetHome })),
 );
+const PoliciesPage = lazy(() =>
+  import('./features/policies/PoliciesPage').then((m) => ({ default: m.PoliciesPage })),
+);
+const PolicyDetailPage = lazy(() =>
+  import('./features/policies/PolicyDetailPage').then((m) => ({ default: m.PolicyDetailPage })),
+);
 const WorkspaceSection = lazy(() =>
   import('./features/workspace/WorkspaceSection').then((m) => ({
     default: m.WorkspaceSection,
@@ -45,7 +51,12 @@ export function App() {
         <Route element={<CabinetShell />}>
           <Route index element={<CabinetHome />} />
 
-          {(['policies', 'buy', 'profile', 'help'] as const).map((id) => (
+          <Route path="policies" element={guard('policies')}>
+            <Route index element={<PoliciesPage />} />
+            <Route path=":id" element={<PolicyDetailPage />} />
+          </Route>
+
+          {(['buy', 'profile', 'help'] as const).map((id) => (
             <Route key={id} path={id} element={guard(id)}>
               <Route index element={<WorkspaceSection section={id} />} />
             </Route>
