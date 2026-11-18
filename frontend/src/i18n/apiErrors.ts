@@ -28,6 +28,10 @@ const SERVER_MESSAGE_KEYS: Record<string, string> = {
   'The customer must be at least 18 years old.': 'validation.adult',
   'Birth date must be within the last 100 years.': 'validation.birthDateRange',
   'A user with this email already exists.': 'errors.emailTaken',
+  'Current password is required.': 'validation.currentPasswordRequired',
+  'Current password is incorrect.': 'validation.currentPasswordIncorrect',
+  'New password must be different from the current one.': 'validation.passwordUnchanged',
+  'Staff accounts have no phone on file.': 'validation.phoneNotApplicable',
 };
 
 export function serverMessageKey(message: string | undefined): string | undefined {

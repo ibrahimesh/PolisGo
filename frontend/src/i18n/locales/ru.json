@@ -385,7 +385,11 @@
     "birthDateRequired": "Введите дату рождения.",
     "licenceDateRequired": "Введите дату выдачи прав.",
     "adult": "Открыть счёт можно с 18 лет.",
-    "birthDateRange": "Дата рождения — в пределах последних 100 лет."
+    "birthDateRange": "Дата рождения — в пределах последних 100 лет.",
+    "currentPasswordRequired": "Введите текущий пароль.",
+    "currentPasswordIncorrect": "Это не ваш текущий пароль.",
+    "passwordUnchanged": "Новый пароль должен отличаться от текущего.",
+    "phoneNotApplicable": "У служебных учётных записей нет номера телефона."
   },
   "common": {
     "loading": "Загрузка",

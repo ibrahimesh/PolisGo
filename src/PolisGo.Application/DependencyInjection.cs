@@ -8,6 +8,7 @@ using PolisGo.Application.Customers;
 using PolisGo.Application.Policies;
 using PolisGo.Application.PolicyTypes;
 using PolisGo.Application.Pricing;
+using PolisGo.Application.Profile;
 using PolisGo.Application.Statistics;
 using PolisGo.Application.Vehicles;
 
@@ -18,6 +19,7 @@ public static class DependencyInjection
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
         services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<IProfileService, ProfileService>();
 
         // PremiumCalculator is a pure function with no state — singleton is safe
         // and avoids per-request allocation.

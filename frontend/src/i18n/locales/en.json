@@ -381,7 +381,11 @@
     "birthDateRequired": "Enter your date of birth.",
     "licenceDateRequired": "Enter the date your licence was issued.",
     "adult": "You must be at least 18 to open an account.",
-    "birthDateRange": "Enter a date of birth within the last 100 years."
+    "birthDateRange": "Enter a date of birth within the last 100 years.",
+    "currentPasswordRequired": "Enter your current password.",
+    "currentPasswordIncorrect": "That isn’t your current password.",
+    "passwordUnchanged": "Choose a password different from the current one.",
+    "phoneNotApplicable": "Staff accounts don’t keep a phone number."
   },
   "common": {
     "loading": "Loading",

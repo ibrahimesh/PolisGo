@@ -381,7 +381,11 @@
     "birthDateRequired": "Doğum tarixinizi daxil edin.",
     "licenceDateRequired": "Vəsiqənin verilmə tarixini daxil edin.",
     "adult": "Hesab açmaq üçün ən azı 18 yaşınız olmalıdır.",
-    "birthDateRange": "Doğum tarixi son 100 il ərzində olmalıdır."
+    "birthDateRange": "Doğum tarixi son 100 il ərzində olmalıdır.",
+    "currentPasswordRequired": "Cari şifrənizi daxil edin.",
+    "currentPasswordIncorrect": "Bu, cari şifrəniz deyil.",
+    "passwordUnchanged": "Yeni şifrə cari şifrədən fərqli olmalıdır.",
+    "phoneNotApplicable": "Əməkdaş hesablarında telefon nömrəsi saxlanılmır."
   },
   "common": {
     "loading": "Yüklənir",
