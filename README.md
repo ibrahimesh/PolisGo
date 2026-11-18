@@ -274,7 +274,7 @@ instead of `echo` — its redirect writes UTF-16, which Vite does not read.
 dotnet test PolisGo.slnx
 ```
 
-**418 backend tests** (xUnit): domain and service tests on SQLite in-memory
+**420 backend tests** (xUnit): domain and service tests on SQLite in-memory
 and HTTP tests via `WebApplicationFactory` (401/403/404 per role, JSON contract,
 and one client reading, paying, searching, uploading to or withdrawing
 another's policy or claim → 404; a client on every staff endpoint → 403, an
