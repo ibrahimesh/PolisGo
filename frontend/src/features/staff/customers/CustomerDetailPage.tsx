@@ -207,36 +207,61 @@ function Policies({ policies }: { policies: readonly PolicyResponse[] }) {
       {policies.length === 0 ? (
         <p className="text-muted">{t('staff.customers.noPolicies')}</p>
       ) : (
-        <Table>
-          <Caption>{t('staff.customers.policies')}</Caption>
-          <THead>
-            <Tr className="border-line">
-              <Th>{t('staff.sales.columns.policy')}</Th>
-              <Th>{t('staff.sales.columns.period')}</Th>
-              <Th className="text-right">{t('staff.sales.columns.premium')}</Th>
-              <Th>{t('claims.columns.status')}</Th>
-            </Tr>
-          </THead>
-          <TBody>
+        <>
+          {/* Phones: one card per policy; a sideways-scrolling table has
+              nothing focusable to scroll it with the keyboard. */}
+          <ul className="divide-y divide-line border-y border-line md:hidden">
             {policies.map((policy) => (
-              <Tr key={policy.id} className="border-line">
-                <Td>
-                  <span className="font-medium break-all">{policy.policyNumber}</span>
-                  <span className="block text-sm text-muted">
-                    {product.name(policy.policyTypeCode)} · {policy.vehicle.plateNumber}
-                  </span>
-                </Td>
-                <Td className="text-sm whitespace-nowrap">
-                  {format.date(policy.startDate)} – {format.date(policy.endDate)}
-                </Td>
-                <Td className="text-right whitespace-nowrap">{format.money(policy.premium)}</Td>
-                <Td>
+              <li key={policy.id} className="space-y-2 py-4">
+                <div className="flex items-start justify-between gap-3">
+                  <span className="min-w-0 font-medium break-all">{policy.policyNumber}</span>
                   <PolicyStatusBadge status={policy.status} />
-                </Td>
-              </Tr>
+                </div>
+                <p className="text-sm text-muted">
+                  {product.name(policy.policyTypeCode)} · {policy.vehicle.plateNumber}
+                </p>
+                <div className="flex flex-wrap justify-between gap-x-4 text-sm tabular">
+                  <span>
+                    {format.date(policy.startDate)} – {format.date(policy.endDate)}
+                  </span>
+                  <span className="font-medium">{format.money(policy.premium)}</span>
+                </div>
+              </li>
             ))}
-          </TBody>
-        </Table>
+          </ul>
+          <div className="hidden md:block">
+            <Table>
+              <Caption>{t('staff.customers.policies')}</Caption>
+              <THead>
+                <Tr className="border-line">
+                  <Th>{t('staff.sales.columns.policy')}</Th>
+                  <Th>{t('staff.sales.columns.period')}</Th>
+                  <Th className="text-right">{t('staff.sales.columns.premium')}</Th>
+                  <Th>{t('claims.columns.status')}</Th>
+                </Tr>
+              </THead>
+              <TBody>
+                {policies.map((policy) => (
+                  <Tr key={policy.id} className="border-line">
+                    <Td>
+                      <span className="font-medium break-all">{policy.policyNumber}</span>
+                      <span className="block text-sm text-muted">
+                        {product.name(policy.policyTypeCode)} · {policy.vehicle.plateNumber}
+                      </span>
+                    </Td>
+                    <Td className="text-sm whitespace-nowrap">
+                      {format.date(policy.startDate)} – {format.date(policy.endDate)}
+                    </Td>
+                    <Td className="text-right whitespace-nowrap">{format.money(policy.premium)}</Td>
+                    <Td>
+                      <PolicyStatusBadge status={policy.status} />
+                    </Td>
+                  </Tr>
+                ))}
+              </TBody>
+            </Table>
+          </div>
+        </>
       )}
     </section>
   );

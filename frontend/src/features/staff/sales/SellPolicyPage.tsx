@@ -211,135 +211,145 @@ function SellForm({
 
   return (
     <div className="grid gap-10 xl:grid-cols-12">
-      <form
-        noValidate
-        aria-label={t('staff.sell.title')}
-        onSubmit={(event) => void submit(event)}
-        className="space-y-8 xl:col-span-7"
-      >
-        <FormErrorSummary errors={errors} fields={summary} show={submitCount > 0} />
-        {serverError !== null && (
-          <ErrorNotice error={serverError} overrides={{ 400: firstFieldMessageKey(serverError) }} />
+      <div className="min-w-0 space-y-8 xl:col-span-7">
+        {/* The vehicle form is its own <form>, so it sits outside the sale's:
+          nested forms would submit both at once. */}
+        {addingVehicle && (
+          <Card className="p-6">
+            <VehicleForm
+              customerId={customer.id}
+              onCancel={() => setAddingVehicle(false)}
+              onCreated={(vehicle) => {
+                setAddingVehicle(false);
+                void invalidate().then(() =>
+                  setValue('vehicleId', vehicle.id, { shouldValidate: true }),
+                );
+              }}
+            />
+          </Card>
         )}
-
-        <fieldset
-          aria-describedby={errors.vehicleId ? 'sell-vehicleId-error' : undefined}
-          className="space-y-3"
+        <form
+          noValidate
+          aria-label={t('staff.sell.title')}
+          onSubmit={(event) => void submit(event)}
+          className="space-y-8"
         >
-          <legend className="mb-3 text-sm font-medium">{labels.vehicleId}</legend>
-          {vehicles.isPending ? (
-            <Skeleton className="h-24 w-full" />
-          ) : vehicles.isError ? (
-            <ErrorNotice error={vehicles.error} />
-          ) : vehicles.data.length === 0 && !addingVehicle ? (
-            <p className="text-muted">{t('staff.sell.noVehicles')}</p>
-          ) : (
-            <div className="grid gap-3 sm:grid-cols-2">
-              {vehicles.data.map((vehicle, index) => (
-                <Choice key={vehicle.id} checked={watched.vehicleId === vehicle.id}>
-                  <input
-                    type="radio"
-                    id={`sell-vehicleId-${index}`}
-                    value={vehicle.id}
-                    className="mt-1 size-4 shrink-0 accent-accent"
-                    {...register('vehicleId')}
-                  />
-                  <span className="min-w-0">
-                    <span className="block font-medium">
-                      {vehicle.make} {vehicle.model} {vehicle.year}
+          <FormErrorSummary errors={errors} fields={summary} show={submitCount > 0} />
+          {serverError !== null && (
+            <ErrorNotice
+              error={serverError}
+              overrides={{ 400: firstFieldMessageKey(serverError) }}
+            />
+          )}
+
+          <fieldset
+            aria-describedby={errors.vehicleId ? 'sell-vehicleId-error' : undefined}
+            className="space-y-3"
+          >
+            <legend className="mb-3 text-sm font-medium">{labels.vehicleId}</legend>
+            {vehicles.isPending ? (
+              <Skeleton className="h-24 w-full" />
+            ) : vehicles.isError ? (
+              <ErrorNotice error={vehicles.error} />
+            ) : vehicles.data.length === 0 ? (
+              <p className="text-muted">{t('staff.sell.noVehicles')}</p>
+            ) : (
+              <div className="grid gap-3 sm:grid-cols-2">
+                {vehicles.data.map((vehicle, index) => (
+                  <Choice key={vehicle.id} checked={watched.vehicleId === vehicle.id}>
+                    <input
+                      type="radio"
+                      id={`sell-vehicleId-${index}`}
+                      value={vehicle.id}
+                      className="mt-1 size-4 shrink-0 accent-accent"
+                      {...register('vehicleId')}
+                    />
+                    <span className="min-w-0">
+                      <span className="block font-medium">
+                        {vehicle.make} {vehicle.model} {vehicle.year}
+                      </span>
+                      <span className="block text-sm text-muted tabular">
+                        {vehicle.plateNumber}
+                      </span>
                     </span>
-                    <span className="block text-sm text-muted tabular">{vehicle.plateNumber}</span>
-                  </span>
-                </Choice>
-              ))}
-            </div>
+                  </Choice>
+                ))}
+              </div>
+            )}
+            <FieldError id="sell-vehicleId-error" message={errors.vehicleId?.message} />
+            {!addingVehicle && (
+              <Button variant="ghost" size="sm" onClick={() => setAddingVehicle(true)}>
+                {t('staff.sell.addVehicle')}
+              </Button>
+            )}
+          </fieldset>
+
+          <fieldset
+            aria-describedby={errors.policyTypeCode ? 'sell-policyTypeCode-error' : undefined}
+            className="space-y-3"
+          >
+            <legend className="mb-3 text-sm font-medium">{labels.policyTypeCode}</legend>
+            {types.isPending ? (
+              <Skeleton className="h-24 w-full" />
+            ) : types.isError ? (
+              <ErrorNotice error={types.error} />
+            ) : (
+              <div className="grid gap-3 sm:grid-cols-2">
+                {types.data.map((type, index) => (
+                  <Choice key={type.code} checked={watched.policyTypeCode === type.code}>
+                    <input
+                      type="radio"
+                      id={`sell-policyTypeCode-${index}`}
+                      value={type.code}
+                      className="mt-1 size-4 shrink-0 accent-accent"
+                      {...register('policyTypeCode')}
+                    />
+                    <span className="min-w-0">
+                      <span className="block font-medium">{product.name(type.code)}</span>
+                      <span className="block text-sm text-muted">{product.hint(type.code)}</span>
+                    </span>
+                  </Choice>
+                ))}
+              </div>
+            )}
+            <FieldError id="sell-policyTypeCode-error" message={errors.policyTypeCode?.message} />
+          </fieldset>
+
+          <div className="grid gap-6 sm:grid-cols-2">
+            <Input
+              id={fieldId('startDate')}
+              label={labels.startDate}
+              type="date"
+              min={bounds.min}
+              max={bounds.max}
+              hint={t('wizard.fields.startDateHint')}
+              error={errors.startDate?.message}
+              {...register('startDate')}
+            />
+            <Select
+              id={fieldId('termMonths')}
+              label={labels.termMonths}
+              error={errors.termMonths?.message}
+              options={MONTHS.map((months) => ({
+                value: months,
+                label: t('calculator.termOption', { count: months }),
+              }))}
+              {...register('termMonths')}
+            />
+          </div>
+          {endDate && (
+            <p className="text-sm text-muted tabular">
+              {t('wizard.coverEnds', { date: format.date(endDate) })}
+            </p>
           )}
-          <FieldError id="sell-vehicleId-error" message={errors.vehicleId?.message} />
-          {addingVehicle ? (
-            <Card className="p-6">
-              <VehicleForm
-                customerId={customer.id}
-                onCancel={() => setAddingVehicle(false)}
-                onCreated={(vehicle) => {
-                  setAddingVehicle(false);
-                  void invalidate().then(() =>
-                    setValue('vehicleId', vehicle.id, { shouldValidate: true }),
-                  );
-                }}
-              />
-            </Card>
-          ) : (
-            <Button variant="ghost" size="sm" onClick={() => setAddingVehicle(true)}>
-              {t('staff.sell.addVehicle')}
+
+          <div className="flex flex-wrap justify-end gap-3 border-t border-line pt-6">
+            <Button type="submit" size="lg" loading={isSubmitting}>
+              {t('staff.sell.createDraft')}
             </Button>
-          )}
-        </fieldset>
-
-        <fieldset
-          aria-describedby={errors.policyTypeCode ? 'sell-policyTypeCode-error' : undefined}
-          className="space-y-3"
-        >
-          <legend className="mb-3 text-sm font-medium">{labels.policyTypeCode}</legend>
-          {types.isPending ? (
-            <Skeleton className="h-24 w-full" />
-          ) : types.isError ? (
-            <ErrorNotice error={types.error} />
-          ) : (
-            <div className="grid gap-3 sm:grid-cols-2">
-              {types.data.map((type, index) => (
-                <Choice key={type.code} checked={watched.policyTypeCode === type.code}>
-                  <input
-                    type="radio"
-                    id={`sell-policyTypeCode-${index}`}
-                    value={type.code}
-                    className="mt-1 size-4 shrink-0 accent-accent"
-                    {...register('policyTypeCode')}
-                  />
-                  <span className="min-w-0">
-                    <span className="block font-medium">{product.name(type.code)}</span>
-                    <span className="block text-sm text-muted">{product.hint(type.code)}</span>
-                  </span>
-                </Choice>
-              ))}
-            </div>
-          )}
-          <FieldError id="sell-policyTypeCode-error" message={errors.policyTypeCode?.message} />
-        </fieldset>
-
-        <div className="grid gap-6 sm:grid-cols-2">
-          <Input
-            id={fieldId('startDate')}
-            label={labels.startDate}
-            type="date"
-            min={bounds.min}
-            max={bounds.max}
-            hint={t('wizard.fields.startDateHint')}
-            error={errors.startDate?.message}
-            {...register('startDate')}
-          />
-          <Select
-            id={fieldId('termMonths')}
-            label={labels.termMonths}
-            error={errors.termMonths?.message}
-            options={MONTHS.map((months) => ({
-              value: months,
-              label: t('calculator.termOption', { count: months }),
-            }))}
-            {...register('termMonths')}
-          />
-        </div>
-        {endDate && (
-          <p className="text-sm text-muted tabular">
-            {t('wizard.coverEnds', { date: format.date(endDate) })}
-          </p>
-        )}
-
-        <div className="flex flex-wrap justify-end gap-3 border-t border-line pt-6">
-          <Button type="submit" size="lg" loading={isSubmitting}>
-            {t('staff.sell.createDraft')}
-          </Button>
-        </div>
-      </form>
+          </div>
+        </form>
+      </div>
 
       <aside
         aria-label={t('wizard.quote.label')}
