@@ -311,7 +311,8 @@
       "policies": "Polislərim",
       "buy": "Polis al",
       "profile": "Profil və ayarlar",
-      "help": "Kömək və suallar"
+      "help": "Kömək və suallar",
+      "myClaims": "Zərərlərim"
     },
     "comingSoonTitle": "Bu bölmə plandakı növbəti addımdır",
     "comingSoonBody": "Bu rol üçün ekranlar hazır olduqdan sonra polislər, avtomobillər və sığorta hadisələri burada görünəcək.",
@@ -324,7 +325,8 @@
       "claims": "Zərərlər",
       "admin": "Admin",
       "profile": "Profil",
-      "help": "Kömək"
+      "help": "Kömək",
+      "myClaims": "Zərərlər"
     }
   },
   "roles": {
@@ -367,7 +369,15 @@
     "policyOverlap": "Bu avtomobilin həmin tarixlər üçün bu növdə qaralama və ya qüvvədə olan polisi artıq var.",
     "draftStartPassed": "Bu qaralamanın başlama tarixi keçib. Yeni tarix seçmək üçün alışı yenidən başladın.",
     "policyExpired": "Bu polisin müddəti artıq bitib.",
-    "plateTaken": "Bu dövlət nömrə nişanı ilə avtomobil artıq qeydiyyatdadır."
+    "plateTaken": "Bu dövlət nömrə nişanı ilə avtomobil artıq qeydiyyatdadır.",
+    "claimDuplicate": "Bu polis, tarix və məbləğ üzrə bildiriş artıq var.",
+    "claimPolicyNotActive": "Zərəri yalnız qüvvədə olan polis üzrə bildirmək olar.",
+    "claimClosed": "Zərər bağlanıb, daha sənəd əlavə etmək olmaz.",
+    "tooManyDocuments": "Bir zərərə ən çoxu 10 sənəd əlavə etmək olar.",
+    "fileRequired": "Yükləmək üçün fayl seçin.",
+    "fileSize": "Fayl 5 MB-dan kiçik olmalıdır.",
+    "fileType": "Yalnız JPG, PNG və ya PDF faylları qəbul edilir.",
+    "fileContent": "Faylın məzmunu onun növünə uyğun deyil."
   },
   "validation": {
     "required": "Mütləq doldurulmalıdır.",
@@ -419,7 +429,22 @@
     "vehicleRequired": "Avtomobili seçin.",
     "searchTooLong": "Ən çox 100 simvol.",
     "startDateRequired": "Sığortanın başlama tarixini seçin.",
-    "acceptRequired": "Davam etmək üçün məlumatları təsdiqləyin."
+    "acceptRequired": "Davam etmək üçün məlumatları təsdiqləyin.",
+    "claimPolicyRequired": "Zərərin aid olduğu polisi seçin.",
+    "incidentDateRequired": "Hadisənin tarixini daxil edin.",
+    "incidentInFuture": "Hadisə tarixi gələcəkdə ola bilməz.",
+    "incidentOutsideCover": "Hadisə tarixi polisin qüvvədə olduğu dövrə düşməlidir.",
+    "incidentTypeRequired": "Nə baş verdiyini seçin.",
+    "locationLength": "Hadisə yerini 3–200 simvolla yazın.",
+    "descriptionLength": "Baş verənləri 10–2000 simvolla təsvir edin.",
+    "amountRequired": "Zərərin təxmini məbləğini daxil edin.",
+    "amountNumber": "Məbləği rəqəmlə yazın, məsələn 850 və ya 850,50.",
+    "amountPositive": "Məbləğ sıfırdan böyük olmalıdır.",
+    "amountTooHigh": "Onlayn 50 000 AZN-ə qədər bildirmək olar. Daha çox üçün dəstəyə müraciət edin.",
+    "amountPrecision": "Ən çoxu iki onluq rəqəm olsun.",
+    "claimAcceptRequired": "Bildirişi göndərməzdən əvvəl məlumatları təsdiqləyin.",
+    "reasonTooLong": "Səbəb ən çoxu 500 simvol olsun.",
+    "commentTooLong": "Şərh ən çoxu 1000 simvol olsun."
   },
   "common": {
     "loading": "Yüklənir",
@@ -476,7 +501,10 @@
       "awaiting_one": "{{count}} polis ödəniş gözləyir.",
       "awaiting_other": "{{count}} polis ödəniş gözləyir.",
       "review": "Bax",
-      "pay": "Ödənişə keç"
+      "pay": "Ödənişə keç",
+      "claimUpdates_one": "{{count}} zərər üzrə yenilik var.",
+      "claimUpdates_other": "{{count}} zərər üzrə yenilik var.",
+      "claims": "Zərərlərə bax"
     },
     "stats": {
       "label": "Sığortanız qısaca",
@@ -509,8 +537,18 @@
         "UnderReview": "{{ref}} zərəri baxılır",
         "Approved": "{{ref}} zərəri təsdiqləndi",
         "Rejected": "{{ref}} zərəri rədd edildi",
-        "Paid": "{{ref}} zərəri üzrə ödəniş edildi"
+        "Paid": "{{ref}} zərəri üzrə ödəniş edildi",
+        "Withdrawn": "{{ref}} zərəri geri götürüldü"
       }
+    },
+    "claims": {
+      "title": "Zərərlər",
+      "open_one": "{{count}} zərər qərar gözləyir.",
+      "open_other": "{{count}} zərər qərar gözləyir.",
+      "noneOpen": "Qərar gözləyən zərər yoxdur.",
+      "latest": "Son yenilik",
+      "none": "Hələ zərər yoxdur.",
+      "all": "Zərərlərim"
     }
   },
   "reminders": {
@@ -723,8 +761,11 @@
     "button_zero": "Bildirişlər, oxunmamış yoxdur",
     "button_one": "Bildirişlər, {{count}} oxunmamış",
     "button_other": "Bildirişlər, {{count}} oxunmamış",
-    "note": "Xatırlatmalar polisin bitməsinə 30 gün qalmış görünür. Onlar yalnız burada göstərilir — telefona və ya e-poçta heç nə göndərilmir.",
-    "title": "Xatırlatmalar"
+    "note": "Zərər yenilikləri və yeniləmə xatırlatmaları yalnız burada və icmalda göstərilir. Telefona və ya e-poçta heç nə göndərilmir.",
+    "title": "Yeniliklər",
+    "claims": "Zərər yenilikləri",
+    "renewals": "Yeniləmə xatırlatmaları",
+    "noClaimUpdates": "Son 90 gündə zərər yeniliyi yoxdur."
   },
   "profile": {
     "title": "Profil və ayarlar",
@@ -749,7 +790,8 @@
     "groups": {
       "buying": "Polis alışı",
       "policies": "Polisləriniz",
-      "account": "Hesabınız"
+      "account": "Hesabınız",
+      "claims": "Zərərlər"
     },
     "items": {
       "price": {
@@ -801,15 +843,271 @@
         "a": "Bu cihazda. Onları başlıqda, profildə və ya Ctrl/⌘ + K ilə dəyişə bilərsiniz."
       },
       "claims": {
-        "q": "Sığorta hadisəsini necə bildirim?",
-        "a": "Onlayn zərər bildirişləri hələ kabinetdə yoxdur — bu, planlarda növbəti addımdır."
+        "q": "Zərəri necə bildirim?",
+        "a": "«Zərərlərim» bölməsini açıb «Zərər bildir» seçin və ya qüvvədə olan polisin səhifəsindəki düymədən istifadə edin. Polisi seçin, nə vaxt, harada və nə baş verdiyini yazın, zərəri təxmin edin, şəkilləriniz varsa əlavə edin, sonra yoxlayıb göndərin. Səhifə yenilənsə, cavablar qalır."
       },
       "licensed": {
         "q": "PolisGo lisenziyalı sığortaçıdırmı?",
         "a": "Xeyr. PolisGo sığorta platformasını nümayiş etdirən portfolio layihəsidir; onun polisləri və şəhadətnamələri real sığorta deyil."
+      },
+      "claimDocs": {
+        "q": "Hansı sənədlər kömək edir?",
+        "a": "Zərərin və hadisə yerinin aydın şəkilləri, digər avtomobilin nömrəsi, polis protokolu və ya hər iki sürücünün imzaladığı qəza blankı, təmir smetası və ya hesab-faktura. JPG, PNG və ya PDF, hər biri 5 MB-a qədər, bir zərərə 10 fayl. Zərər açıq olduqca onun səhifəsindən daha çox əlavə etmək olar."
+      },
+      "claimStatuses": {
+        "q": "Zərər statusları nə deməkdir?",
+        "a": "Bildirilib: tənzimləyicini gözləyir. Baxılır: tənzimləyici qiymətləndirir. Təsdiqlənib: qəbul edilib, təsdiqlənən məbləğ göstərilir. Rədd edilib: hadisə sığortaya daxil deyil, səbəbi tənzimləyicinin qeydindədir. Ödənilib: təsdiqlənən məbləğ ödənilib. Geri götürülüb: zərəri siz geri götürmüsünüz."
+      },
+      "claimWithdraw": {
+        "q": "Zərəri geri götürə bilərəmmi?",
+        "a": "Bəli, tənzimləyici qərar verənə qədər. Zərəri açıb «Zərəri geri götür» seçin. Bunu geri qaytarmaq olmur; tənzimləyici üçün səbəb yaza bilərsiniz."
+      },
+      "claimUpdates": {
+        "q": "Zərər üzrə dəyişikliyi necə biləcəyəm?",
+        "a": "Hər addım zərərin tarixçəsində və zəngin altında, oxuyana qədər nöqtə ilə görünür. Telefona və ya e-poçta heç nə göndərilmir."
       }
     },
     "more": "Qiymət və əhatə haqqında ümumi suallarınız var?",
     "moreLink": "Əsas saytdakı suallara baxın"
+  },
+  "claimStatus": {
+    "Submitted": "Bildirilib",
+    "UnderReview": "Baxılır",
+    "Approved": "Təsdiqlənib",
+    "Rejected": "Rədd edilib",
+    "Paid": "Ödənilib",
+    "Withdrawn": "Geri götürülüb"
+  },
+  "incidentType": {
+    "Collision": "Toqquşma",
+    "Theft": "Oğurluq",
+    "Vandalism": "Vandalizm",
+    "Fire": "Yanğın",
+    "NaturalHazard": "Fırtına, sel və ya dolu",
+    "Glass": "Şüşə zədəsi",
+    "Other": "Digər"
+  },
+  "upload": {
+    "dropLabel": "Şəkilləri və ya sənədləri bura sürüşdürün",
+    "choose": "Fayl seçin",
+    "hint": "JPG, PNG və ya PDF, hər biri {{size}} MB-a qədər, bir zərərə {{count}} fayl.",
+    "full": "Bu zərərə daha sənəd əlavə etmək olmaz.",
+    "added_one": "{{count}} fayl əlavə edildi.",
+    "added_other": "{{count}} fayl əlavə edildi.",
+    "notAdded_one": "{{count}} fayl əlavə edilmədi.",
+    "notAdded_other": "{{count}} fayl əlavə edilmədi.",
+    "rejected": "{{name}} əlavə edilmədi: {{reason}}",
+    "problems": {
+      "fileType": "yalnız JPG, PNG və ya PDF qəbul edilir.",
+      "fileEmpty": "fayl boşdur.",
+      "fileTooLarge": "fayl {{size}} MB-dan böyükdür.",
+      "fileContent": "məzmunu fayl növünə uyğun deyil.",
+      "tooMany": "bir zərərə ən çoxu {{count}} sənəd əlavə etmək olar."
+    },
+    "listLabel": "Yüklənəcək fayllar",
+    "progressLabel": "{{name}} yüklənir",
+    "remove": "Sil",
+    "status": {
+      "done": "Yükləndi"
+    }
+  },
+  "claims": {
+    "title": "Zərərlərim",
+    "lead": "Bildirdiyiniz zərərlər, onların statusu və tənzimləyicinin qərarı.",
+    "file": "Zərər bildir",
+    "filters": "Zərər filtrləri",
+    "search": "Axtarış",
+    "searchPlaceholder": "Zərər və ya polis nömrəsi",
+    "status": "Status",
+    "allStatuses": "Bütün statuslar",
+    "openOnly": "Açıq (qərar gözləyir)",
+    "sort": "Sıralama",
+    "sortOptions": {
+      "newest": "Əvvəlcə yenilər",
+      "oldest": "Əvvəlcə köhnələr",
+      "incidentLatest": "Hadisə tarixi, sonuncular",
+      "incidentEarliest": "Hadisə tarixi, ilkinlər",
+      "amountHigh": "Məbləğ, ən böyük",
+      "amountLow": "Məbləğ, ən kiçik",
+      "number": "Zərər nömrəsi"
+    },
+    "results": "Zərərlər",
+    "count_one": "{{count}} zərər",
+    "count_other": "{{count}} zərər",
+    "noMatchTitle": "Uyğun zərər tapılmadı",
+    "noMatchBody": "Başqa status və ya sorğu yoxlayın, ya da filtrləri təmizləyin.",
+    "emptyTitle": "Hələ zərər yoxdur",
+    "emptyBody": "Sığortalı avtomobillə nəsə baş verərsə, zərəri burada bildirin. Bir neçə dəqiqə çəkir, şəkilləri indi və ya sonra əlavə etmək olar.",
+    "pagination": "Zərər səhifələri",
+    "caption": "Sizin zərərləriniz",
+    "columns": {
+      "number": "Zərər",
+      "incident": "Hadisə",
+      "amount": "Məbləğ",
+      "updated": "Son yenilənmə",
+      "status": "Status"
+    },
+    "approvedAmount": "{{amount}} təsdiqlənib"
+  },
+  "claimWizard": {
+    "title": "Zərər bildir",
+    "lead": "Beş qısa addım. Səhifəni yeniləsəniz, cavablar qalır.",
+    "progress": "Bildiriş addımları",
+    "steps": {
+      "policy": {
+        "short": "Polis",
+        "title": "Zərər hansı polis üzrədir?"
+      },
+      "incident": {
+        "short": "Hadisə",
+        "title": "Nə baş verdi?"
+      },
+      "damage": {
+        "short": "Zərər",
+        "title": "Zərər nə qədərdir?"
+      },
+      "documents": {
+        "short": "Sənədlər",
+        "title": "Şəkillər və sənədlər"
+      },
+      "review": {
+        "short": "Yoxlama",
+        "title": "Yoxlayın və göndərin"
+      },
+      "done": {
+        "short": "Hazır",
+        "title": "Zərər bildirildi"
+      }
+    },
+    "policy": {
+      "legend": "Polis",
+      "hint": "Zərəri yalnız qüvvədə olan polis üzrə bildirmək olar. Digərləri səbəbi ilə göstərilir.",
+      "noneEligible": "Bu gün heç bir polisiniz üzrə zərər bildirmək olmur — səbəb hər birinin yanında yazılıb.",
+      "noneTitle": "Hələ polis yoxdur",
+      "noneBody": "Zərər qüvvədə olan polis üzrə bildirilir. Əvvəlcə polis alın.",
+      "reasons": {
+        "unpaid": "Ödənilməyib, ona görə də sığorta yoxdur.",
+        "ended": "Sığorta {{date}} tarixində bitib.",
+        "cancelled": "Bu polis ləğv edilib.",
+        "notStarted": "Sığorta {{date}} tarixində başlayır."
+      }
+    },
+    "incident": {
+      "date": "Hadisənin tarixi",
+      "dateHint": "{{from}} – {{to}} arasında.",
+      "type": "Nə baş verdi",
+      "typePlaceholder": "Seçin…",
+      "location": "Hadisə yeri",
+      "locationHint": "Şəhər və küçə, ya da yol və ən yaxın nişanə.",
+      "description": "Təsvir",
+      "descriptionHint": "Baş verənləri öz sözlərinizlə yazın: ən azı {{min}} simvol."
+    },
+    "damage": {
+      "amount": "Təxmini zərər",
+      "amountHint": "Onlayn {{max}}-a qədər.",
+      "estimate": "Hələlik servisin smetası, hesab-faktura və ya öz təxmininiz kifayətdir. Varsa, növbəti addımda əlavə edin.",
+      "cover": {
+        "MTPL": "İcbari sığorta başqalarına və onların əmlakına vurduğunuz zərəri əhatə edir, öz avtomobilinizi yox.",
+        "CASCO": "KASKO öz avtomobilinizə dəyən zərəri, o cümlədən oğurluq və təbii hadisələri əhatə edir.",
+        "other": "Tənzimləyici polisinizin nəyi əhatə etdiyini yoxlayacaq."
+      },
+      "review": "Tənzimləyici təxmini yoxlayır və başqa məbləğ təsdiqləyə bilər."
+    },
+    "documents": {
+      "lead": "Məcburi deyil, amma qərarı sürətləndirir. Zərər açıq olduqca onun səhifəsindən daha çox əlavə etmək olar.",
+      "tips": {
+        "photos": "Zərərin, hadisə yerinin və digər avtomobilin nömrəsinin şəkilləri.",
+        "police": "Polis protokolu və ya hər iki sürücünün imzaladığı qəza blankı.",
+        "estimate": "Təmir smetası və ya hesab-faktura."
+      },
+      "skip": "Sənədsiz davam et"
+    },
+    "review": {
+      "accept": "Bildiyim qədər bu məlumatların doğru olduğunu təsdiqləyirəm.",
+      "acceptLabel": "Təsdiq",
+      "submit": "Zərəri bildir",
+      "retryUploads": "Yükləməni təkrarla",
+      "noDocuments": "Yoxdur",
+      "documents_one": "{{count}} fayl, göndərişdən sonra yüklənəcək",
+      "documents_other": "{{count}} fayl, göndərişdən sonra yüklənəcək",
+      "policyGone": "Bu polis üzrə artıq zərər bildirmək olmur. Başqasını seçin.",
+      "filedWithFailures_one": "{{number}} zərəri bildirildi, amma {{count}} fayl yüklənmədi.",
+      "filedWithFailures_other": "{{number}} zərəri bildirildi, amma {{count}} fayl yüklənmədi.",
+      "failuresHelp": "Aşağıda işarələnmiş faylları silin və ya yenidən cəhd edin. Sənədləri sonra zərərin səhifəsindən də əlavə etmək olar.",
+      "continueWithout": "Onlarsız davam et"
+    },
+    "done": {
+      "filed": "Zərər bildirildi",
+      "documents_one": "{{count}} sənəd əlavə edildi.",
+      "documents_other": "{{count}} sənəd əlavə edildi.",
+      "noDocuments": "Hələ sənəd əlavə edilməyib.",
+      "next": "Ona tənzimləyici baxacaq. Hər addım zərərin səhifəsində və zəngin altında görünəcək.",
+      "channels": "Telefona və ya e-poçta heç nə göndərilmir: yenilikləri kabinetdə izləyin.",
+      "view": "Zərərə bax",
+      "all": "Zərərlərim",
+      "another": "Daha bir zərər bildir"
+    }
+  },
+  "claimDetail": {
+    "back": "Zərərlərimə qayıt",
+    "title": "{{number}} zərəri",
+    "notFoundTitle": "Zərər tapılmadı",
+    "notFoundBody": "O yoxdur və ya hesabınıza aid deyil.",
+    "summary": "Zərərin xülasəsi",
+    "claimed": "Bildirilən",
+    "approved": "Təsdiqlənən",
+    "policy": "Polis",
+    "filed": "Bildirilib",
+    "timelineTitle": "Tarixçə",
+    "timeline": {
+      "Submitted": "Zərər bildirildi",
+      "UnderReview": "Baxışa götürüldü",
+      "Approved": "Təsdiqləndi",
+      "Rejected": "Rədd edildi",
+      "Paid": "Ödənildi",
+      "Withdrawn": "Geri götürüldü"
+    },
+    "actor": {
+      "you": "siz",
+      "Client": "{{name}}",
+      "Agent": "agentiniz {{name}}",
+      "Adjuster": "tənzimləyici {{name}}",
+      "Admin": "PolisGo əməkdaşı"
+    },
+    "decision": {
+      "approved": "{{amount}} məbləğində təsdiqlənib",
+      "rejected": "Bu zərər rədd edilib",
+      "reason": "Tənzimləyicinin qeydi",
+      "paid": "Təsdiqlənən məbləğ ödənilib."
+    },
+    "documents": {
+      "title": "Sənədlər",
+      "empty": "Hələ sənəd yoxdur.",
+      "download": "Yüklə",
+      "add": "Şəkil və ya sənəd əlavə et",
+      "uploaded_one": "{{count}} sənəd əlavə edildi.",
+      "uploaded_other": "{{count}} sənəd əlavə edildi.",
+      "full": "Zərərdə maksimum {{count}} sənəd var.",
+      "closed": "Sənədləri yalnız zərər açıq olduqca əlavə etmək olar."
+    },
+    "withdraw": "Zərəri geri götür",
+    "withdrawTitle": "{{number}} zərəri geri götürülsün?",
+    "withdrawBody": "Zərər bağlanacaq və tənzimləyici onun üzərində işi dayandıracaq. Bunu geri qaytarmaq olmur — yeni zərər bildirmək lazım olacaq.",
+    "reasonLabel": "Səbəb (məcburi deyil)",
+    "keep": "Saxla",
+    "confirmWithdraw": "Geri götür",
+    "withdrawn": "{{number}} zərəri geri götürüldü.",
+    "withdrawConflict": "Bu zərər üzrə artıq qərar var, onu geri götürmək olmaz.",
+    "withdrawnNote": "Bu zərəri geri götürmüsünüz. O, qeyd üçün burada qalır."
+  },
+  "claimUpdates": {
+    "status": {
+      "Submitted": "Sizin adınıza {{number}} zərəri bildirildi",
+      "UnderReview": "{{number}} zərərinə baxılır",
+      "Approved": "{{number}} zərəri təsdiqləndi",
+      "Rejected": "{{number}} zərəri rədd edildi",
+      "Paid": "{{number}} zərəri üzrə ödəniş edildi",
+      "Withdrawn": "{{number}} zərəri geri götürüldü"
+    }
   }
 }

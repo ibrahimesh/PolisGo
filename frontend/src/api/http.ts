@@ -16,7 +16,7 @@ export interface RequestOptions {
   // Anonymous endpoints skip the header so a stale token can't turn a public
   // call (e.g. the quote calculator) into a 401.
   anonymous?: boolean;
-  responseType?: 'json' | 'text';
+  responseType?: 'json' | 'text' | 'blob';
 }
 
 type UnauthorizedListener = () => void;
@@ -71,5 +71,6 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
 
   if (response.status === 204) return undefined as T;
   if (responseType === 'text') return (await response.text()) as T;
+  if (responseType === 'blob') return (await response.blob()) as T;
   return (await response.json()) as T;
 }

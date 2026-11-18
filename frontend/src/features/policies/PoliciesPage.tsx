@@ -6,8 +6,9 @@ import { PageHeader } from '../../components/layout/PageHeader';
 import { Button, ButtonLink } from '../../components/ui/Button';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { ErrorNotice } from '../../components/ui/ErrorNotice';
-import { ChevronLeftIcon, ChevronRightIcon, SearchIcon } from '../../components/ui/icons';
+import { SearchIcon } from '../../components/ui/icons';
 import { Input } from '../../components/ui/Input';
+import { Pagination } from '../../components/ui/Pagination';
 import { Select } from '../../components/ui/Select';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { Caption, Table, TBody, Td, Th, THead, Tr } from '../../components/ui/Table';
@@ -185,6 +186,7 @@ export function PoliciesPage() {
           <Pagination
             page={Math.min(state.page, pages)}
             pages={pages}
+            label={t('policies.pagination')}
             onChange={(page) => setParams(writeListState({ ...state, page }))}
           />
         )}
@@ -277,39 +279,6 @@ function PolicyCards({ items }: { items: readonly PolicyResponse[] }) {
         </li>
       ))}
     </ul>
-  );
-}
-
-function Pagination({
-  page,
-  pages,
-  onChange,
-}: {
-  page: number;
-  pages: number;
-  onChange: (page: number) => void;
-}) {
-  const { t } = useTranslation();
-  return (
-    <nav
-      aria-label={t('policies.pagination')}
-      className="flex items-center justify-between gap-4 border-t border-line pt-4"
-    >
-      <Button variant="secondary" size="sm" disabled={page <= 1} onClick={() => onChange(page - 1)}>
-        <ChevronLeftIcon />
-        {t('policies.previous')}
-      </Button>
-      <p className="text-sm text-muted tabular">{t('policies.pageOf', { page, pages })}</p>
-      <Button
-        variant="secondary"
-        size="sm"
-        disabled={page >= pages}
-        onClick={() => onChange(page + 1)}
-      >
-        {t('policies.next')}
-        <ChevronRightIcon />
-      </Button>
-    </nav>
   );
 }
 

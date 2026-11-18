@@ -55,6 +55,25 @@ const SERVER_MESSAGE_KEYS: Record<string, string> = {
     'errors.draftStartPassed',
   'This policy has already expired.': 'errors.policyExpired',
   'A vehicle with this plate number is already registered.': 'errors.plateTaken',
+  // Claim rules — ClaimValidation.Messages (same contract test).
+  'Claims can only be filed on active policies.': 'errors.claimPolicyNotActive',
+  'Incident date cannot be in the future.': 'validation.incidentInFuture',
+  'Incident date must fall within the policy period.': 'validation.incidentOutsideCover',
+  'Incident type is required.': 'validation.incidentTypeRequired',
+  'Location must be between 3 and 200 characters.': 'validation.locationLength',
+  'Description must be between 10 and 2000 characters.': 'validation.descriptionLength',
+  'Claimed amount must be greater than zero.': 'validation.amountPositive',
+  'Claimed amount is above the limit for an online claim.': 'validation.amountTooHigh',
+  'Claimed amount can have at most two decimal places.': 'validation.amountPrecision',
+  'A claim for this policy, incident date and amount is already on file.': 'errors.claimDuplicate',
+  'Reason must be at most 500 characters.': 'validation.reasonTooLong',
+  'Comment must be at most 1000 characters.': 'validation.commentTooLong',
+  'File is required.': 'errors.fileRequired',
+  'File size must be between 1 byte and 5 MB.': 'errors.fileSize',
+  'Only .jpg, .jpeg, .png and .pdf files are accepted.': 'errors.fileType',
+  'File content does not match the declared extension.': 'errors.fileContent',
+  'A claim can have at most 10 documents.': 'errors.tooManyDocuments',
+  'Documents can only be added while the claim is open.': 'errors.claimClosed',
 };
 
 export function serverMessageKey(message: string | undefined): string | undefined {

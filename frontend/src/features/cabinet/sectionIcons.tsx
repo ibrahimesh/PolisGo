@@ -17,6 +17,7 @@ export const SECTION_ICONS: Record<WorkspaceSectionId, ComponentType> = {
   buy: PlusIcon,
   agent: BriefcaseIcon,
   claims: ClipboardIcon,
+  myClaims: ClipboardIcon,
   admin: GaugeIcon,
   profile: UserIcon,
   help: HelpIcon,

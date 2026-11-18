@@ -12,6 +12,8 @@ export const WORKSPACE_SECTIONS = [
   { id: 'overview', path: '/app', roles: USER_ROLES, mobile: true },
   { id: 'policies', path: '/app/policies', roles: ['Client'], mobile: true },
   { id: 'buy', path: '/app/buy', roles: ['Client'], mobile: true },
+  // Same path as the staff claims desk: one route, the role picks the page.
+  { id: 'myClaims', path: '/app/claims', roles: ['Client'], mobile: true },
   { id: 'agent', path: '/app/agent', roles: ['Agent', 'Admin'], mobile: true },
   { id: 'claims', path: '/app/claims', roles: ['Adjuster', 'Admin'], mobile: true },
   { id: 'admin', path: '/app/admin', roles: ['Admin'], mobile: true },
