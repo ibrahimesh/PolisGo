@@ -1,6 +1,14 @@
 import { test } from '@playwright/test';
 import type { Page } from '@playwright/test';
-import { usePreferences, waitForPremium } from './helpers';
+import {
+  cabinetApi,
+  randomUser,
+  uniqueVehicle,
+  registerSession,
+  usePreferences,
+  useSession,
+  waitForPremium,
+} from './helpers';
 import type { Theme } from './helpers';
 
 // Regenerates docs/screenshots. Tagged so the regular e2e run skips it:
@@ -45,6 +53,71 @@ for (const size of SIZES) {
           fullPage: true,
           animations: 'disabled',
         });
+      });
+    }
+  });
+}
+
+/* ---------- Client cabinet: first screen only ---------- */
+
+const CABINET_PAGES = ['overview', 'policies', 'policy', 'buy', 'profile'] as const;
+const THEMES: Theme[] = ['dark', 'light'];
+
+// One client with real data behind every page: an active policy, one that
+// ends inside the 30-day reminder window, and an unpaid draft.
+async function seedClient(page: Page) {
+  const { session } = await registerSession(page, { ...randomUser(), fullName: 'Leyla Məmmədova' });
+  const api = cabinetApi(page, session);
+  const { policy } = await api.activePolicy(12, 'MTPL');
+  await api.activePolicy(1, 'CASCO');
+  // Sorts first by plate, so the wizard preselects it; it has only a CASCO
+  // draft, so MTPL prices without an overlap.
+  const spare = await api.vehicle({
+    ...uniqueVehicle(),
+    // Random digits: parallel workers run this at the same millisecond.
+    plateNumber: `10-AA-${String(Math.floor(Math.random() * 1e5)).padStart(5, '0')}`,
+  });
+  await api.policy(spare.id, 'CASCO', 6);
+  return { session, policyId: policy.id };
+}
+
+for (const size of SIZES) {
+  test.describe(`cabinet ${size.label} @screenshots`, () => {
+    test.use({ viewport: size.viewport, deviceScaleFactor: 2 });
+
+    for (const theme of THEMES) {
+      test(`cabinet-${theme}-${size.label}`, async ({ page }) => {
+        await page.emulateMedia({ reducedMotion: 'reduce' });
+        const { session, policyId } = await seedClient(page);
+        await usePreferences(page, { theme, lang: 'en' });
+        await useSession(page, session);
+
+        const paths: Record<(typeof CABINET_PAGES)[number], string> = {
+          overview: '/app',
+          policies: '/app/policies',
+          policy: `/app/policies/${policyId}`,
+          buy: '/app/buy',
+          profile: '/app/profile',
+        };
+        for (const name of CABINET_PAGES) {
+          await page.goto(paths[name]);
+          if (name === 'overview')
+            await page.getByText('Active policies', { exact: true }).waitFor();
+          if (name === 'policies') await page.getByText('3 policies', { exact: true }).waitFor();
+          if (name === 'policy')
+            await page.getByRole('heading', { name: 'Status history' }).waitFor();
+          if (name === 'buy') {
+            await page.getByRole('radio', { name: /^MTPL/ }).check();
+            await page.getByText(/^Your premium: /).waitFor({ state: 'attached', timeout: 15_000 });
+          }
+          if (name === 'profile') await page.getByLabel('Full name').waitFor();
+          await page.evaluate(() => document.fonts.ready);
+          await page.waitForTimeout(400);
+          await page.screenshot({
+            path: `docs/screenshots/cabinet-${name}-${theme}-${size.label}.png`,
+            animations: 'disabled',
+          });
+        }
       });
     }
   });
