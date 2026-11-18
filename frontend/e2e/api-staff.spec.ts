@@ -107,7 +107,9 @@ test.describe('Staff API on SQL Server', () => {
     }
   });
 
-  test('directory scope: own book, case-insensitive Azerbaijani letters and phone digits', async ({ page }) => {
+  test('directory scope: own book, case-insensitive Azerbaijani letters and phone digits', async ({
+    page,
+  }) => {
     const admin = await adminApi(page);
     const agent = await admin.createStaff('Agent');
     const other = await admin.createStaff('Agent');

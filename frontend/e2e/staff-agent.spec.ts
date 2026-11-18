@@ -31,7 +31,6 @@ test.describe('Agent desk', () => {
     const theirs = await bookOf(page, 1);
     const myCustomer = mine.customers[0];
     const theirCustomer = theirs.customers[0];
-    if (!myCustomer || !theirCustomer) throw new Error('setup');
 
     await seedPreferences(page, { lang: 'en', theme: 'dark' });
     await openSession(page, mine.agent.session);
@@ -62,7 +61,6 @@ test.describe('Agent desk', () => {
   }) => {
     const { agent, customers } = await bookOf(page, 1);
     const customer = customers[0];
-    if (!customer) throw new Error('setup');
     await seedPreferences(page, { lang: 'en', theme: 'dark' });
     await openSession(page, agent.session);
 
@@ -120,7 +118,7 @@ test.describe('Agent desk', () => {
       page.getByRole('button', { name: 'Export CSV' }).click(),
     ]);
     expect(download.suggestedFilename()).toMatch(/^policies-\d{4}-\d{2}-\d{2}\.csv$/);
-    const bytes = readFileSync((await download.path()) ?? '');
+    const bytes = readFileSync(await download.path());
     expect([...bytes.subarray(0, 3)]).toEqual([0xef, 0xbb, 0xbf]);
     const lines = bytes.subarray(3).toString('utf8').split('\r\n').filter(Boolean);
     expect(lines[0]).toMatch(/^Policy number,Status,Customer,Product,/);

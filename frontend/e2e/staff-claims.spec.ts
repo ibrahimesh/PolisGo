@@ -181,7 +181,7 @@ test.describe('Adjuster claims desk', () => {
       page.getByRole('button', { name: 'Export CSV' }).click(),
     ]);
     expect(download.suggestedFilename()).toMatch(/^claims-\d{4}-\d{2}-\d{2}\.csv$/);
-    const bytes = readFileSync((await download.path()) ?? '');
+    const bytes = readFileSync(await download.path());
 
     expect([...bytes.subarray(0, 3)]).toEqual([0xef, 0xbb, 0xbf]);
     const lines = bytes.subarray(3).toString('utf8').split('\r\n').filter(Boolean);
