@@ -13,4 +13,8 @@ public class Payment
     public DateTime PaidAt { get; set; }
     public PaymentMethod Method { get; set; }
     public PaymentStatus Status { get; set; }
+
+    // The payment provider's reference, printed on the certificate so the
+    // customer can trace the charge. Null on rows that predate it.
+    public string? Reference { get; set; }
 }

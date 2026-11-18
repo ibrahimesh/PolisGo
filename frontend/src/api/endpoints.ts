@@ -3,6 +3,7 @@ import type {
   ApproveClaimRequest,
   AuthResponse,
   CalculateQuoteRequest,
+  ChangePasswordRequest,
   ClaimDetailResponse,
   ClaimHistoryEntry,
   ClaimResponse,
@@ -11,18 +12,22 @@ import type {
   CreateVehicleRequest,
   CurrentUserResponse,
   Guid,
+  ListPoliciesQuery,
   ListClaimsQuery,
   LoginRequest,
   PagedResult,
   PayClaimRequest,
   PayPolicyResponse,
+  PolicyDetailResponse,
   PolicyResponse,
   PolicyTypeResponse,
   PremiumBreakdown,
+  ProfileResponse,
   RegisterRequest,
   RejectClaimRequest,
   ReviewClaimRequest,
   SubmitClaimRequest,
+  UpdateProfileRequest,
   VehicleResponse,
 } from './types';
 
@@ -34,6 +39,14 @@ export const authApi = {
   register: (body: RegisterRequest) =>
     request<AuthResponse>('/api/auth/register', { method: 'POST', body, anonymous: true }),
   me: (signal?: Signal) => request<CurrentUserResponse>('/api/auth/me', { signal }),
+};
+
+export const profileApi = {
+  get: (signal?: Signal) => request<ProfileResponse>('/api/me', { signal }),
+  update: (body: UpdateProfileRequest) =>
+    request<ProfileResponse>('/api/me', { method: 'PUT', body }),
+  changePassword: (body: ChangePasswordRequest) =>
+    request<void>('/api/me/change-password', { method: 'POST', body }),
 };
 
 export const quotesApi = {
@@ -58,9 +71,13 @@ export const vehiclesApi = {
 };
 
 export const policiesApi = {
-  list: (page = 1, pageSize = 20, signal?: Signal) =>
-    request<PagedResult<PolicyResponse>>('/api/policies', { query: { page, pageSize }, signal }),
-  get: (id: Guid, signal?: Signal) => request<PolicyResponse>(`/api/policies/${id}`, { signal }),
+  list: (query: ListPoliciesQuery = {}, signal?: Signal) =>
+    request<PagedResult<PolicyResponse>>('/api/policies', { query: { ...query }, signal }),
+  get: (id: Guid, signal?: Signal) =>
+    request<PolicyDetailResponse>(`/api/policies/${id}`, { signal }),
+  // Priced from the customer's stored data: the premium that will be charged.
+  quote: (body: CreatePolicyRequest, signal?: Signal) =>
+    request<PremiumBreakdown>('/api/policies/quote', { method: 'POST', body, signal }),
   create: (body: CreatePolicyRequest) =>
     request<PolicyResponse>('/api/policies', { method: 'POST', body }),
   pay: (id: Guid) => request<PayPolicyResponse>(`/api/policies/${id}/pay`, { method: 'POST' }),

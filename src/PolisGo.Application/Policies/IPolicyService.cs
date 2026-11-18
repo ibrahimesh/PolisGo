@@ -1,10 +1,17 @@
 using PolisGo.Application.Common;
 using PolisGo.Application.Policies.Dtos;
+using PolisGo.Application.Pricing;
 
 namespace PolisGo.Application.Policies;
 
 public interface IPolicyService
 {
+    // Prices a prospective policy from stored customer, vehicle and claims
+    // data — the same path Create uses, so the quote is the price charged.
+    Task<PremiumBreakdown> QuoteAsync(
+        CreatePolicyRequest request,
+        CancellationToken cancellationToken = default);
+
     Task<PolicyResponse> CreateAsync(
         CreatePolicyRequest request,
         CancellationToken cancellationToken = default);
@@ -13,9 +20,12 @@ public interface IPolicyService
         Guid policyId,
         CancellationToken cancellationToken = default);
 
+    Task<PolicyDetailResponse> GetDetailAsync(
+        Guid policyId,
+        CancellationToken cancellationToken = default);
+
     Task<PagedResult<PolicyResponse>> ListAsync(
-        int page,
-        int pageSize,
+        ListPoliciesQuery query,
         CancellationToken cancellationToken = default);
 
     Task<PayPolicyResponse> PayAsync(

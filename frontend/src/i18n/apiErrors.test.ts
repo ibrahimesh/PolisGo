@@ -9,7 +9,11 @@ import en from './locales/en.json';
 // PolicyValidation.Messages in C#) must map to a translated key, so a server
 // 400 never reaches the user as untranslated English or a generic error.
 // Vitest runs from frontend/, so the API source is one level up.
-const SOURCES = ['Auth/AuthValidation.cs', 'Vehicles/VehicleValidation.cs'];
+const SOURCES = [
+  'Auth/AuthValidation.cs',
+  'Vehicles/VehicleValidation.cs',
+  'Policies/PolicyValidation.cs',
+];
 
 function messagesIn(file: string): string[] {
   const csharp = readFileSync(resolve(process.cwd(), '../src/PolisGo.Application', file), 'utf8');

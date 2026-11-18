@@ -349,7 +349,10 @@
     },
     "invalidCredentials": "E-poçt və ya şifrə yanlışdır.",
     "emailTaken": "Bu e-poçtla hesab artıq mövcuddur.",
-    "unknownProduct": "Bu sığorta məhsulu mövcud deyil."
+    "unknownProduct": "Bu sığorta məhsulu mövcud deyil.",
+    "policyOverlap": "Bu avtomobilin həmin tarixlər üçün bu növdə qaralama və ya qüvvədə olan polisi artıq var.",
+    "draftStartPassed": "Bu qaralamanın başlama tarixi keçib. Yeni tarix seçmək üçün alışı yenidən başladın.",
+    "policyExpired": "Bu polisin müddəti artıq bitib."
   },
   "validation": {
     "required": "Mütləq doldurulmalıdır.",
@@ -394,7 +397,12 @@
     "plateInvalid": "Boşluq və ya defislə ayrılmış 16-ya qədər hərf və rəqəm, məsələn 10-AA-123.",
     "vinRequired": "VIN kodunu daxil edin.",
     "vinInvalid": "VIN 17 simvoldan ibarətdir: rəqəmlər və I, O, Q-dan başqa latın hərfləri.",
-    "vehicleYearRange": "Buraxılış ili 1950-ci ildən gələn ilə qədər olmalıdır."
+    "vehicleYearRange": "Buraxılış ili 1950-ci ildən gələn ilə qədər olmalıdır.",
+    "startDatePast": "Başlama tarixi keçmişdə ola bilməz.",
+    "startDateTooFar": "Növbəti 60 gün ərzində başlama tarixi seçin.",
+    "policyTypeRequired": "Sığorta növünü seçin.",
+    "vehicleRequired": "Avtomobili seçin.",
+    "searchTooLong": "Ən çox 100 simvol."
   },
   "common": {
     "loading": "Yüklənir",

@@ -19,6 +19,7 @@ public class AppDbContext : DbContext, IApplicationDbContext
     public DbSet<Claim> Claims => Set<Claim>();
     public DbSet<ClaimStatusHistory> ClaimStatusHistory => Set<ClaimStatusHistory>();
     public DbSet<ClaimDocument> ClaimDocuments => Set<ClaimDocument>();
+    public DbSet<PolicyStatusHistory> PolicyStatusHistory => Set<PolicyStatusHistory>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

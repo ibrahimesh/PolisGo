@@ -349,7 +349,10 @@
     },
     "invalidCredentials": "The email or password is incorrect.",
     "emailTaken": "An account with this email already exists.",
-    "unknownProduct": "This insurance product isn't available."
+    "unknownProduct": "This insurance product isn't available.",
+    "policyOverlap": "This vehicle already has a draft or active policy of this type for those dates.",
+    "draftStartPassed": "The start date of this draft has passed. Start a new purchase to choose a new date.",
+    "policyExpired": "This policy has already expired."
   },
   "validation": {
     "required": "Required.",
@@ -394,7 +397,12 @@
     "plateInvalid": "Use up to 16 letters and digits, separated by spaces or hyphens, like 10-AA-123.",
     "vinRequired": "Enter the VIN.",
     "vinInvalid": "A VIN has 17 characters: digits and letters except I, O and Q.",
-    "vehicleYearRange": "Model year must be between 1950 and next year."
+    "vehicleYearRange": "Model year must be between 1950 and next year.",
+    "startDatePast": "The start date can’t be in the past.",
+    "startDateTooFar": "Choose a start date within the next 60 days.",
+    "policyTypeRequired": "Choose a type of cover.",
+    "vehicleRequired": "Choose a vehicle.",
+    "searchTooLong": "Use 100 characters or fewer."
   },
   "common": {
     "loading": "Loading",

@@ -79,4 +79,49 @@ public class PolicyEntityTests
         var b = Draft(new DateTime(2026, 7, 1), new DateTime(2026, 12, 31));
         Assert.False(a.OverlapsWith(b));
     }
+
+    [Fact]
+    public void Every_transition_appends_a_history_row_with_the_actor()
+    {
+        var actor = Guid.NewGuid();
+        var policy = Draft();
+
+        policy.RecordIssued(actor);
+        policy.Activate(actor);
+        policy.Cancel(actor);
+
+        Assert.Equal(
+            [(null, PolicyStatus.Draft), (PolicyStatus.Draft, PolicyStatus.Active), (PolicyStatus.Active, PolicyStatus.Cancelled)],
+            policy.StatusHistory.Select(h => (h.FromStatus, h.ToStatus)));
+        Assert.All(policy.StatusHistory, h => Assert.Equal(actor, h.ChangedByUserId));
+    }
+
+    [Fact]
+    public void RecordIssued_twice_throws()
+    {
+        var policy = Draft();
+        policy.RecordIssued(null);
+        Assert.Throws<InvalidStateTransitionException>(() => policy.RecordIssued(null));
+    }
+
+    [Fact]
+    public void A_failed_transition_leaves_no_history()
+    {
+        var policy = Draft();
+        policy.Status = PolicyStatus.Cancelled;
+        Assert.Throws<InvalidStateTransitionException>(() => policy.Activate());
+        Assert.Empty(policy.StatusHistory);
+    }
+
+    [Theory]
+    [InlineData(PolicyStatus.Active, "2026-12-31", PolicyStatus.Active)]   // last covered day
+    [InlineData(PolicyStatus.Active, "2027-01-01", PolicyStatus.Expired)]  // day after the end
+    [InlineData(PolicyStatus.Draft, "2027-06-01", PolicyStatus.Draft)]     // drafts never expire
+    [InlineData(PolicyStatus.Cancelled, "2027-06-01", PolicyStatus.Cancelled)]
+    public void StatusOn_derives_expiry_from_the_inclusive_end_date(PolicyStatus stored, string on, PolicyStatus expected)
+    {
+        var policy = Draft();
+        policy.Status = stored;
+        Assert.Equal(expected, policy.StatusOn(DateOnly.Parse(on)));
+    }
 }

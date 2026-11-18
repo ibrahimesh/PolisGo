@@ -10,11 +10,12 @@ namespace PolisGo.Tests.Infrastructure;
 internal sealed class TestData
 {
     private readonly AppDbContext _db;
-    private int _sequence;
+    // Static: several TestData instances often share one database (ApiFactory).
+    private static int _sequence;
 
     public TestData(AppDbContext db) => _db = db;
 
-    private int Next() => Interlocked.Increment(ref _sequence);
+    private static int Next() => Interlocked.Increment(ref _sequence);
 
     public User User(UserRole role = UserRole.Admin, string? email = null)
     {

@@ -3,9 +3,14 @@ using Microsoft.AspNetCore.Mvc;
 using PolisGo.Application.Common;
 using PolisGo.Application.Policies;
 using PolisGo.Application.Policies.Dtos;
+using PolisGo.Application.Pricing;
+using PolisGo.Domain.Enums;
 
 namespace PolisGo.Api.Controllers;
 
+// Rows are scoped by PolicyAccess inside the service: Clients see their own,
+// Agents the ones they sold, Adjusters and Admins all. A policy outside the
+// caller's scope is a 404, never a 403, so its existence isn't leaked.
 [ApiController]
 [Route("api/policies")]
 [Authorize]
@@ -19,12 +24,53 @@ public class PoliciesController : ControllerBase
     }
 
     /// <summary>
+    /// Prices a prospective policy from stored data, without creating it.
+    /// </summary>
+    /// <remarks>
+    /// Uses the customer's stored birth and licence dates, the vehicle and the
+    /// customer's approved claims — the same calculation as
+    /// <c>POST /api/policies</c>, so the result is the premium that will be
+    /// charged today. Runs the same checks too (dates, term, ownership, overlap).
+    /// </remarks>
+    /// <response code="200">The premium and its factors.</response>
+    /// <response code="400">Invalid start date, term or missing fields.</response>
+    /// <response code="401">No or invalid bearer token.</response>
+    /// <response code="403">The caller is an Adjuster.</response>
+    /// <response code="404">Unknown policy type, or a vehicle the caller can't use.</response>
+    /// <response code="409">A Draft or Active policy of this type already covers the vehicle then.</response>
+    [HttpPost("quote")]
+    [Authorize(Roles = "Client,Agent,Admin")]
+    [ProducesResponseType<PremiumBreakdown>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
+    public async Task<ActionResult<PremiumBreakdown>> Quote(
+        [FromBody] CreatePolicyRequest request, CancellationToken cancellationToken)
+    {
+        return Ok(await _policies.QuoteAsync(request, cancellationToken));
+    }
+
+    /// <summary>
     /// Creates a Draft policy. The premium is computed server-side from stored
     /// customer, vehicle and claims data — the request does not (and cannot)
     /// include a Premium field.
     /// </summary>
+    /// <response code="201">The Draft policy.</response>
+    /// <response code="400">Invalid start date, term or missing fields.</response>
+    /// <response code="401">No or invalid bearer token.</response>
+    /// <response code="403">The caller is an Adjuster.</response>
+    /// <response code="404">Unknown policy type, or a vehicle the caller can't use.</response>
+    /// <response code="409">A Draft or Active policy of this type already covers the vehicle then.</response>
     [HttpPost]
     [Authorize(Roles = "Client,Agent,Admin")]
+    [ProducesResponseType<PolicyResponse>(StatusCodes.Status201Created)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
     public async Task<ActionResult<PolicyResponse>> Create(
         [FromBody] CreatePolicyRequest request, CancellationToken cancellationToken)
     {
@@ -32,26 +78,79 @@ public class PoliciesController : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id = response.Id }, response);
     }
 
+    /// <summary>
+    /// Paged, filterable list of the policies the caller can see.
+    /// </summary>
+    /// <param name="status">Effective status: Expired includes Active policies past their end date.</param>
+    /// <param name="type">Policy type code, e.g. MTPL.</param>
+    /// <param name="search">Part of a policy number or plate, any case. Max 100 characters.</param>
+    /// <param name="sortBy">CreatedAt (default), StartDate, EndDate, Premium or PolicyNumber.</param>
+    /// <param name="sortDir">Asc or Desc (default).</param>
+    /// <param name="page">1-based page number.</param>
+    /// <param name="pageSize">Items per page; capped at 50.</param>
+    /// <param name="cancellationToken">Request cancellation.</param>
+    /// <response code="200">A page of policies.</response>
+    /// <response code="400">Invalid filter or sort value, or search too long.</response>
+    /// <response code="401">No or invalid bearer token.</response>
     [HttpGet]
+    [ProducesResponseType<PagedResult<PolicyResponse>>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<PagedResult<PolicyResponse>>> List(
+        [FromQuery] PolicyStatus? status,
+        [FromQuery] string? type,
+        [FromQuery] string? search,
+        [FromQuery] PolicySortBy sortBy = PolicySortBy.CreatedAt,
+        [FromQuery] SortDirection sortDir = SortDirection.Desc,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
         CancellationToken cancellationToken = default)
     {
-        var result = await _policies.ListAsync(page, pageSize, cancellationToken);
+        var result = await _policies.ListAsync(
+            new ListPoliciesQuery(status, type, search, sortBy, sortDir, page, pageSize), cancellationToken);
         return Ok(result);
     }
 
+    /// <summary>
+    /// One policy with its vehicle, holder, pricing, payments and status history.
+    /// </summary>
+    /// <remarks>
+    /// <c>pricing</c> holds the factors frozen at issue and is null for
+    /// policies issued before they were recorded. History is oldest first; the
+    /// expiry step is derived from the end date and marked <c>automatic</c>.
+    /// </remarks>
+    /// <response code="200">The policy.</response>
+    /// <response code="401">No or invalid bearer token.</response>
+    /// <response code="404">No such policy, or one the caller can't see.</response>
     [HttpGet("{id:guid}")]
-    public async Task<ActionResult<PolicyResponse>> GetById(
+    [ProducesResponseType<PolicyDetailResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<PolicyDetailResponse>> GetById(
         Guid id, CancellationToken cancellationToken)
     {
-        var policy = await _policies.GetByIdAsync(id, cancellationToken);
-        return Ok(policy);
+        return Ok(await _policies.GetDetailAsync(id, cancellationToken));
     }
 
+    /// <summary>
+    /// Pays a Draft policy through the payment gateway and activates it.
+    /// </summary>
+    /// <remarks>
+    /// The amount is the stored premium, never a client value. The gateway in
+    /// this build is a fake that always succeeds.
+    /// </remarks>
+    /// <response code="200">The payment and the now Active policy.</response>
+    /// <response code="401">No or invalid bearer token.</response>
+    /// <response code="403">The caller is an Adjuster.</response>
+    /// <response code="404">No such policy, or one the caller can't see.</response>
+    /// <response code="409">Not a Draft any more, or its start date has passed.</response>
     [HttpPost("{id:guid}/pay")]
     [Authorize(Roles = "Client,Agent,Admin")]
+    [ProducesResponseType<PayPolicyResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
     public async Task<ActionResult<PayPolicyResponse>> Pay(
         Guid id, CancellationToken cancellationToken)
     {
@@ -59,7 +158,18 @@ public class PoliciesController : ControllerBase
         return Ok(response);
     }
 
+    /// <summary>
+    /// Cancels a Draft or Active policy.
+    /// </summary>
+    /// <response code="200">The cancelled policy.</response>
+    /// <response code="401">No or invalid bearer token.</response>
+    /// <response code="404">No such policy, or one the caller can't see.</response>
+    /// <response code="409">Already cancelled or expired.</response>
     [HttpPost("{id:guid}/cancel")]
+    [ProducesResponseType<PolicyResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
     public async Task<ActionResult<PolicyResponse>> Cancel(
         Guid id, CancellationToken cancellationToken)
     {
