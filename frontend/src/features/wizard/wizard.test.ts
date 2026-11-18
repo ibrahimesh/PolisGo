@@ -115,3 +115,17 @@ describe('wizard state', () => {
     expect(valuesKey(a.values)).not.toBe(valuesKey({ ...a.values, termMonths: 6 }));
   });
 });
+
+// Regression: an untouched radio group is null, and zod's own English
+// message ("expected string, received null") leaked into the error summary.
+it('reports an untouched radio group with the translated required message', () => {
+  const cover = createCoverSchema(TODAY).safeParse({
+    policyTypeCode: null,
+    startDate: TODAY,
+    termMonths: 12,
+  });
+  expect(fieldErrors(cover).policyTypeCode).toBe('validation.policyTypeRequired');
+  expect(fieldErrors(vehicleChoiceSchema.safeParse({ vehicleId: null })).vehicleId).toBe(
+    'validation.vehicleRequired',
+  );
+});

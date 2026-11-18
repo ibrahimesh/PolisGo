@@ -14,7 +14,10 @@ export function startDateBounds(today: string = todayIso()) {
 export function createCoverSchema(today: string = todayIso()) {
   const { min, max } = startDateBounds(today);
   return z.object({
-    policyTypeCode: z.string().min(1, 'validation.policyTypeRequired'),
+    // An untouched radio group reads as null: same message as empty.
+    policyTypeCode: z
+      .string({ error: 'validation.policyTypeRequired' })
+      .min(1, 'validation.policyTypeRequired'),
     // One ordered check, so the field reports the first problem only.
     startDate: z.string().superRefine((value, ctx) => {
       const message = !value
@@ -40,7 +43,7 @@ export type CoverInput = z.input<ReturnType<typeof createCoverSchema>>;
 export type CoverValues = z.output<ReturnType<typeof createCoverSchema>>;
 
 export const vehicleChoiceSchema = z.object({
-  vehicleId: z.string().min(1, 'validation.vehicleRequired'),
+  vehicleId: z.string({ error: 'validation.vehicleRequired' }).min(1, 'validation.vehicleRequired'),
 });
 export type VehicleChoice = z.infer<typeof vehicleChoiceSchema>;
 

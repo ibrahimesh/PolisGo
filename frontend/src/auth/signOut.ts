@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router';
 import { useToast } from '../components/ui/ToastProvider';
@@ -26,12 +26,16 @@ export function useCompleteSignOut() {
   const { toast } = useToast();
   const { t } = useTranslation();
   const requested = (location.state as SignOutState | null)?.signOut === true;
+  // One sign-out per navigation: StrictMode (and any re-render before the
+  // state is cleared) re-runs the effect, which showed the toast twice.
+  const handled = useRef<string | null>(null);
 
   useEffect(() => {
-    if (!requested) return;
+    if (!requested || handled.current === location.key) return;
+    handled.current = location.key;
     logout();
     toast({ title: t('auth.signedOut'), tone: 'info' });
     // Drop the flag so Back/Forward or a re-render can't sign out again.
     void navigate(location.pathname + location.hash, { replace: true, state: null });
-  }, [requested, logout, toast, t, navigate, location.pathname, location.hash]);
+  }, [requested, logout, toast, t, navigate, location.pathname, location.hash, location.key]);
 }

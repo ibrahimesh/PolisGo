@@ -34,6 +34,8 @@ export function VehicleStep() {
   const { register, control, handleSubmit, setValue, formState } = useForm<VehicleChoice>({
     resolver: zodResolver(vehicleChoiceSchema),
     mode: 'onTouched',
+    // Radios can't take RHF's focus; the invalid handler focuses in field order.
+    shouldFocusError: false,
     defaultValues: { vehicleId: state.values.vehicleId },
   });
   const vehicleId = useWatch({ control, name: 'vehicleId' });

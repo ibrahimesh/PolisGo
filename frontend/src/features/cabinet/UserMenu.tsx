@@ -25,15 +25,17 @@ export function UserMenu() {
         type="button"
         {...popover.buttonProps}
         onClick={popover.toggle}
-        aria-label={t('cabinet.userMenu', { name: user.fullName })}
+        // Starts with the visible name (WCAG 2.5.3): "Leyla Məmmədova, account menu".
+        aria-label={`${user.fullName}, ${t('cabinet.accountMenu')}`}
         className="flex h-9 items-center gap-2 rounded-sm border border-line pr-2 pl-1 text-sm text-text transition-colors hover:bg-surface-2"
       >
+        {/* Initials as generated content, not text: decoration that would
+            otherwise count as visible text missing from the name. */}
         <span
           aria-hidden="true"
-          className="grid size-7 place-items-center rounded-sm bg-surface-2 text-sm font-medium"
-        >
-          {initials(user.fullName)}
-        </span>
+          data-initials={initials(user.fullName)}
+          className="grid size-7 place-items-center rounded-sm bg-surface-2 text-sm font-medium after:content-[attr(data-initials)]"
+        />
         <span className="hidden max-w-40 truncate font-medium md:inline">{user.fullName}</span>
         <ChevronDownIcon />
       </button>

@@ -450,8 +450,8 @@
     "nav": "Şəxsi kabinet",
     "home": "PolisGo — şəxsi kabinet",
     "backToSite": "Saytın əsas səhifəsinə qayıt",
-    "userMenu": "{{name}} hesab menyusu",
-    "signedInAs": "Daxil olmusunuz:"
+    "signedInAs": "Daxil olmusunuz:",
+    "accountMenu": "hesab menyusu"
   },
   "policyStatus": {
     "Draft": "Ödənilməyib",
@@ -723,7 +723,8 @@
     "button_zero": "Bildirişlər, oxunmamış yoxdur",
     "button_one": "Bildirişlər, {{count}} oxunmamış",
     "button_other": "Bildirişlər, {{count}} oxunmamış",
-    "note": "Xatırlatmalar polisin bitməsinə 30 gün qalmış görünür. Onlar yalnız burada göstərilir — telefona və ya e-poçta heç nə göndərilmir."
+    "note": "Xatırlatmalar polisin bitməsinə 30 gün qalmış görünür. Onlar yalnız burada göstərilir — telefona və ya e-poçta heç nə göndərilmir.",
+    "title": "Xatırlatmalar"
   },
   "profile": {
     "title": "Profil və ayarlar",

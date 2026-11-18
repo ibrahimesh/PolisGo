@@ -450,8 +450,8 @@
     "nav": "Your account",
     "home": "PolisGo — your account",
     "backToSite": "Back to the main site",
-    "userMenu": "Account menu for {{name}}",
-    "signedInAs": "Signed in as"
+    "signedInAs": "Signed in as",
+    "accountMenu": "account menu"
   },
   "policyStatus": {
     "Draft": "Unpaid",
@@ -723,7 +723,8 @@
     "button_zero": "Notifications, none unread",
     "button_one": "Notifications, {{count}} unread",
     "button_other": "Notifications, {{count}} unread",
-    "note": "Reminders appear 30 days before a policy ends. They are shown here only; nothing is sent to your phone or email."
+    "note": "Reminders appear 30 days before a policy ends. They are shown here only; nothing is sent to your phone or email.",
+    "title": "Reminders"
   },
   "profile": {
     "title": "Profile and settings",

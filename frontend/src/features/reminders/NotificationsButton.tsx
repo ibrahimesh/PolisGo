@@ -51,7 +51,7 @@ export function NotificationsButton() {
       >
         <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-3">
           <h2 id="notifications-title" className="font-sans text-base font-medium">
-            {t('reminders.title')}
+            {t('notifications.title')}
           </h2>
           {unread > 0 && (
             <Button

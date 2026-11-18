@@ -48,6 +48,8 @@ export function CoverStep() {
   >({
     resolver: zodResolver(schema),
     mode: 'onTouched',
+    // Radios can't take RHF's focus; the invalid handler focuses in field order.
+    shouldFocusError: false,
     defaultValues: {
       policyTypeCode: state.values.policyTypeCode,
       startDate: state.values.startDate,
