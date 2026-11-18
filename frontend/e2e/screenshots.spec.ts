@@ -2,6 +2,7 @@ import { test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 import {
   adminApi,
+  API_URL,
   cabinetApi,
   claimsApi,
   FILES,
@@ -158,6 +159,183 @@ for (const size of SIZES) {
             animations: 'disabled',
           });
         }
+      });
+    }
+  });
+}
+
+/* ---------- Staff desks: first screen only ---------- */
+
+const PEOPLE = ['Aysel Həsənova', 'Rauf Quliyev', 'Nigar Əliyeva'];
+
+// An adjuster with three claims in their review (one with photos and a PDF)
+// and an agent with three customers, each sold a paid policy.
+async function seedStaff(page: Page) {
+  const admin = await adminApi(page);
+  const adjuster = await admin.createStaff('Adjuster', 'Rauf Məmmədli');
+  const agent = await admin.createStaff('Agent', 'Leyla Əliyeva');
+  const claimIds: string[] = [];
+  const customerIds: string[] = [];
+
+  for (const [index, fullName] of PEOPLE.entries()) {
+    const { session, user } = await registerSession(page, { ...randomUser(), fullName });
+    const customerId = await admin.customerIdFor(user.email);
+    await admin.assignAgent(customerId, agent.id);
+    customerIds.push(customerId);
+
+    const vehicle = await cabinetApi(page, session).vehicle();
+    const sale = await page.request.post(`${API_URL}/api/policies`, {
+      headers: { Authorization: `Bearer ${agent.session.token}` },
+      data: {
+        vehicleId: vehicle.id,
+        policyTypeCode: index === 1 ? 'CASCO' : 'MTPL',
+        startDate: new Date().toISOString().slice(0, 10),
+        termMonths: 12,
+        customerId,
+      },
+    });
+    const { id: policyId } = (await sale.json()) as { id: string };
+    await page.request.post(`${API_URL}/api/policies/${policyId}/pay`, {
+      headers: { Authorization: `Bearer ${agent.session.token}` },
+    });
+
+    const claim = await claimsApi(page, session).file(policyId, {
+      claimedAmount: [1240, 860, 2150][index],
+      incidentType: ['Collision', 'Glass', 'Vandalism'][index],
+      location: [
+        'Bakı, Nizami küçəsi 10',
+        'Bakı–Sumqayıt yolu, 12-ci km',
+        'Gəncə, Atatürk prospekti 5',
+      ][index],
+      description: [
+        'Rear bumper and boot lid dented at a red light; the other driver admitted fault.',
+        'A stone from a truck cracked the windscreen.',
+        'Both mirrors broken while parked overnight.',
+      ][index],
+    });
+    if (index === 0) {
+      await claimsApi(page, session).upload(claim.id, 'rear-bumper.png', FILES.png);
+      await claimsApi(page, session).upload(
+        claim.id,
+        'garage-estimate.pdf',
+        FILES.pdf,
+        'application/pdf',
+      );
+    }
+    await page.request.post(`${API_URL}/api/claims/${claim.id}/review`, {
+      headers: { Authorization: `Bearer ${adjuster.session.token}` },
+      data: {},
+    });
+    claimIds.push(claim.id);
+  }
+  return { adjuster, agent, claimId: claimIds[0] ?? '', customerId: customerIds[0] ?? '' };
+}
+
+const STAFF_PAGES = [
+  'overview',
+  'queue',
+  'review',
+  'customers',
+  'customer',
+  'sales',
+  'sell',
+] as const;
+
+for (const size of SIZES) {
+  test.describe(`staff ${size.label} @screenshots`, () => {
+    test.use({ viewport: size.viewport, deviceScaleFactor: 2 });
+
+    for (const theme of THEMES) {
+      test(`staff-${theme}-${size.label}`, async ({ page, browser }) => {
+        const { adjuster, agent, claimId, customerId } = await seedStaff(page);
+        const contexts = {
+          adjuster: await browser.newContext({
+            viewport: size.viewport,
+            deviceScaleFactor: 2,
+            reducedMotion: 'reduce',
+          }),
+          agent: await browser.newContext({
+            viewport: size.viewport,
+            deviceScaleFactor: 2,
+            reducedMotion: 'reduce',
+          }),
+        };
+        const adjusterPage = await contexts.adjuster.newPage();
+        const agentPage = await contexts.agent.newPage();
+        for (const [p, session] of [
+          [adjusterPage, adjuster.session],
+          [agentPage, agent.session],
+        ] as const) {
+          await seedPreferences(p, { theme, lang: 'en' });
+          await openSession(p, session);
+        }
+
+        const steps: Record<
+          (typeof STAFF_PAGES)[number],
+          { page: Page; path: string; ready: (p: Page) => Promise<unknown> }
+        > = {
+          overview: {
+            page: adjusterPage,
+            path: '/app',
+            ready: (p) => p.getByRole('heading', { name: 'Claims desk' }).waitFor(),
+          },
+          queue: {
+            page: adjusterPage,
+            path: '/app/claims?view=mine',
+            ready: (p) => p.getByText('3 claims', { exact: true }).waitFor(),
+          },
+          review: {
+            page: adjusterPage,
+            path: `/app/claims/${claimId}`,
+            ready: async (p) => {
+              await p.getByRole('radio', { name: 'Approve' }).check();
+              await p.getByRole('textbox', { name: 'Amount to approve' }).fill('1190');
+              await p
+                .getByRole('textbox', { name: 'Note (optional)' })
+                .fill('Approved minus the 50 AZN excess.');
+            },
+          },
+          customers: {
+            page: agentPage,
+            path: '/app/customers',
+            ready: (p) => p.getByText('3 customers', { exact: true }).waitFor(),
+          },
+          customer: {
+            page: agentPage,
+            path: `/app/customers/${customerId}`,
+            ready: (p) => p.getByRole('heading', { name: 'Policies', exact: true }).waitFor(),
+          },
+          sales: {
+            page: agentPage,
+            path: '/app/sales',
+            ready: (p) => p.getByText('3 policies', { exact: true }).waitFor(),
+          },
+          sell: {
+            page: agentPage,
+            path: `/app/customers/${customerId}/sell`,
+            ready: async (p) => {
+              await p
+                .getByRole('radio', { name: /^Toyota/ })
+                .first()
+                .check();
+              await p.getByRole('radio', { name: /^CASCO/ }).check();
+              await p.getByText(/^Your premium: /).waitFor({ state: 'attached', timeout: 15_000 });
+            },
+          },
+        };
+        for (const name of STAFF_PAGES) {
+          const step = steps[name];
+          await step.page.goto(step.path);
+          await step.ready(step.page);
+          await step.page.evaluate(() => document.fonts.ready);
+          await step.page.waitForTimeout(400);
+          await step.page.screenshot({
+            path: `docs/screenshots/staff-${name}-${theme}-${size.label}.png`,
+            animations: 'disabled',
+          });
+        }
+        await contexts.adjuster.close();
+        await contexts.agent.close();
       });
     }
   });
