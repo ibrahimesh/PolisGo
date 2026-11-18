@@ -30,6 +30,12 @@ const PolicyDetailPage = lazy(() =>
 const BuyPolicyPage = lazy(() =>
   import('./features/wizard/BuyPolicyPage').then((m) => ({ default: m.BuyPolicyPage })),
 );
+const ProfilePage = lazy(() =>
+  import('./features/profile/ProfilePage').then((m) => ({ default: m.ProfilePage })),
+);
+const HelpPage = lazy(() =>
+  import('./features/help/HelpPage').then((m) => ({ default: m.HelpPage })),
+);
 const WorkspaceSection = lazy(() =>
   import('./features/workspace/WorkspaceSection').then((m) => ({
     default: m.WorkspaceSection,
@@ -63,11 +69,12 @@ export function App() {
             <Route index element={<BuyPolicyPage />} />
           </Route>
 
-          {(['profile', 'help'] as const).map((id) => (
-            <Route key={id} path={id} element={guard(id)}>
-              <Route index element={<WorkspaceSection section={id} />} />
-            </Route>
-          ))}
+          <Route path="profile" element={guard('profile')}>
+            <Route index element={<ProfilePage />} />
+          </Route>
+          <Route path="help" element={guard('help')}>
+            <Route index element={<HelpPage />} />
+          </Route>
 
           {STAFF_SECTION_IDS.map((id) => (
             <Route key={id} path={id} element={guard(id)}>

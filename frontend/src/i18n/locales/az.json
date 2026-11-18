@@ -724,5 +724,91 @@
     "button_one": "Bildirişlər, {{count}} oxunmamış",
     "button_other": "Bildirişlər, {{count}} oxunmamış",
     "note": "Xatırlatmalar polisin bitməsinə 30 gün qalmış görünür. Onlar yalnız burada göstərilir — telefona və ya e-poçta heç nə göndərilmir."
+  },
+  "profile": {
+    "title": "Profil və ayarlar",
+    "lead": "Əlaqə məlumatlarınız, şifrəniz və PolisGo-nun görünüşü.",
+    "details": "Şəxsi məlumatlar",
+    "detailsLead": "Adınız polislərdə və şəhadətnamələrdə göstərilir.",
+    "readOnlyNote": "E-poçt giriş adınızdır. Doğum tarixi və vəsiqə tarixi sığorta haqqını müəyyən edir, ona görə onları yalnız dəstək xidməti dəyişə bilər.",
+    "save": "Dəyişiklikləri saxla",
+    "saved": "Məlumatlarınız saxlanıldı.",
+    "password": "Şifrə",
+    "passwordLead": "Şifrəni dəyişdikdən sonra bu cihazda daxil olmuş qalacaqsınız.",
+    "currentPassword": "Cari şifrə",
+    "newPassword": "Yeni şifrə",
+    "changePassword": "Şifrəni dəyiş",
+    "passwordChanged": "Şifrəniz dəyişdirildi.",
+    "preferences": "Dil və mövzu",
+    "preferencesLead": "Bu cihazda saxlanılır və dərhal tətbiq olunur."
+  },
+  "help": {
+    "title": "Kömək və suallar",
+    "lead": "Polislərin alınması, idarə edilməsi və yenilənməsi haqqında qısa cavablar.",
+    "groups": {
+      "buying": "Polis alışı",
+      "policies": "Polisləriniz",
+      "account": "Hesabınız"
+    },
+    "items": {
+      "price": {
+        "q": "Sığorta haqqım necə hesablanır?",
+        "a": "Sığorta növünün baza tarifi mühərrik, yaşınız və sürücülük stajınız, avtomobilin yaşı və son üç ildəki zərərləriniz üzrə əmsallara vurulur, sonra müddətə görə düzəliş edilir. Hər polisin səhifəsində onun hesablandığı əmsallar göstərilir."
+      },
+      "exact": {
+        "q": "Alış zamanı göstərilən qiymət sondurmu?",
+        "a": "Bəli. O, hesabınızdakı məlumatlar və seçilmiş avtomobil əsasında, polisin rəsmiləşdirilməsində olduğu kimi hesablanır. Əsas saytdakı kalkulyator yalnız təxmini qiymət verir."
+      },
+      "dates": {
+        "q": "Sığorta nə vaxt başlaya bilər?",
+        "a": "Bu gün və ya növbəti 60 gün ərzində istənilən gün. Sığorta başlama tarixindən bitmə tarixinədək (daxil olmaqla), 1–12 ay müddətinə qüvvədədir."
+      },
+      "payment": {
+        "q": "Kartımdan pul çıxılırmı?",
+        "a": "Xeyr. PolisGo portfolio layihəsidir və ödənişlər nümayiş şlüzündən keçir: kart tələb olunmur, pul köçürülmür."
+      },
+      "renew": {
+        "q": "Polisi necə yeniləyim?",
+        "a": "Polisin bitməsinə 30 gün qalmış icmalda və zəng işarəsinin altında xatırlatma görünür. «Yenilə» düyməsi eyni avtomobil və əhatə ilə, köhnə polis bitdikdən sonrakı gündən başlayan alışı açır."
+      },
+      "certificate": {
+        "q": "Şəhadətnaməm haradadır?",
+        "a": "Polisi açın və «Şəhadətnaməni yüklə» seçin. PDF seçdiyiniz dildə cihazınızda yaradılır və polis ödənildikdən sonra əlçatandır."
+      },
+      "expired": {
+        "q": "Polis niyə müddəti bitmiş kimi göstərilir?",
+        "a": "Sığorta son gündən sonra bitir. Növbəti gündən polis «Müddəti bitib» kimi göstərilir və siyahınızda qalır."
+      },
+      "cancel": {
+        "q": "Ödənilməmiş polisə nə olur?",
+        "a": "Onu polis səhifəsindən ödəyənədək ödənilməmiş qalır. Başlama tarixi keçdikdən sonra onu ödəmək olmaz — yeni tarixlə yeni polis alın."
+      },
+      "reminders": {
+        "q": "Xatırlatmalar telefona və ya e-poçta gəlirmi?",
+        "a": "Xeyr. Xatırlatmalar yalnız kabinetdə — zəng işarəsinin altında və icmalda göstərilir. «Oxunmuş» qeydi bütün cihazlarınızda qüvvədədir."
+      },
+      "details": {
+        "q": "Adımı və ya telefonumu dəyişə bilərəmmi?",
+        "a": "Bəli, «Profil və ayarlar» bölməsində. Doğum tarixini və ya vəsiqə tarixini düzəltmək üçün dəstək xidmətinə müraciət edin: sığorta haqqı onlardan asılıdır."
+      },
+      "password": {
+        "q": "Şifrəmi necə dəyişim?",
+        "a": "«Profil və ayarlar» bölməsində cari şifrəni və yenisini daxil edin: 8–64 simvol, böyük və kiçik hərf və rəqəm."
+      },
+      "preferences": {
+        "q": "Dil və mövzu harada saxlanılır?",
+        "a": "Bu cihazda. Onları başlıqda, profildə və ya Ctrl/⌘ + K ilə dəyişə bilərsiniz."
+      },
+      "claims": {
+        "q": "Sığorta hadisəsini necə bildirim?",
+        "a": "Onlayn zərər bildirişləri hələ kabinetdə yoxdur — bu, planlarda növbəti addımdır."
+      },
+      "licensed": {
+        "q": "PolisGo lisenziyalı sığortaçıdırmı?",
+        "a": "Xeyr. PolisGo sığorta platformasını nümayiş etdirən portfolio layihəsidir; onun polisləri və şəhadətnamələri real sığorta deyil."
+      }
+    },
+    "more": "Qiymət və əhatə haqqında ümumi suallarınız var?",
+    "moreLink": "Əsas saytdakı suallara baxın"
   }
 }

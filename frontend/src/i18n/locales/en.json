@@ -724,5 +724,91 @@
     "button_one": "Notifications, {{count}} unread",
     "button_other": "Notifications, {{count}} unread",
     "note": "Reminders appear 30 days before a policy ends. They are shown here only; nothing is sent to your phone or email."
+  },
+  "profile": {
+    "title": "Profile and settings",
+    "lead": "Your contact details, password and how PolisGo looks for you.",
+    "details": "Personal details",
+    "detailsLead": "Your name appears on policies and certificates.",
+    "readOnlyNote": "Email is your sign-in. Date of birth and licence date set your premium, so only support can change them.",
+    "save": "Save changes",
+    "saved": "Your details were saved.",
+    "password": "Password",
+    "passwordLead": "You stay signed in on this device after changing it.",
+    "currentPassword": "Current password",
+    "newPassword": "New password",
+    "changePassword": "Change password",
+    "passwordChanged": "Your password was changed.",
+    "preferences": "Language and theme",
+    "preferencesLead": "Saved on this device and applied straight away."
+  },
+  "help": {
+    "title": "Help and questions",
+    "lead": "Short answers about buying, managing and renewing your policies.",
+    "groups": {
+      "buying": "Buying a policy",
+      "policies": "Your policies",
+      "account": "Your account"
+    },
+    "items": {
+      "price": {
+        "q": "How is my premium calculated?",
+        "a": "A base rate for the type of cover is multiplied by factors for the engine, your age and driving experience, the vehicle’s age and your claims in the last three years, then adjusted for the term. Every policy page shows the factors it was priced with."
+      },
+      "exact": {
+        "q": "Is the price in the purchase steps final?",
+        "a": "Yes. It is calculated from the details on your account and the chosen vehicle, the same way as when the policy is issued. The calculator on the main site is only an estimate for any driver."
+      },
+      "dates": {
+        "q": "When can cover start?",
+        "a": "Today or on any day in the next 60 days. Cover runs from the start date to the end date inclusive, for 1 to 12 months."
+      },
+      "payment": {
+        "q": "Is my card charged?",
+        "a": "No. PolisGo is a portfolio project and payments go through a demonstration gateway: no card is asked for and no money moves."
+      },
+      "renew": {
+        "q": "How do I renew a policy?",
+        "a": "From 30 days before a policy ends, a reminder appears on your overview and under the bell. Renew opens the purchase with the same vehicle and cover, starting the day after the old policy ends."
+      },
+      "certificate": {
+        "q": "Where is my certificate?",
+        "a": "Open the policy and choose Download certificate. It is created on your device as a PDF in the language you are using, and is available once the policy is paid."
+      },
+      "expired": {
+        "q": "Why does a policy show as expired?",
+        "a": "Cover ends after its last day. From the next day the policy shows as Expired and stays in your list for your records."
+      },
+      "cancel": {
+        "q": "What happens to an unpaid policy?",
+        "a": "It stays unpaid until you pay it from its page. Once its start date has passed it can no longer be paid; buy a new one with a new date instead."
+      },
+      "reminders": {
+        "q": "Will reminders reach my phone or email?",
+        "a": "No. Reminders are shown only in the cabinet, under the bell and on the overview. Marking one as read hides the dot on every device you use."
+      },
+      "details": {
+        "q": "Can I change my name or phone?",
+        "a": "Yes, in Profile and settings. To correct your date of birth or licence date, contact support: they decide your premium."
+      },
+      "password": {
+        "q": "How do I change my password?",
+        "a": "In Profile and settings, enter your current password and a new one with 8–64 characters, an uppercase letter, a lowercase letter and a number."
+      },
+      "preferences": {
+        "q": "Where are language and theme saved?",
+        "a": "On this device. Change them in the header, in Profile and settings, or with Ctrl/⌘ + K."
+      },
+      "claims": {
+        "q": "How do I report an incident?",
+        "a": "Online claims are not in the cabinet yet; they are next on the roadmap."
+      },
+      "licensed": {
+        "q": "Is PolisGo a licensed insurer?",
+        "a": "No. PolisGo is a portfolio project that demonstrates an insurance platform; its policies and certificates are not real insurance."
+      }
+    },
+    "more": "Questions about pricing and cover in general?",
+    "moreLink": "See the questions on the main site"
   }
 }
