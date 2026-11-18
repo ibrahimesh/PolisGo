@@ -296,6 +296,31 @@ namespace PolisGo.Infrastructure.Persistence.Migrations
                     b.ToTable("Policies");
                 });
 
+            modelBuilder.Entity("PolisGo.Domain.Entities.PolicyReminderRead", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("PolicyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("ReadAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("PolicyId", "UserId")
+                        .IsUnique();
+
+                    b.ToTable("PolicyReminderReads");
+                });
+
             modelBuilder.Entity("PolisGo.Domain.Entities.PolicyStatusHistory", b =>
                 {
                     b.Property<Guid>("Id")
@@ -603,6 +628,23 @@ namespace PolisGo.Infrastructure.Persistence.Migrations
                     b.Navigation("Pricing");
 
                     b.Navigation("Vehicle");
+                });
+
+            modelBuilder.Entity("PolisGo.Domain.Entities.PolicyReminderRead", b =>
+                {
+                    b.HasOne("PolisGo.Domain.Entities.Policy", "Policy")
+                        .WithMany()
+                        .HasForeignKey("PolicyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PolisGo.Domain.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Policy");
                 });
 
             modelBuilder.Entity("PolisGo.Domain.Entities.PolicyStatusHistory", b =>

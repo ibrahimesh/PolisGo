@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using PolisGo.Application.Abstractions;
 using PolisGo.Application.Auth;
+using PolisGo.Application.Cabinet;
 using PolisGo.Application.Claims;
 using PolisGo.Application.Claims.Documents;
 using PolisGo.Application.Customers;
@@ -20,6 +21,7 @@ public static class DependencyInjection
     {
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IProfileService, ProfileService>();
+        services.AddScoped<ICabinetService, CabinetService>();
 
         // PremiumCalculator is a pure function with no state — singleton is safe
         // and avoids per-request allocation.

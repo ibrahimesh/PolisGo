@@ -299,6 +299,52 @@ export interface PayClaimRequest {
   comment?: string | null;
 }
 
+/* ---- Client cabinet (/api/me) ---- */
+
+// Active policy ending within 30 days with no follow-on policy yet.
+export interface ReminderResponse {
+  policyId: Guid;
+  policyNumber: string;
+  policyTypeCode: string;
+  vehicle: PolicyVehicleSummary;
+  endDate: IsoDate;
+  // 0 on the last covered day.
+  daysLeft: number;
+  readAt: IsoDateTime | null;
+}
+
+export interface NextRenewalResponse {
+  policyId: Guid;
+  policyNumber: string;
+  policyTypeCode: string;
+  endDate: IsoDate;
+  daysLeft: number;
+}
+
+export type ActivityKind = 'Policy' | 'Claim';
+
+export interface ActivityEntry {
+  kind: ActivityKind;
+  subjectId: Guid;
+  reference: string;
+  // PolicyStatus or ClaimStatus names, depending on kind.
+  fromStatus: string | null;
+  toStatus: string;
+  at: IsoDateTime;
+}
+
+export interface ClientOverviewResponse {
+  activePolicies: number;
+  awaitingPayment: number;
+  nextRenewal: NextRenewalResponse | null;
+  insuredVehicles: number;
+  vehicles: number;
+  paidLast12Months: number;
+  currency: string;
+  unreadReminders: number;
+  recentActivity: ActivityEntry[];
+}
+
 /* ---- Common ---- */
 
 export interface PagedResult<T> {

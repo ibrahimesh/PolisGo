@@ -20,6 +20,7 @@ public class AppDbContext : DbContext, IApplicationDbContext
     public DbSet<ClaimStatusHistory> ClaimStatusHistory => Set<ClaimStatusHistory>();
     public DbSet<ClaimDocument> ClaimDocuments => Set<ClaimDocument>();
     public DbSet<PolicyStatusHistory> PolicyStatusHistory => Set<PolicyStatusHistory>();
+    public DbSet<PolicyReminderRead> PolicyReminderReads => Set<PolicyReminderRead>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
