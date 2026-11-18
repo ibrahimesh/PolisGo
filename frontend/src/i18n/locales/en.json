@@ -307,11 +307,25 @@
       "overview": "Overview",
       "agent": "Agent desk",
       "claims": "Claims desk",
-      "admin": "Administration"
+      "admin": "Administration",
+      "policies": "My policies",
+      "buy": "Buy a policy",
+      "profile": "Profile and settings",
+      "help": "Help and questions"
     },
     "comingSoonTitle": "This area is next on the roadmap",
     "comingSoonBody": "Policies, vehicles and claims will appear here once the screens for this role are built.",
-    "backToOverview": "Back to overview"
+    "backToOverview": "Back to overview",
+    "short": {
+      "overview": "Overview",
+      "policies": "Policies",
+      "buy": "Buy",
+      "agent": "Agent",
+      "claims": "Claims",
+      "admin": "Admin",
+      "profile": "Profile",
+      "help": "Help"
+    }
   },
   "roles": {
     "Client": "Client",
@@ -349,7 +363,11 @@
     },
     "invalidCredentials": "The email or password is incorrect.",
     "emailTaken": "An account with this email already exists.",
-    "unknownProduct": "This insurance product isn't available."
+    "unknownProduct": "This insurance product isn't available.",
+    "policyOverlap": "This vehicle already has a draft or active policy of this type for those dates.",
+    "draftStartPassed": "The start date of this draft has passed. Start a new purchase to choose a new date.",
+    "policyExpired": "This policy has already expired.",
+    "plateTaken": "A vehicle with this plate is already registered."
   },
   "validation": {
     "required": "Required.",
@@ -381,13 +399,34 @@
     "birthDateRequired": "Enter your date of birth.",
     "licenceDateRequired": "Enter the date your licence was issued.",
     "adult": "You must be at least 18 to open an account.",
-    "birthDateRange": "Enter a date of birth within the last 100 years."
+    "birthDateRange": "Enter a date of birth within the last 100 years.",
+    "currentPasswordRequired": "Enter your current password.",
+    "currentPasswordIncorrect": "That isn’t your current password.",
+    "passwordUnchanged": "Choose a password different from the current one.",
+    "phoneNotApplicable": "Staff accounts don’t keep a phone number.",
+    "makeRequired": "Enter the make, like Toyota.",
+    "makeTooLong": "Use 64 characters or fewer.",
+    "modelRequired": "Enter the model, like Corolla.",
+    "modelTooLong": "Use 64 characters or fewer.",
+    "plateRequired": "Enter the plate number.",
+    "plateInvalid": "Use up to 16 letters and digits, separated by spaces or hyphens, like 10-AA-123.",
+    "vinRequired": "Enter the VIN.",
+    "vinInvalid": "A VIN has 17 characters: digits and letters except I, O and Q.",
+    "vehicleYearRange": "Model year must be between 1950 and next year.",
+    "startDatePast": "The start date can’t be in the past.",
+    "startDateTooFar": "Choose a start date within the next 60 days.",
+    "policyTypeRequired": "Choose a type of cover.",
+    "vehicleRequired": "Choose a vehicle.",
+    "searchTooLong": "Use 100 characters or fewer.",
+    "startDateRequired": "Choose the day cover starts.",
+    "acceptRequired": "Confirm the details to continue."
   },
   "common": {
     "loading": "Loading",
     "close": "Close",
     "dismiss": "Dismiss notification",
-    "notifications": "Notifications"
+    "notifications": "Notifications",
+    "retry": "Try again"
   },
   "forms": {
     "errorSummary_one": "1 field needs attention",
@@ -403,7 +442,374 @@
       "navigation": "Go to",
       "language": "Language",
       "theme": "Theme",
-      "account": "Account"
+      "account": "Account",
+      "cabinet": "Your account"
     }
+  },
+  "cabinet": {
+    "nav": "Your account",
+    "home": "PolisGo — your account",
+    "backToSite": "Back to the main site",
+    "signedInAs": "Signed in as",
+    "accountMenu": "account menu"
+  },
+  "policyStatus": {
+    "Draft": "Unpaid",
+    "Active": "Active",
+    "Expired": "Expired",
+    "Cancelled": "Cancelled"
+  },
+  "overview": {
+    "titleLead": "Hello,",
+    "lead": "Here is where your cover stands today, {{date}}.",
+    "getQuote": "Get a quote",
+    "buy": "Buy a policy",
+    "error": "Your overview couldn’t be loaded.",
+    "empty": {
+      "title": "No policies yet",
+      "body": "Choose a vehicle and a type of cover, see the exact price as you go, and pay in one step.",
+      "action": "Buy your first policy"
+    },
+    "notices": {
+      "reminders_one": "{{count}} policy ends within 30 days.",
+      "reminders_other": "{{count}} policies end within 30 days.",
+      "awaiting_one": "{{count}} policy is waiting for payment.",
+      "awaiting_other": "{{count}} policies are waiting for payment.",
+      "review": "Review",
+      "pay": "Go to payment"
+    },
+    "stats": {
+      "label": "Your cover at a glance",
+      "active": "Active policies",
+      "awaiting_one": "{{count}} awaiting payment",
+      "awaiting_other": "{{count}} awaiting payment",
+      "awaitingNone": "Nothing awaiting payment",
+      "nextRenewal": "Next renewal",
+      "inDays_one": "in {{count}} day",
+      "inDays_other": "in {{count}} days",
+      "endsToday": "ends today",
+      "noRenewal": "No active cover",
+      "insured": "Insured vehicles",
+      "insuredValue": "{{insured}} of {{total}}",
+      "insuredHint": "with active cover",
+      "paid": "Paid in the last 12 months",
+      "paidHint": "completed payments"
+    },
+    "activity": {
+      "title": "Recent activity",
+      "empty": "No activity yet. Policies you buy and claims you file will show up here.",
+      "policy": {
+        "Draft": "Policy {{ref}} issued, awaiting payment",
+        "Active": "Policy {{ref}} paid — cover is active",
+        "Cancelled": "Policy {{ref}} cancelled",
+        "Expired": "Policy {{ref}} expired"
+      },
+      "claim": {
+        "Submitted": "Claim {{ref}} submitted",
+        "UnderReview": "Claim {{ref}} is under review",
+        "Approved": "Claim {{ref}} approved",
+        "Rejected": "Claim {{ref}} rejected",
+        "Paid": "Claim {{ref}} paid out"
+      }
+    }
+  },
+  "reminders": {
+    "title": "Renewal reminders",
+    "lead": "Active policies that end within 30 days.",
+    "empty": "Nothing ends in the next 30 days.",
+    "endsOn": "Ends {{date}}",
+    "daysLeft_one": "{{count}} day left",
+    "daysLeft_other": "{{count}} days left",
+    "lastDay": "last day of cover",
+    "renew": "Renew",
+    "markRead": "Mark as read",
+    "markAll": "Mark all as read",
+    "unread": "Unread"
+  },
+  "certificate": {
+    "documentTitle": "PolisGo certificate of insurance {{number}}",
+    "titleLead": "Certificate of",
+    "titleAccent": "insurance",
+    "number": "Policy no.",
+    "holder": "Policyholder",
+    "name": "Full name",
+    "vehicle": "Insured vehicle",
+    "makeModel": "Make, model, year",
+    "plate": "Plate number",
+    "vin": "VIN",
+    "engine": "Engine",
+    "engineValue": "{{cc}} cc",
+    "period": "Period of cover",
+    "from": "From",
+    "to": "To",
+    "toValue": "{{date}}, inclusive",
+    "term": "Term",
+    "payment": "Premium and payment",
+    "premium": "Premium",
+    "paidOn": "Paid on",
+    "reference": "Payment reference",
+    "coverage": "What this policy covers",
+    "coverageUnknown": "See the policy terms for this product.",
+    "pricing": "How the premium was calculated",
+    "disclaimer": "PolisGo is a portfolio project, not a licensed insurer. This certificate demonstrates the platform and is not valid proof of insurance.",
+    "footer": "Generated {{date}} from the PolisGo client cabinet",
+    "download": "Download certificate (PDF)",
+    "preparing": "Preparing PDF…",
+    "unavailable": "The certificate is available once the policy is paid.",
+    "cancelledNote": "This policy was cancelled; the certificate is a record only.",
+    "failed": "The certificate couldn’t be generated. Try again."
+  },
+  "policies": {
+    "title": "My policies",
+    "lead": "Every policy on your account, with its status and period of cover.",
+    "filters": "Filter policies",
+    "search": "Search",
+    "searchPlaceholder": "Policy number or plate",
+    "status": "Status",
+    "allStatuses": "All statuses",
+    "type": "Type of cover",
+    "allTypes": "All types",
+    "sort": "Sort by",
+    "sortOptions": {
+      "newest": "Newest first",
+      "oldest": "Oldest first",
+      "endSoonest": "Ends soonest",
+      "endLatest": "Ends latest",
+      "premiumHigh": "Premium: high to low",
+      "premiumLow": "Premium: low to high",
+      "number": "Policy number"
+    },
+    "results": "Results",
+    "count_one": "{{count}} policy",
+    "count_other": "{{count}} policies",
+    "clearFilters": "Clear filters",
+    "caption": "Your policies",
+    "columns": {
+      "number": "Policy",
+      "vehicle": "Vehicle",
+      "period": "Period",
+      "premium": "Premium",
+      "status": "Status"
+    },
+    "emptyTitle": "No policies yet",
+    "emptyBody": "When you buy a policy it appears here, with its certificate.",
+    "noMatchTitle": "No policies match these filters",
+    "noMatchBody": "Try another status or type, or clear the search.",
+    "pagination": "Pages",
+    "previous": "Previous",
+    "next": "Next",
+    "pageOf": "Page {{page}} of {{pages}}"
+  },
+  "policy": {
+    "back": "My policies",
+    "notFoundTitle": "Policy not found",
+    "notFoundBody": "There is no policy with this link on your account.",
+    "summary": "Summary",
+    "number": "Policy number",
+    "status": "Status",
+    "premium": "Premium",
+    "period": "Period of cover",
+    "periodValue": "{{from}} – {{to}}",
+    "term": "Term",
+    "vehicle": "Vehicle",
+    "issued": "Issued",
+    "coverage": "Coverage",
+    "included": "Included",
+    "notIncluded": "Not included",
+    "breakdown": "Premium breakdown",
+    "breakdownLead": "The factors frozen when the policy was issued. Base rate × factors = premium.",
+    "breakdownMissing": "This policy was issued before premium factors were recorded.",
+    "payment": "Payment",
+    "notPaid": "Not paid yet.",
+    "payNow": "Pay now",
+    "draftExpired": "The start date of this draft has passed, so it can no longer be paid. Buy a new policy to choose a new date.",
+    "method": "Method",
+    "methods": {
+      "Online": "Online",
+      "Card": "Card",
+      "Cash": "Cash",
+      "BankTransfer": "Bank transfer"
+    },
+    "paidAt": "Paid on",
+    "amount": "Amount",
+    "reference": "Reference",
+    "history": "Status history",
+    "historyAutomatic": "automatically, at the end of the period",
+    "historyIssued": "Issued as a draft"
+  },
+  "vehicle": {
+    "add": "Add a vehicle",
+    "addTitle": "New vehicle",
+    "make": "Make",
+    "model": "Model",
+    "year": "Model year",
+    "engine": "Engine capacity",
+    "plate": "Plate number",
+    "plateHint": "As on the registration, e.g. 10-AA-123",
+    "vin": "VIN",
+    "vinHint": "17 characters, on the registration certificate",
+    "save": "Save vehicle",
+    "cancel": "Cancel"
+  },
+  "wizard": {
+    "title": "Buy a policy",
+    "lead": "Choose your cover, see the exact price as you go, and pay in one step.",
+    "progress": "Purchase progress",
+    "stepOf": "Step {{step}} of {{total}}",
+    "completed": "completed",
+    "continue": "Continue",
+    "back": "Back",
+    "editCover": "Change cover details",
+    "startFresh": "Start a new purchase",
+    "noVehicles": "You have no vehicles yet. Add one to continue.",
+    "coverEnds": "Cover runs until {{date}}, inclusive.",
+    "steps": {
+      "cover": {
+        "title": "What would you like to insure?",
+        "short": "Cover"
+      },
+      "vehicle": {
+        "title": "Which vehicle?",
+        "short": "Vehicle"
+      },
+      "review": {
+        "title": "Check the details",
+        "short": "Review"
+      },
+      "payment": {
+        "title": "Payment",
+        "short": "Payment"
+      },
+      "done": {
+        "title": "You’re covered.",
+        "short": "Done"
+      }
+    },
+    "fields": {
+      "type": "Type of cover",
+      "startDate": "Cover starts on",
+      "startDateHint": "Today or within the next 60 days",
+      "term": "Term",
+      "vehicle": "Vehicle"
+    },
+    "quote": {
+      "label": "Your premium",
+      "note": "Priced from your account details and this vehicle. This is the amount you pay.",
+      "needVehicle": "Choose a vehicle to see your exact price.",
+      "errorTitle": "This combination can’t be priced"
+    },
+    "review": {
+      "period": "Period of cover",
+      "driver": "Born {{birth}} · licence since {{licence}}",
+      "pricedFrom": "The price uses the details on your account. To correct your date of birth or licence date, contact support.",
+      "draftNote": "Draft {{number}} is waiting for payment. Changing the cover or vehicle replaces it.",
+      "accept": "I confirm these details are correct and accept the policy terms.",
+      "acceptLabel": "Confirmation",
+      "confirm": "Confirm and continue to payment",
+      "edit": "Change"
+    },
+    "payment": {
+      "amount": "Amount to pay",
+      "demo": "Payments go through the demo gateway of this portfolio project: no card is needed and no money moves.",
+      "pay": "Pay {{amount}}"
+    },
+    "done": {
+      "lead": "Payment received. Policy {{number}} is active.",
+      "viewPolicy": "View the policy",
+      "another": "Buy another policy"
+    }
+  },
+  "notifications": {
+    "button_zero": "Notifications, none unread",
+    "button_one": "Notifications, {{count}} unread",
+    "button_other": "Notifications, {{count}} unread",
+    "note": "Reminders appear 30 days before a policy ends. They are shown here only; nothing is sent to your phone or email.",
+    "title": "Reminders"
+  },
+  "profile": {
+    "title": "Profile and settings",
+    "lead": "Your contact details, password and how PolisGo looks for you.",
+    "details": "Personal details",
+    "detailsLead": "Your name appears on policies and certificates.",
+    "readOnlyNote": "Email is your sign-in. Date of birth and licence date set your premium, so only support can change them.",
+    "save": "Save changes",
+    "saved": "Your details were saved.",
+    "password": "Password",
+    "passwordLead": "You stay signed in on this device after changing it.",
+    "currentPassword": "Current password",
+    "newPassword": "New password",
+    "changePassword": "Change password",
+    "passwordChanged": "Your password was changed.",
+    "preferences": "Language and theme",
+    "preferencesLead": "Saved on this device and applied straight away."
+  },
+  "help": {
+    "title": "Help and questions",
+    "lead": "Short answers about buying, managing and renewing your policies.",
+    "groups": {
+      "buying": "Buying a policy",
+      "policies": "Your policies",
+      "account": "Your account"
+    },
+    "items": {
+      "price": {
+        "q": "How is my premium calculated?",
+        "a": "A base rate for the type of cover is multiplied by factors for the engine, your age and driving experience, the vehicle’s age and your claims in the last three years, then adjusted for the term. Every policy page shows the factors it was priced with."
+      },
+      "exact": {
+        "q": "Is the price in the purchase steps final?",
+        "a": "Yes. It is calculated from the details on your account and the chosen vehicle, the same way as when the policy is issued. The calculator on the main site is only an estimate for any driver."
+      },
+      "dates": {
+        "q": "When can cover start?",
+        "a": "Today or on any day in the next 60 days. Cover runs from the start date to the end date inclusive, for 1 to 12 months."
+      },
+      "payment": {
+        "q": "Is my card charged?",
+        "a": "No. PolisGo is a portfolio project and payments go through a demonstration gateway: no card is asked for and no money moves."
+      },
+      "renew": {
+        "q": "How do I renew a policy?",
+        "a": "From 30 days before a policy ends, a reminder appears on your overview and under the bell. Renew opens the purchase with the same vehicle and cover, starting the day after the old policy ends."
+      },
+      "certificate": {
+        "q": "Where is my certificate?",
+        "a": "Open the policy and choose Download certificate. It is created on your device as a PDF in the language you are using, and is available once the policy is paid."
+      },
+      "expired": {
+        "q": "Why does a policy show as expired?",
+        "a": "Cover ends after its last day. From the next day the policy shows as Expired and stays in your list for your records."
+      },
+      "cancel": {
+        "q": "What happens to an unpaid policy?",
+        "a": "It stays unpaid until you pay it from its page. Once its start date has passed it can no longer be paid; buy a new one with a new date instead."
+      },
+      "reminders": {
+        "q": "Will reminders reach my phone or email?",
+        "a": "No. Reminders are shown only in the cabinet, under the bell and on the overview. Marking one as read hides the dot on every device you use."
+      },
+      "details": {
+        "q": "Can I change my name or phone?",
+        "a": "Yes, in Profile and settings. To correct your date of birth or licence date, contact support: they decide your premium."
+      },
+      "password": {
+        "q": "How do I change my password?",
+        "a": "In Profile and settings, enter your current password and a new one with 8–64 characters, an uppercase letter, a lowercase letter and a number."
+      },
+      "preferences": {
+        "q": "Where are language and theme saved?",
+        "a": "On this device. Change them in the header, in Profile and settings, or with Ctrl/⌘ + K."
+      },
+      "claims": {
+        "q": "How do I report an incident?",
+        "a": "Online claims are not in the cabinet yet; they are next on the roadmap."
+      },
+      "licensed": {
+        "q": "Is PolisGo a licensed insurer?",
+        "a": "No. PolisGo is a portfolio project that demonstrates an insurance platform; its policies and certificates are not real insurance."
+      }
+    },
+    "more": "Questions about pricing and cover in general?",
+    "moreLink": "See the questions on the main site"
   }
 }

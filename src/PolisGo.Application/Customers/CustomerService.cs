@@ -22,11 +22,13 @@ public class CustomerService : ICustomerService
 
     private readonly IApplicationDbContext _db;
     private readonly ICurrentUser _currentUser;
+    private readonly TimeProvider _clock;
 
-    public CustomerService(IApplicationDbContext db, ICurrentUser currentUser)
+    public CustomerService(IApplicationDbContext db, ICurrentUser currentUser, TimeProvider? clock = null)
     {
         _db = db;
         _currentUser = currentUser;
+        _clock = clock ?? TimeProvider.System;
     }
 
     public async Task<PagedResult<CustomerListItem>> ListAsync(
@@ -75,13 +77,12 @@ public class CustomerService : ICustomerService
             .OrderBy(v => v.PlateNumber)
             .ToListAsync(cancellationToken);
 
-        var policies = await (
-            from p in PolicyAccess.VisibleTo(_db.Policies.AsNoTracking(), _currentUser)
-            join pt in _db.PolicyTypes on p.PolicyTypeId equals pt.Id
-            where p.CustomerId == id
-            orderby p.CreatedAt descending
-            select new { Policy = p, pt.Code })
+        var policies = await PolicyService.Project(
+                PolicyAccess.VisibleTo(_db.Policies.AsNoTracking(), _currentUser)
+                    .Where(p => p.CustomerId == id)
+                    .OrderByDescending(p => p.CreatedAt))
             .ToListAsync(cancellationToken);
+        var today = DateOnly.FromDateTime(_clock.GetUtcNow().UtcDateTime);
 
         var claims = ClaimAccess.VisibleTo(_db.Claims.AsNoTracking(), _currentUser)
             .Where(c => c.Policy.CustomerId == id);
@@ -123,7 +124,7 @@ public class CustomerService : ICustomerService
             customer.CreatedAt,
             customer.UserId != null,
             vehicles.Select(VehicleService.Map).ToList(),
-            policies.Select(p => PolicyService.Map(p.Policy, p.Code)).ToList(),
+            policies.Select(p => p.ToResponse(today)).ToList(),
             summary);
     }
 

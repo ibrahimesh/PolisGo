@@ -28,6 +28,33 @@ const SERVER_MESSAGE_KEYS: Record<string, string> = {
   'The customer must be at least 18 years old.': 'validation.adult',
   'Birth date must be within the last 100 years.': 'validation.birthDateRange',
   'A user with this email already exists.': 'errors.emailTaken',
+  'Current password is required.': 'validation.currentPasswordRequired',
+  'Current password is incorrect.': 'validation.currentPasswordIncorrect',
+  'New password must be different from the current one.': 'validation.passwordUnchanged',
+  'Staff accounts have no phone on file.': 'validation.phoneNotApplicable',
+  // Vehicle rules — VehicleValidation.Messages (same contract test).
+  'Make is required.': 'validation.makeRequired',
+  'Make must be 64 characters or fewer.': 'validation.makeTooLong',
+  'Model is required.': 'validation.modelRequired',
+  'Model must be 64 characters or fewer.': 'validation.modelTooLong',
+  'Plate number is required.': 'validation.plateRequired',
+  'Plate number must be up to 16 letters, digits, spaces or hyphens.': 'validation.plateInvalid',
+  'VIN is required.': 'validation.vinRequired',
+  'VIN must be 17 characters: digits and letters except I, O and Q.': 'validation.vinInvalid',
+  'Model year must be between 1950 and next year.': 'validation.vehicleYearRange',
+  'Engine capacity must be 10000 cc or less.': 'validation.engineCapacityMax',
+  // Purchase rules — PolicyValidation.Messages (same contract test).
+  'Start date cannot be in the past.': 'validation.startDatePast',
+  'Start date cannot be more than 60 days in the future.': 'validation.startDateTooFar',
+  'Policy type is required.': 'validation.policyTypeRequired',
+  'Vehicle is required.': 'validation.vehicleRequired',
+  'Search must be at most 100 characters.': 'validation.searchTooLong',
+  'An active or draft policy of this type already covers the vehicle in the chosen period.':
+    'errors.policyOverlap',
+  'The start date of this draft has passed. Start a new purchase to choose a new date.':
+    'errors.draftStartPassed',
+  'This policy has already expired.': 'errors.policyExpired',
+  'A vehicle with this plate number is already registered.': 'errors.plateTaken',
 };
 
 export function serverMessageKey(message: string | undefined): string | undefined {
@@ -36,6 +63,15 @@ export function serverMessageKey(message: string | undefined): string | undefine
 
 export function fieldMessageKey(messages: readonly string[] | undefined): string {
   return serverMessageKey(messages?.[0]) ?? 'validation.invalidField';
+}
+
+// For a 400 whose fields aren't on the current screen (e.g. the quote
+// rejecting a vehicle year while the user is choosing cover), the first
+// field message says more than the generic "some details need attention".
+export function firstFieldMessageKey(error: unknown): string | undefined {
+  if (!isApiError(error) || error.status !== 400) return undefined;
+  const first = Object.values(error.problem?.errors ?? {})[0];
+  return first ? fieldMessageKey(first) : undefined;
 }
 
 export interface DescribedError {

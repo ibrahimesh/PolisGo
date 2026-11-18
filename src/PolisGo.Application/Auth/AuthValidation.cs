@@ -36,6 +36,10 @@ public static partial class AuthValidation
         public const string BirthDateOutOfRange = "Birth date must be within the last 100 years.";
         public const string LicenceInFuture = "Driving licence date must not be in the future.";
         public const string LicenceBefore18 = "Driving licence date must be after the customer turns 18.";
+        public const string CurrentPasswordRequired = "Current password is required.";
+        public const string CurrentPasswordIncorrect = "Current password is incorrect.";
+        public const string PasswordUnchanged = "New password must be different from the current one.";
+        public const string PhoneNotApplicable = "Staff accounts have no phone on file.";
     }
 
     // One @, a dotted domain and a 2+ letter TLD. MailAddress alone accepts

@@ -75,3 +75,6 @@ p.txt
 .env
 .env.*
 !.env.example
+
+## Local Claude Code / editor tooling
+.claude/

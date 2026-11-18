@@ -32,8 +32,8 @@ public class VehicleService : IVehicleService
 
         // Normalise plate so duplicate detection and comparisons are reliable
         // regardless of how the client typed it.
-        var plate = request.PlateNumber.Trim().ToUpperInvariant();
-        var vin = request.Vin.Trim().ToUpperInvariant();
+        var plate = VehicleValidation.NormalizePlate(request.PlateNumber);
+        var vin = VehicleValidation.NormalizeVin(request.Vin);
 
         if (await _db.Vehicles.AnyAsync(v => v.PlateNumber == plate, cancellationToken))
         {
@@ -106,22 +106,17 @@ public class VehicleService : IVehicleService
     private static void ValidateInput(CreateVehicleRequest request)
     {
         var errors = new Dictionary<string, string[]>();
+        void Check(string field, string? error)
+        {
+            if (error is not null) errors[field] = [error];
+        }
 
-        if (string.IsNullOrWhiteSpace(request.Make))
-            errors[nameof(request.Make)] = new[] { "Make is required." };
-        if (string.IsNullOrWhiteSpace(request.Model))
-            errors[nameof(request.Model)] = new[] { "Model is required." };
-        if (string.IsNullOrWhiteSpace(request.PlateNumber))
-            errors[nameof(request.PlateNumber)] = new[] { "Plate number is required." };
-        if (string.IsNullOrWhiteSpace(request.Vin))
-            errors[nameof(request.Vin)] = new[] { "VIN is required." };
-
-        var currentYear = DateTime.UtcNow.Year;
-        if (request.Year < 1950 || request.Year > currentYear + 1)
-            errors[nameof(request.Year)] = new[] { $"Year must be between 1950 and {currentYear + 1}." };
-
-        if (request.EngineCapacityCc <= 0)
-            errors[nameof(request.EngineCapacityCc)] = new[] { "Engine capacity must be greater than zero." };
+        Check(nameof(request.Make), VehicleValidation.MakeError(request.Make));
+        Check(nameof(request.Model), VehicleValidation.ModelError(request.Model));
+        Check(nameof(request.PlateNumber), VehicleValidation.PlateError(request.PlateNumber));
+        Check(nameof(request.Vin), VehicleValidation.VinError(request.Vin));
+        Check(nameof(request.Year), VehicleValidation.YearError(request.Year, DateTime.UtcNow.Year));
+        Check(nameof(request.EngineCapacityCc), VehicleValidation.EngineCapacityError(request.EngineCapacityCc));
 
         if (errors.Count > 0)
         {

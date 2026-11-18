@@ -10,6 +10,7 @@ React frontend.
 | Dark (default)                                                              | Light                                                                         |
 | --------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
 | ![Landing page, dark theme](frontend/docs/screenshots/landing-dark-desktop.png) | ![Landing page, light theme](frontend/docs/screenshots/landing-light-desktop.png) |
+| ![Client overview, dark theme](frontend/docs/screenshots/cabinet-overview-dark-desktop.png) | ![Purchase wizard, light theme](frontend/docs/screenshots/cabinet-buy-light-desktop.png) |
 
 ## What it is
 
@@ -31,9 +32,16 @@ product catalogue (`/api/policy-types`); health check.
 - Register vehicles; buy a policy for one — the premium is recalculated on the
   server from stored data, including approved or paid claims of the last three
   years; start date within 60 days; no overlapping policy of the same type.
+- Live quote from stored data (`POST /api/policies/quote`): the same calculation
+  as issuing, so the quoted premium is the charged premium.
 - Pay a policy (Draft → Active) or cancel it; submit claims on own policies,
   upload JPG/PNG/PDF documents (≤ 5 MB, ≤ 10 per claim), follow the status
   history. Sees only their own vehicles, policies and claims.
+- Policy list with status/type filters, search by number or plate and sorting;
+  policy detail with the pricing frozen at issue, payments and status history.
+- Profile (`/api/me`): edit name and phone, change password. Overview figures
+  and renewal reminders (active policies ending within 30 days) with read
+  marks.
 
 **Agent** — registers vehicles, issues and takes payment for policies, and
 files claims on behalf of a customer; sees only the policies they sold and the
@@ -50,8 +58,22 @@ months of activity, average claim resolution time).
 **Frontend** (`frontend/`) — landing page with the live calculator and an
 API-driven coverage table, validated sign-in and registration, EN / RU / AZ,
 dark and light themes, Ctrl/⌘+K palette; design system in
-[frontend/DESIGN.md](frontend/DESIGN.md). Role screens are not built yet
-([Roadmap](#roadmap)).
+[frontend/DESIGN.md](frontend/DESIGN.md).
+
+**Client cabinet** (`/app`) — sidebar on desktop, bottom bar on phones:
+- **Overview**: active policies, next renewal, insured vehicles, premiums paid
+  in 12 months, recent activity, renewal reminders.
+- **My policies**: filters, search, sort and pages kept in the URL; policy
+  detail with coverage, premium breakdown, payment and status history; a **PDF
+  certificate** generated in the browser in EN / RU / AZ.
+- **Buy a policy**: five-step wizard with the exact live premium, inline
+  vehicle registration, review, payment through the demo gateway and a success
+  screen; survives a reload; renew-a-policy and resume-a-draft links.
+- **Notifications** panel for renewal reminders (unread badge, mark as read).
+- **Profile and settings** (name, phone, password, language, theme) and
+  **Help**.
+
+Staff desks are not built yet ([Roadmap](#roadmap)).
 
 ## Architecture
 
@@ -101,8 +123,20 @@ frontend/                  React SPA, Playwright e2e, DESIGN.md
   (`StartReview`, `Approve`, `Reject`, `MarkPaid`) live on the entity and each
   one appends a `ClaimStatusHistory` row
   ([Claim.cs](src/PolisGo.Domain/Entities/Claim.cs));
-  policies have `Activate` / `Cancel` ([Policy.cs](src/PolisGo.Domain/Entities/Policy.cs)).
-  Illegal transitions throw and become 409.
+  policies have `Activate` / `Cancel` ([Policy.cs](src/PolisGo.Domain/Entities/Policy.cs)),
+  which append `PolicyStatusHistory` rows. Illegal transitions throw and become 409.
+- **Prices you can explain later.** The tariff factors are frozen on the
+  policy at issue (an owned `PolicyPricing`), because recomputing them later
+  would use a different age, claims history or tariff. The quote and create
+  endpoints share one pricing path, so the quoted premium is the charged one.
+- **Expiry is derived, not scheduled.** An Active policy past its inclusive
+  end date reads and filters as Expired
+  ([PolicyStatusFilter.cs](src/PolisGo.Application/Policies/PolicyStatusFilter.cs)),
+  and a Draft whose start date has passed can no longer be paid (no backdated
+  cover).
+- **Certificates rendered in the browser** with pdf-lib + fontkit (MIT) and
+  the app's own fonts (OFL), so they come out in the user's language with no
+  server-side translation. The code loads only on Download.
 - **Optimistic concurrency.** `Claim.RowVersion` is a GUID regenerated on
   every transition and mapped as a concurrency token
   ([ClaimConfiguration.cs](src/PolisGo.Infrastructure/Persistence/Configurations/ClaimConfiguration.cs));
@@ -197,8 +231,9 @@ instead of `echo` — its redirect writes UTF-16, which Vite does not read.
 dotnet test PolisGo.slnx
 ```
 
-**291 backend tests** (xUnit): domain and service tests on SQLite in-memory
-and HTTP tests via `WebApplicationFactory` (401/403/404 per role, JSON contract).
+**334 backend tests** (xUnit): domain and service tests on SQLite in-memory
+and HTTP tests via `WebApplicationFactory` (401/403/404 per role, JSON contract,
+and one client reading, paying or searching for another's policy → 404).
 
 ```bash
 cd frontend
@@ -207,10 +242,13 @@ npx playwright install chromium
 npm run e2e
 ```
 
-**75 frontend unit tests** (Vitest) and **32 end-to-end tests** (Playwright +
-axe-core) against the real API — the e2e suite needs the Docker stack on
-`:8080`. They cover sign-up and sign-in, negative validation, server-side 400
-mapping, the live calculator, themes, languages, and WCAG checks in both themes.
+**184 frontend unit tests** (Vitest) and **58 end-to-end tests** (Playwright +
+axe-core: 45 at 1440px, plus the 13 cabinet tests again at 390px) against the
+real API — the e2e suite needs the Docker stack on `:8080`. They cover
+sign-up and sign-in, buying a policy end to end, the certificate download,
+renewal, notifications, profile and password changes, negative validation on
+the client and the server, forbidden staff routes and another client's policy,
+the live calculator, languages, and axe checks on every page in both themes.
 
 ## CI
 
@@ -231,10 +269,14 @@ Generated from the controllers; full schemas in Swagger.
 | ------ | ---- | ------ |
 | POST | `/api/auth/register`, `/api/auth/login` | Anonymous |
 | GET | `/api/auth/me` | Signed in |
+| GET, PUT | `/api/me` | Signed in (own profile) |
+| POST | `/api/me/change-password` | Signed in |
+| GET | `/api/me/overview`, `/api/me/reminders` | Client |
+| POST | `/api/me/reminders/{policyId}/read`, `/api/me/reminders/read-all` | Client |
 | POST | `/api/quotes/calculate` | Anonymous |
 | GET | `/api/policy-types` | Anonymous |
 | GET, POST | `/api/vehicles` | Signed in (Clients: own only) |
-| POST | `/api/policies` | Client, Agent, Admin |
+| POST | `/api/policies/quote`, `/api/policies` | Client, Agent, Admin |
 | GET | `/api/policies`, `/api/policies/{id}` | Signed in, row-filtered |
 | POST | `/api/policies/{id}/pay` | Client, Agent, Admin |
 | POST | `/api/policies/{id}/cancel` | Signed in, row-filtered |
@@ -252,11 +294,11 @@ Generated from the controllers; full schemas in Swagger.
 
 Not done yet:
 
-- Frontend client cabinet (vehicles, policies, payments, claims), adjuster
-  claims desk, agent desk and admin panel — the API exists; the role-guarded
-  routes are placeholders.
-- Policy expiry: the `Expired` status is defined, but nothing moves policies
-  into it yet.
+- Claims in the client cabinet (the API supports them), the adjuster claims
+  desk, agent desk and admin panel — those routes are still placeholders.
+- A scheduled job that stores `Expired` (today it is derived from the end
+  date on every read) and server-side language/theme preferences.
+- Revoking other sessions on a password change (tokens live up to 60 minutes).
 - Real payment and payout providers instead of the fake gateways.
 - Refresh tokens (sessions are a single 60-minute access token).
 - Running the e2e suite in CI.

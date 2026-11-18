@@ -12,7 +12,7 @@ export type UserRole = (typeof USER_ROLES)[number];
 export type PolicyStatus = 'Draft' | 'Active' | 'Expired' | 'Cancelled';
 export type ClaimStatus = 'Submitted' | 'UnderReview' | 'Approved' | 'Rejected' | 'Paid';
 
-// Seeded by PolicyTypeConfiguration; the API has no catalog endpoint yet.
+// Seeded by PolicyTypeConfiguration; GET /api/policy-types lists them.
 export const POLICY_TYPE_CODES = ['MTPL', 'CASCO'] as const;
 export type PolicyTypeCode = (typeof POLICY_TYPE_CODES)[number];
 
@@ -45,6 +45,28 @@ export interface CurrentUserResponse {
   email: string;
   fullName: string;
   role: UserRole;
+}
+
+// GET/PUT /api/me — customer fields are null for staff accounts.
+export interface ProfileResponse {
+  id: Guid;
+  email: string;
+  fullName: string;
+  role: UserRole;
+  phone: string | null;
+  birthDate: IsoDate | null;
+  drivingLicenseDate: IsoDate | null;
+  createdAt: IsoDateTime;
+}
+
+export interface UpdateProfileRequest {
+  fullName: string;
+  phone: string | null;
+}
+
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
 }
 
 export interface CreateStaffUserRequest {
@@ -122,6 +144,14 @@ export interface CreatePolicyRequest {
   customerId?: Guid | null;
 }
 
+export interface PolicyVehicleSummary {
+  id: Guid;
+  make: string;
+  model: string;
+  year: number;
+  plateNumber: string;
+}
+
 export interface PolicyResponse {
   id: Guid;
   policyNumber: string;
@@ -134,8 +164,62 @@ export interface PolicyResponse {
   endDate: IsoDate;
   premium: number;
   currency: string;
+  // Effective: an Active policy past its end date arrives as Expired.
   status: PolicyStatus;
   createdAt: IsoDateTime;
+  vehicle: PolicyVehicleSummary;
+}
+
+export type PaymentMethod = 'Cash' | 'Card' | 'BankTransfer' | 'Online';
+export type PaymentStatus = 'Pending' | 'Completed' | 'Failed' | 'Refunded';
+
+export interface PolicyPaymentResponse {
+  id: Guid;
+  amount: number;
+  currency: string;
+  method: PaymentMethod;
+  status: PaymentStatus;
+  paidAt: IsoDateTime;
+  reference: string | null;
+}
+
+export interface PolicyHistoryEntry {
+  fromStatus: PolicyStatus | null;
+  toStatus: PolicyStatus;
+  changedAt: IsoDateTime;
+  // The derived Active -> Expired step that nobody performs.
+  automatic: boolean;
+}
+
+// GET /api/policies/{id}
+export interface PolicyDetailResponse {
+  policy: PolicyResponse;
+  holderName: string;
+  vehicle: VehicleResponse;
+  // Factors frozen at issue; null for policies issued before they were stored.
+  pricing: PremiumBreakdown | null;
+  payments: PolicyPaymentResponse[];
+  history: PolicyHistoryEntry[];
+}
+
+export const POLICY_SORT_FIELDS = [
+  'CreatedAt',
+  'StartDate',
+  'EndDate',
+  'Premium',
+  'PolicyNumber',
+] as const;
+export type PolicySortBy = (typeof POLICY_SORT_FIELDS)[number];
+export type SortDirection = 'Asc' | 'Desc';
+
+export interface ListPoliciesQuery {
+  status?: PolicyStatus;
+  type?: string;
+  search?: string;
+  sortBy?: PolicySortBy;
+  sortDir?: SortDirection;
+  page?: number;
+  pageSize?: number;
 }
 
 export interface PayPolicyResponse {
@@ -213,6 +297,52 @@ export interface RejectClaimRequest {
 }
 export interface PayClaimRequest {
   comment?: string | null;
+}
+
+/* ---- Client cabinet (/api/me) ---- */
+
+// Active policy ending within 30 days with no follow-on policy yet.
+export interface ReminderResponse {
+  policyId: Guid;
+  policyNumber: string;
+  policyTypeCode: string;
+  vehicle: PolicyVehicleSummary;
+  endDate: IsoDate;
+  // 0 on the last covered day.
+  daysLeft: number;
+  readAt: IsoDateTime | null;
+}
+
+export interface NextRenewalResponse {
+  policyId: Guid;
+  policyNumber: string;
+  policyTypeCode: string;
+  endDate: IsoDate;
+  daysLeft: number;
+}
+
+export type ActivityKind = 'Policy' | 'Claim';
+
+export interface ActivityEntry {
+  kind: ActivityKind;
+  subjectId: Guid;
+  reference: string;
+  // PolicyStatus or ClaimStatus names, depending on kind.
+  fromStatus: string | null;
+  toStatus: string;
+  at: IsoDateTime;
+}
+
+export interface ClientOverviewResponse {
+  activePolicies: number;
+  awaitingPayment: number;
+  nextRenewal: NextRenewalResponse | null;
+  insuredVehicles: number;
+  vehicles: number;
+  paidLast12Months: number;
+  currency: string;
+  unreadReminders: number;
+  recentActivity: ActivityEntry[];
 }
 
 /* ---- Common ---- */

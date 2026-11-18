@@ -307,11 +307,25 @@
       "overview": "İcmal",
       "agent": "Agent masası",
       "claims": "Zərərlərin tənzimlənməsi",
-      "admin": "İdarəetmə"
+      "admin": "İdarəetmə",
+      "policies": "Polislərim",
+      "buy": "Polis al",
+      "profile": "Profil və ayarlar",
+      "help": "Kömək və suallar"
     },
     "comingSoonTitle": "Bu bölmə plandakı növbəti addımdır",
     "comingSoonBody": "Bu rol üçün ekranlar hazır olduqdan sonra polislər, avtomobillər və sığorta hadisələri burada görünəcək.",
-    "backToOverview": "İcmala qayıt"
+    "backToOverview": "İcmala qayıt",
+    "short": {
+      "overview": "İcmal",
+      "policies": "Polislər",
+      "buy": "Al",
+      "agent": "Agent",
+      "claims": "Zərərlər",
+      "admin": "Admin",
+      "profile": "Profil",
+      "help": "Kömək"
+    }
   },
   "roles": {
     "Client": "Müştəri",
@@ -349,7 +363,11 @@
     },
     "invalidCredentials": "E-poçt və ya şifrə yanlışdır.",
     "emailTaken": "Bu e-poçtla hesab artıq mövcuddur.",
-    "unknownProduct": "Bu sığorta məhsulu mövcud deyil."
+    "unknownProduct": "Bu sığorta məhsulu mövcud deyil.",
+    "policyOverlap": "Bu avtomobilin həmin tarixlər üçün bu növdə qaralama və ya qüvvədə olan polisi artıq var.",
+    "draftStartPassed": "Bu qaralamanın başlama tarixi keçib. Yeni tarix seçmək üçün alışı yenidən başladın.",
+    "policyExpired": "Bu polisin müddəti artıq bitib.",
+    "plateTaken": "Bu dövlət nömrə nişanı ilə avtomobil artıq qeydiyyatdadır."
   },
   "validation": {
     "required": "Mütləq doldurulmalıdır.",
@@ -381,13 +399,34 @@
     "birthDateRequired": "Doğum tarixinizi daxil edin.",
     "licenceDateRequired": "Vəsiqənin verilmə tarixini daxil edin.",
     "adult": "Hesab açmaq üçün ən azı 18 yaşınız olmalıdır.",
-    "birthDateRange": "Doğum tarixi son 100 il ərzində olmalıdır."
+    "birthDateRange": "Doğum tarixi son 100 il ərzində olmalıdır.",
+    "currentPasswordRequired": "Cari şifrənizi daxil edin.",
+    "currentPasswordIncorrect": "Bu, cari şifrəniz deyil.",
+    "passwordUnchanged": "Yeni şifrə cari şifrədən fərqli olmalıdır.",
+    "phoneNotApplicable": "Əməkdaş hesablarında telefon nömrəsi saxlanılmır.",
+    "makeRequired": "Markanı daxil edin, məsələn Toyota.",
+    "makeTooLong": "Ən çox 64 simvol.",
+    "modelRequired": "Modeli daxil edin, məsələn Corolla.",
+    "modelTooLong": "Ən çox 64 simvol.",
+    "plateRequired": "Dövlət nömrə nişanını daxil edin.",
+    "plateInvalid": "Boşluq və ya defislə ayrılmış 16-ya qədər hərf və rəqəm, məsələn 10-AA-123.",
+    "vinRequired": "VIN kodunu daxil edin.",
+    "vinInvalid": "VIN 17 simvoldan ibarətdir: rəqəmlər və I, O, Q-dan başqa latın hərfləri.",
+    "vehicleYearRange": "Buraxılış ili 1950-ci ildən gələn ilə qədər olmalıdır.",
+    "startDatePast": "Başlama tarixi keçmişdə ola bilməz.",
+    "startDateTooFar": "Növbəti 60 gün ərzində başlama tarixi seçin.",
+    "policyTypeRequired": "Sığorta növünü seçin.",
+    "vehicleRequired": "Avtomobili seçin.",
+    "searchTooLong": "Ən çox 100 simvol.",
+    "startDateRequired": "Sığortanın başlama tarixini seçin.",
+    "acceptRequired": "Davam etmək üçün məlumatları təsdiqləyin."
   },
   "common": {
     "loading": "Yüklənir",
     "close": "Bağla",
     "dismiss": "Bildirişi bağla",
-    "notifications": "Bildirişlər"
+    "notifications": "Bildirişlər",
+    "retry": "Yenidən cəhd edin"
   },
   "forms": {
     "errorSummary_one": "{{count}} sahə düzəldilməlidir",
@@ -403,7 +442,374 @@
       "navigation": "Keçid",
       "language": "Dil",
       "theme": "Mövzu",
-      "account": "Hesab"
+      "account": "Hesab",
+      "cabinet": "Şəxsi kabinet"
     }
+  },
+  "cabinet": {
+    "nav": "Şəxsi kabinet",
+    "home": "PolisGo — şəxsi kabinet",
+    "backToSite": "Saytın əsas səhifəsinə qayıt",
+    "signedInAs": "Daxil olmusunuz:",
+    "accountMenu": "hesab menyusu"
+  },
+  "policyStatus": {
+    "Draft": "Ödənilməyib",
+    "Active": "Qüvvədədir",
+    "Expired": "Müddəti bitib",
+    "Cancelled": "Ləğv edilib"
+  },
+  "overview": {
+    "titleLead": "Salam,",
+    "lead": "Bu gün, {{date}} tarixinə sığortanızın vəziyyəti.",
+    "getQuote": "Qiyməti hesabla",
+    "buy": "Polis al",
+    "error": "İcmalı yükləmək mümkün olmadı.",
+    "empty": {
+      "title": "Hələ polisiniz yoxdur",
+      "body": "Avtomobili və sığorta növünü seçin, dəqiq qiyməti dərhal görün və bir addımda ödəyin.",
+      "action": "İlk polisi al"
+    },
+    "notices": {
+      "reminders_one": "{{count}} polisin müddəti 30 gün ərzində bitir.",
+      "reminders_other": "{{count}} polisin müddəti 30 gün ərzində bitir.",
+      "awaiting_one": "{{count}} polis ödəniş gözləyir.",
+      "awaiting_other": "{{count}} polis ödəniş gözləyir.",
+      "review": "Bax",
+      "pay": "Ödənişə keç"
+    },
+    "stats": {
+      "label": "Sığortanız qısaca",
+      "active": "Qüvvədə olan polislər",
+      "awaiting_one": "{{count}} ödəniş gözləyir",
+      "awaiting_other": "{{count}} ödəniş gözləyir",
+      "awaitingNone": "Ödəniş gözləyən yoxdur",
+      "nextRenewal": "Növbəti yeniləmə",
+      "inDays_one": "{{count}} gün sonra",
+      "inDays_other": "{{count}} gün sonra",
+      "endsToday": "bu gün bitir",
+      "noRenewal": "Qüvvədə olan sığorta yoxdur",
+      "insured": "Sığortalı avtomobillər",
+      "insuredValue": "{{total}} avtomobildən {{insured}}",
+      "insuredHint": "qüvvədə olan sığorta ilə",
+      "paid": "Son 12 ayda ödənilib",
+      "paidHint": "tamamlanmış ödənişlər"
+    },
+    "activity": {
+      "title": "Son hadisələr",
+      "empty": "Hələ hadisə yoxdur. Aldığınız polislər və bildirdiyiniz zərərlər burada görünəcək.",
+      "policy": {
+        "Draft": "{{ref}} polisi rəsmiləşdirildi, ödəniş gözləyir",
+        "Active": "{{ref}} polisi ödənildi — sığorta qüvvədədir",
+        "Cancelled": "{{ref}} polisi ləğv edildi",
+        "Expired": "{{ref}} polisinin müddəti bitdi"
+      },
+      "claim": {
+        "Submitted": "{{ref}} zərəri bildirildi",
+        "UnderReview": "{{ref}} zərəri baxılır",
+        "Approved": "{{ref}} zərəri təsdiqləndi",
+        "Rejected": "{{ref}} zərəri rədd edildi",
+        "Paid": "{{ref}} zərəri üzrə ödəniş edildi"
+      }
+    }
+  },
+  "reminders": {
+    "title": "Yeniləmə xatırlatmaları",
+    "lead": "30 gün ərzində müddəti bitən qüvvədə olan polislər.",
+    "empty": "Növbəti 30 gündə müddəti bitən polis yoxdur.",
+    "endsOn": "{{date}} tarixinədək",
+    "daysLeft_one": "{{count}} gün qalıb",
+    "daysLeft_other": "{{count}} gün qalıb",
+    "lastDay": "sığortanın son günü",
+    "renew": "Yenilə",
+    "markRead": "Oxunmuş kimi qeyd et",
+    "markAll": "Hamısını oxunmuş kimi qeyd et",
+    "unread": "Oxunmayıb"
+  },
+  "certificate": {
+    "documentTitle": "PolisGo sığorta şəhadətnaməsi {{number}}",
+    "titleLead": "Sığorta",
+    "titleAccent": "şəhadətnaməsi",
+    "number": "Polis №",
+    "holder": "Sığortalı",
+    "name": "Ad, soyad",
+    "vehicle": "Sığortalanmış avtomobil",
+    "makeModel": "Marka, model, il",
+    "plate": "Dövlət nömrə nişanı",
+    "vin": "VIN",
+    "engine": "Mühərrik",
+    "engineValue": "{{cc}} sm³",
+    "period": "Sığorta müddəti",
+    "from": "Başlama",
+    "to": "Bitmə",
+    "toValue": "{{date}}, daxil olmaqla",
+    "term": "Müddət",
+    "payment": "Sığorta haqqı və ödəniş",
+    "premium": "Sığorta haqqı",
+    "paidOn": "Ödənilib",
+    "reference": "Ödəniş nömrəsi",
+    "coverage": "Polis nəyi əhatə edir",
+    "coverageUnknown": "Əhatə bu məhsulun şərtlərinə uyğundur.",
+    "pricing": "Sığorta haqqı necə hesablanıb",
+    "disclaimer": "PolisGo portfolio layihəsidir, lisenziyalı sığortaçı deyil. Bu şəhadətnamə platformanı nümayiş etdirir və sığortanın etibarlı sübutu deyil.",
+    "footer": "{{date}} tarixində PolisGo şəxsi kabinetində yaradılıb",
+    "download": "Şəhadətnaməni yüklə (PDF)",
+    "preparing": "PDF hazırlanır…",
+    "unavailable": "Şəhadətnamə polis ödənildikdən sonra əlçatan olacaq.",
+    "cancelledNote": "Polis ləğv edilib; şəhadətnamə yalnız qeyd üçündür.",
+    "failed": "Şəhadətnaməni yaratmaq mümkün olmadı. Yenidən cəhd edin."
+  },
+  "policies": {
+    "title": "Polislərim",
+    "lead": "Hesabınızdakı bütün polislər — statusu və müddəti ilə.",
+    "filters": "Polisləri süz",
+    "search": "Axtarış",
+    "searchPlaceholder": "Polis nömrəsi və ya dövlət nişanı",
+    "status": "Status",
+    "allStatuses": "Bütün statuslar",
+    "type": "Sığorta növü",
+    "allTypes": "Bütün növlər",
+    "sort": "Sıralama",
+    "sortOptions": {
+      "newest": "Əvvəlcə yenilər",
+      "oldest": "Əvvəlcə köhnələr",
+      "endSoonest": "Tezliklə bitənlər",
+      "endLatest": "Gec bitənlər",
+      "premiumHigh": "Haqq: azalan",
+      "premiumLow": "Haqq: artan",
+      "number": "Polis nömrəsi"
+    },
+    "results": "Nəticələr",
+    "count_one": "{{count}} polis",
+    "count_other": "{{count}} polis",
+    "clearFilters": "Süzgəcləri təmizlə",
+    "caption": "Polisləriniz",
+    "columns": {
+      "number": "Polis",
+      "vehicle": "Avtomobil",
+      "period": "Müddət",
+      "premium": "Haqq",
+      "status": "Status"
+    },
+    "emptyTitle": "Hələ polisiniz yoxdur",
+    "emptyBody": "Aldığınız polis şəhadətnaməsi ilə birlikdə burada görünəcək.",
+    "noMatchTitle": "Bu şərtlərə uyğun polis yoxdur",
+    "noMatchBody": "Başqa status və ya növ seçin, yaxud axtarışı təmizləyin.",
+    "pagination": "Səhifələr",
+    "previous": "Əvvəlki",
+    "next": "Növbəti",
+    "pageOf": "Səhifə {{page}} / {{pages}}"
+  },
+  "policy": {
+    "back": "Polislərim",
+    "notFoundTitle": "Polis tapılmadı",
+    "notFoundBody": "Hesabınızda bu keçidə uyğun polis yoxdur.",
+    "summary": "Qısaca",
+    "number": "Polis nömrəsi",
+    "status": "Status",
+    "premium": "Sığorta haqqı",
+    "period": "Sığorta müddəti",
+    "periodValue": "{{from}} – {{to}}",
+    "term": "Müddət",
+    "vehicle": "Avtomobil",
+    "issued": "Rəsmiləşdirilib",
+    "coverage": "Əhatə",
+    "included": "Daxildir",
+    "notIncluded": "Daxil deyil",
+    "breakdown": "Sığorta haqqının hesablanması",
+    "breakdownLead": "Rəsmiləşdirmə zamanı qeydə alınmış əmsallar. Baza tarif × əmsallar = sığorta haqqı.",
+    "breakdownMissing": "Bu polis əmsallar saxlanılmağa başlamazdan əvvəl rəsmiləşdirilib.",
+    "payment": "Ödəniş",
+    "notPaid": "Hələ ödənilməyib.",
+    "payNow": "İndi ödə",
+    "draftExpired": "Bu qaralamanın başlama tarixi keçib, onu artıq ödəmək olmaz. Yeni tarixlə yeni polis alın.",
+    "method": "Üsul",
+    "methods": {
+      "Online": "Onlayn",
+      "Card": "Kart",
+      "Cash": "Nağd",
+      "BankTransfer": "Bank köçürməsi"
+    },
+    "paidAt": "Ödənilib",
+    "amount": "Məbləğ",
+    "reference": "Ödəniş nömrəsi",
+    "history": "Status tarixçəsi",
+    "historyAutomatic": "avtomatik olaraq, müddətin sonunda",
+    "historyIssued": "Qaralama kimi rəsmiləşdirilib"
+  },
+  "vehicle": {
+    "add": "Avtomobil əlavə et",
+    "addTitle": "Yeni avtomobil",
+    "make": "Marka",
+    "model": "Model",
+    "year": "Buraxılış ili",
+    "engine": "Mühərrikin həcmi",
+    "plate": "Dövlət nömrə nişanı",
+    "plateHint": "Qeydiyyat şəhadətnaməsindəki kimi, məsələn 10-AA-123",
+    "vin": "VIN",
+    "vinHint": "17 simvol, qeydiyyat şəhadətnaməsində göstərilib",
+    "save": "Avtomobili saxla",
+    "cancel": "Ləğv et"
+  },
+  "wizard": {
+    "title": "Polis alışı",
+    "lead": "Əhatəni seçin, dəqiq qiyməti dərhal görün və bir addımda ödəyin.",
+    "progress": "Alış mərhələləri",
+    "stepOf": "Addım {{step}} / {{total}}",
+    "completed": "tamamlanıb",
+    "continue": "Davam et",
+    "back": "Geri",
+    "editCover": "Şərtləri dəyiş",
+    "startFresh": "Alışı yenidən başla",
+    "noVehicles": "Hələ avtomobiliniz yoxdur. Davam etmək üçün avtomobil əlavə edin.",
+    "coverEnds": "Sığorta {{date}} tarixinədək (daxil olmaqla) qüvvədədir.",
+    "steps": {
+      "cover": {
+        "title": "Nəyi sığortalamaq istəyirsiniz?",
+        "short": "Əhatə"
+      },
+      "vehicle": {
+        "title": "Hansı avtomobil?",
+        "short": "Avtomobil"
+      },
+      "review": {
+        "title": "Məlumatları yoxlayın",
+        "short": "Yoxlama"
+      },
+      "payment": {
+        "title": "Ödəniş",
+        "short": "Ödəniş"
+      },
+      "done": {
+        "title": "Siz sığortalısınız.",
+        "short": "Hazırdır"
+      }
+    },
+    "fields": {
+      "type": "Sığorta növü",
+      "startDate": "Başlama tarixi",
+      "startDateHint": "Bu gün və ya növbəti 60 gün ərzində",
+      "term": "Müddət",
+      "vehicle": "Avtomobil"
+    },
+    "quote": {
+      "label": "Sığorta haqqınız",
+      "note": "Hesabınızdakı məlumatlar və bu avtomobil əsasında hesablanıb. Ödəyəcəyiniz məbləğ budur.",
+      "needVehicle": "Dəqiq qiyməti görmək üçün avtomobil seçin.",
+      "errorTitle": "Bu seçim üçün qiymət hesablanmır"
+    },
+    "review": {
+      "period": "Sığorta müddəti",
+      "driver": "Doğum tarixi {{birth}} · sürücülük vəsiqəsi {{licence}} tarixindən",
+      "pricedFrom": "Qiymət hesabınızdakı məlumatlarla hesablanıb. Doğum tarixini və ya vəsiqə tarixini düzəltmək üçün dəstək xidmətinə müraciət edin.",
+      "draftNote": "{{number}} qaralaması ödəniş gözləyir. Əhatəni və ya avtomobili dəyişsəniz, o əvəz olunacaq.",
+      "accept": "Məlumatların düzgün olduğunu təsdiq edirəm və polis şərtlərini qəbul edirəm.",
+      "acceptLabel": "Təsdiq",
+      "confirm": "Təsdiqlə və ödənişə keç",
+      "edit": "Dəyiş"
+    },
+    "payment": {
+      "amount": "Ödəniləcək məbləğ",
+      "demo": "Ödəniş bu portfolio layihəsinin nümayiş şlüzündən keçir: kart lazım deyil, pul köçürülmür.",
+      "pay": "{{amount}} ödə"
+    },
+    "done": {
+      "lead": "Ödəniş qəbul edildi. {{number}} polisi qüvvədədir.",
+      "viewPolicy": "Polisə bax",
+      "another": "Daha bir polis al"
+    }
+  },
+  "notifications": {
+    "button_zero": "Bildirişlər, oxunmamış yoxdur",
+    "button_one": "Bildirişlər, {{count}} oxunmamış",
+    "button_other": "Bildirişlər, {{count}} oxunmamış",
+    "note": "Xatırlatmalar polisin bitməsinə 30 gün qalmış görünür. Onlar yalnız burada göstərilir — telefona və ya e-poçta heç nə göndərilmir.",
+    "title": "Xatırlatmalar"
+  },
+  "profile": {
+    "title": "Profil və ayarlar",
+    "lead": "Əlaqə məlumatlarınız, şifrəniz və PolisGo-nun görünüşü.",
+    "details": "Şəxsi məlumatlar",
+    "detailsLead": "Adınız polislərdə və şəhadətnamələrdə göstərilir.",
+    "readOnlyNote": "E-poçt giriş adınızdır. Doğum tarixi və vəsiqə tarixi sığorta haqqını müəyyən edir, ona görə onları yalnız dəstək xidməti dəyişə bilər.",
+    "save": "Dəyişiklikləri saxla",
+    "saved": "Məlumatlarınız saxlanıldı.",
+    "password": "Şifrə",
+    "passwordLead": "Şifrəni dəyişdikdən sonra bu cihazda daxil olmuş qalacaqsınız.",
+    "currentPassword": "Cari şifrə",
+    "newPassword": "Yeni şifrə",
+    "changePassword": "Şifrəni dəyiş",
+    "passwordChanged": "Şifrəniz dəyişdirildi.",
+    "preferences": "Dil və mövzu",
+    "preferencesLead": "Bu cihazda saxlanılır və dərhal tətbiq olunur."
+  },
+  "help": {
+    "title": "Kömək və suallar",
+    "lead": "Polislərin alınması, idarə edilməsi və yenilənməsi haqqında qısa cavablar.",
+    "groups": {
+      "buying": "Polis alışı",
+      "policies": "Polisləriniz",
+      "account": "Hesabınız"
+    },
+    "items": {
+      "price": {
+        "q": "Sığorta haqqım necə hesablanır?",
+        "a": "Sığorta növünün baza tarifi mühərrik, yaşınız və sürücülük stajınız, avtomobilin yaşı və son üç ildəki zərərləriniz üzrə əmsallara vurulur, sonra müddətə görə düzəliş edilir. Hər polisin səhifəsində onun hesablandığı əmsallar göstərilir."
+      },
+      "exact": {
+        "q": "Alış zamanı göstərilən qiymət sondurmu?",
+        "a": "Bəli. O, hesabınızdakı məlumatlar və seçilmiş avtomobil əsasında, polisin rəsmiləşdirilməsində olduğu kimi hesablanır. Əsas saytdakı kalkulyator yalnız təxmini qiymət verir."
+      },
+      "dates": {
+        "q": "Sığorta nə vaxt başlaya bilər?",
+        "a": "Bu gün və ya növbəti 60 gün ərzində istənilən gün. Sığorta başlama tarixindən bitmə tarixinədək (daxil olmaqla), 1–12 ay müddətinə qüvvədədir."
+      },
+      "payment": {
+        "q": "Kartımdan pul çıxılırmı?",
+        "a": "Xeyr. PolisGo portfolio layihəsidir və ödənişlər nümayiş şlüzündən keçir: kart tələb olunmur, pul köçürülmür."
+      },
+      "renew": {
+        "q": "Polisi necə yeniləyim?",
+        "a": "Polisin bitməsinə 30 gün qalmış icmalda və zəng işarəsinin altında xatırlatma görünür. «Yenilə» düyməsi eyni avtomobil və əhatə ilə, köhnə polis bitdikdən sonrakı gündən başlayan alışı açır."
+      },
+      "certificate": {
+        "q": "Şəhadətnaməm haradadır?",
+        "a": "Polisi açın və «Şəhadətnaməni yüklə» seçin. PDF seçdiyiniz dildə cihazınızda yaradılır və polis ödənildikdən sonra əlçatandır."
+      },
+      "expired": {
+        "q": "Polis niyə müddəti bitmiş kimi göstərilir?",
+        "a": "Sığorta son gündən sonra bitir. Növbəti gündən polis «Müddəti bitib» kimi göstərilir və siyahınızda qalır."
+      },
+      "cancel": {
+        "q": "Ödənilməmiş polisə nə olur?",
+        "a": "Onu polis səhifəsindən ödəyənədək ödənilməmiş qalır. Başlama tarixi keçdikdən sonra onu ödəmək olmaz — yeni tarixlə yeni polis alın."
+      },
+      "reminders": {
+        "q": "Xatırlatmalar telefona və ya e-poçta gəlirmi?",
+        "a": "Xeyr. Xatırlatmalar yalnız kabinetdə — zəng işarəsinin altında və icmalda göstərilir. «Oxunmuş» qeydi bütün cihazlarınızda qüvvədədir."
+      },
+      "details": {
+        "q": "Adımı və ya telefonumu dəyişə bilərəmmi?",
+        "a": "Bəli, «Profil və ayarlar» bölməsində. Doğum tarixini və ya vəsiqə tarixini düzəltmək üçün dəstək xidmətinə müraciət edin: sığorta haqqı onlardan asılıdır."
+      },
+      "password": {
+        "q": "Şifrəmi necə dəyişim?",
+        "a": "«Profil və ayarlar» bölməsində cari şifrəni və yenisini daxil edin: 8–64 simvol, böyük və kiçik hərf və rəqəm."
+      },
+      "preferences": {
+        "q": "Dil və mövzu harada saxlanılır?",
+        "a": "Bu cihazda. Onları başlıqda, profildə və ya Ctrl/⌘ + K ilə dəyişə bilərsiniz."
+      },
+      "claims": {
+        "q": "Sığorta hadisəsini necə bildirim?",
+        "a": "Onlayn zərər bildirişləri hələ kabinetdə yoxdur — bu, planlarda növbəti addımdır."
+      },
+      "licensed": {
+        "q": "PolisGo lisenziyalı sığortaçıdırmı?",
+        "a": "Xeyr. PolisGo sığorta platformasını nümayiş etdirən portfolio layihəsidir; onun polisləri və şəhadətnamələri real sığorta deyil."
+      }
+    },
+    "more": "Qiymət və əhatə haqqında ümumi suallarınız var?",
+    "moreLink": "Əsas saytdakı suallara baxın"
   }
 }

@@ -24,6 +24,13 @@ interface QuoteResultProps {
   updating: boolean;
   // The form currently holds invalid input, so the figure on screen is stale.
   stale: boolean;
+  // The purchase wizard prices from stored data, so its figure is exact:
+  // it replaces the "indicative" label and note.
+  label?: string;
+  note?: string;
+  // For a narrow column (the wizard's side panel): price and note stack, and
+  // the price stays at 64px instead of growing to 96px.
+  compact?: boolean;
 }
 
 export function QuoteResult({
@@ -32,8 +39,12 @@ export function QuoteResult({
   termMonths,
   updating,
   stale,
+  label,
+  note,
+  compact = false,
 }: QuoteResultProps) {
   const { t } = useTranslation();
+  const resultLabel = label ?? t('calculator.resultLabel');
   const [explainOpen, setExplainOpen] = useState(false);
 
   return (
@@ -46,7 +57,7 @@ export function QuoteResult({
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
         <span id="quote-result-label">
-          <Label className="text-paper-muted">{t('calculator.resultLabel')}</Label>
+          <Label className="text-paper-muted">{resultLabel}</Label>
         </span>
         <div className="flex items-center gap-2">
           {/* visibility, not an opacity fade: a half-faded label fails contrast,
@@ -63,6 +74,9 @@ export function QuoteResult({
           breakdown={breakdown}
           termMonths={termMonths}
           stale={stale}
+          label={resultLabel}
+          note={note ?? t('calculator.estimate')}
+          compact={compact}
           onExplain={() => setExplainOpen(true)}
         />
       ) : (
@@ -92,11 +106,17 @@ function ResultBody({
   breakdown,
   termMonths,
   stale,
+  label,
+  note,
+  compact,
   onExplain,
 }: {
   breakdown: PremiumBreakdown;
   termMonths: number;
   stale: boolean;
+  label: string;
+  note: string;
+  compact: boolean;
   onExplain: () => void;
 }) {
   const { t } = useTranslation();
@@ -108,14 +128,19 @@ function ResultBody({
     <div className={cx('transition-opacity duration-200', stale && 'opacity-45')}>
       {/* Price and notes share a row; the diagram gets the full card width
           below so its axis labels stay legible on every screen size. */}
-      <div className="mt-6 grid items-end gap-6 sm:grid-cols-2 sm:gap-10">
+      <div className={cx('mt-6 grid items-end gap-6', !compact && 'sm:grid-cols-2 sm:gap-10')}>
         <div>
           {/* The animated figure is decorative; screen readers get the final value once. */}
           <p className="sr-only" aria-live="polite" aria-atomic="true">
-            {t('calculator.resultLabel')}: {format.amount(breakdown.premium)} {breakdown.currency}
+            {label}: {format.amount(breakdown.premium)} {breakdown.currency}
           </p>
           <p aria-hidden="true" className="flex items-baseline gap-3">
-            <span className="font-serif text-3xl leading-none tracking-[-0.03em] tabular sm:text-4xl">
+            <span
+              className={cx(
+                'font-serif text-3xl leading-none tracking-[-0.03em] tabular',
+                !compact && 'sm:text-4xl',
+              )}
+            >
               {format.amount(price)}
             </span>
             <span className="text-lg text-paper-muted">{breakdown.currency}</span>
@@ -125,7 +150,7 @@ function ResultBody({
           </p>
         </div>
 
-        <div className="space-y-3 sm:border-l sm:border-paper-line sm:pl-6">
+        <div className={cx('space-y-3', !compact && 'sm:border-l sm:border-paper-line sm:pl-6')}>
           {cap && (
             <div className="space-y-2">
               <Badge tone="paper">{t('calculator.capApplied')}</Badge>
@@ -137,7 +162,7 @@ function ResultBody({
               </p>
             </div>
           )}
-          <p className="text-sm text-paper-muted">{t('calculator.estimate')}</p>
+          <p className="text-sm text-paper-muted">{note}</p>
           <button
             type="button"
             onClick={onExplain}

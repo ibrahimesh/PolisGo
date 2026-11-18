@@ -4,122 +4,83 @@ using PolisGo.Application.Common;
 using PolisGo.Application.Common.Exceptions;
 using PolisGo.Application.Policies.Dtos;
 using PolisGo.Application.Pricing;
+using PolisGo.Application.Vehicles.Dtos;
 using PolisGo.Domain.Entities;
 using PolisGo.Domain.Enums;
+using PolisGo.Domain.Exceptions;
 
 namespace PolisGo.Application.Policies;
 
 public class PolicyService : IPolicyService
 {
     private const int MaxPageSize = 50;
-    private const int StartDateHorizonDays = 60;
     private const int PolicyNumberMaxAttempts = 5;
 
     private readonly IApplicationDbContext _db;
     private readonly IPremiumCalculator _calculator;
     private readonly IPaymentGateway _paymentGateway;
     private readonly ICurrentUser _currentUser;
+    private readonly TimeProvider _clock;
 
     public PolicyService(
         IApplicationDbContext db,
         IPremiumCalculator calculator,
         IPaymentGateway paymentGateway,
-        ICurrentUser currentUser)
+        ICurrentUser currentUser,
+        TimeProvider? clock = null)
     {
         _db = db;
         _calculator = calculator;
         _paymentGateway = paymentGateway;
         _currentUser = currentUser;
+        _clock = clock ?? TimeProvider.System;
+    }
+
+    private DateTime UtcNow => _clock.GetUtcNow().UtcDateTime;
+    private DateOnly Today => DateOnly.FromDateTime(UtcNow);
+
+    public async Task<PremiumBreakdown> QuoteAsync(
+        CreatePolicyRequest request, CancellationToken cancellationToken = default)
+    {
+        var priced = await PriceAsync(request, Today, cancellationToken);
+        return priced.Breakdown;
     }
 
     public async Task<PolicyResponse> CreateAsync(
         CreatePolicyRequest request, CancellationToken cancellationToken = default)
     {
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
-        var customerId = ResolveCustomerId(request.CustomerId);
-
-        ValidateStartDate(request.StartDate, today);
-
-        var customer = await _db.Customers
-            .FirstOrDefaultAsync(c => c.Id == customerId, cancellationToken)
-            ?? throw new NotFoundException(nameof(Customer), customerId);
-
-        var vehicle = await _db.Vehicles
-            .FirstOrDefaultAsync(v => v.Id == request.VehicleId, cancellationToken)
-            ?? throw new NotFoundException(nameof(Vehicle), request.VehicleId);
-
-        if (vehicle.CustomerId != customerId)
-        {
-            // Return 404 (via NotFoundException) instead of 403 so a caller
-            // cannot probe the existence of someone else's vehicle.
-            throw new NotFoundException(nameof(Vehicle), request.VehicleId);
-        }
-
-        var code = (request.PolicyTypeCode ?? string.Empty).Trim().ToUpperInvariant();
-        var policyType = await _db.PolicyTypes
-            .FirstOrDefaultAsync(pt => pt.Code == code, cancellationToken)
-            ?? throw new NotFoundException(nameof(PolicyType), request.PolicyTypeCode ?? "(null)");
-
-        var endDate = request.StartDate.AddMonths(request.TermMonths).AddDays(-1);
-
-        // Reject overlapping Draft/Active policies for the same vehicle + type.
-        // Server-side recalculation also means pricing is fresh; this guards
-        // against duplicate coverage.
-        var sameTypePolicies = await _db.Policies
-            .Where(p => p.VehicleId == vehicle.Id
-                && p.PolicyTypeId == policyType.Id
-                && (p.Status == PolicyStatus.Draft || p.Status == PolicyStatus.Active))
-            .ToListAsync(cancellationToken);
-
-        var candidateRange = new Policy
-        {
-            StartDate = request.StartDate.ToDateTime(TimeOnly.MinValue),
-            EndDate = endDate.ToDateTime(TimeOnly.MinValue)
-        };
-        if (sameTypePolicies.Any(existing => existing.OverlapsWith(candidateRange)))
-        {
-            throw new ConflictException(
-                "An active or draft policy of this type already covers the vehicle in the chosen period.");
-        }
-
-        var threeYearsAgo = DateTime.UtcNow.AddYears(-3);
-        var claimCount = await _db.Claims
-            .Where(c => c.Policy.CustomerId == customerId)
-            .Where(c => c.Status == ClaimStatus.Approved || c.Status == ClaimStatus.Paid)
-            .Where(c => c.IncidentDate >= threeYearsAgo)
-            .CountAsync(cancellationToken);
-
-        var driverBirth = DateOnly.FromDateTime(customer.BirthDate);
-        var driverLicense = DateOnly.FromDateTime(customer.DrivingLicenseDate);
-
-        // Premium is ALWAYS computed server-side from stored data — the caller
-        // doesn't send one, and even if the client-side quote differed we trust
-        // only this calculation.
-        var breakdown = _calculator.Calculate(new PremiumCalculationInput(
-            PolicyTypeCode: policyType.Code,
-            BaseRate: policyType.BaseRate,
-            EngineCapacityCc: vehicle.EngineCapacityCc,
-            DriverBirthDate: driverBirth,
-            DrivingLicenseDate: driverLicense,
-            VehicleYear: vehicle.Year,
-            ClaimsInLast3Years: claimCount,
-            TermMonths: request.TermMonths,
-            AsOfDate: today));
+        var today = Today;
+        var priced = await PriceAsync(request, today, cancellationToken);
+        var breakdown = priced.Breakdown;
 
         var policy = new Policy
         {
             Id = Guid.NewGuid(),
             PolicyNumber = await AllocatePolicyNumberAsync(today.Year, cancellationToken),
-            CustomerId = customer.Id,
-            VehicleId = vehicle.Id,
-            PolicyTypeId = policyType.Id,
+            CustomerId = priced.CustomerId,
+            VehicleId = priced.Vehicle.Id,
+            PolicyTypeId = priced.PolicyType.Id,
             AgentId = _currentUser.Role == UserRole.Agent ? _currentUser.UserId : null,
             StartDate = request.StartDate.ToDateTime(TimeOnly.MinValue),
-            EndDate = endDate.ToDateTime(TimeOnly.MinValue),
+            EndDate = priced.EndDate.ToDateTime(TimeOnly.MinValue),
             Premium = breakdown.Premium,
             Status = PolicyStatus.Draft,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = UtcNow,
+            // Frozen so the policy page can explain this premium later, even
+            // after the customer's age, claims or the tariff have moved on.
+            Pricing = new PolicyPricing
+            {
+                BaseRate = breakdown.BaseRate,
+                EngineFactor = breakdown.EngineFactor,
+                DriverAgeFactor = breakdown.DriverAgeFactor,
+                ExperienceFactor = breakdown.ExperienceFactor,
+                VehicleAgeFactor = breakdown.VehicleAgeFactor,
+                BonusMalusFactor = breakdown.BonusMalusFactor,
+                TermFactor = breakdown.TermFactor,
+                TotalFactor = breakdown.TotalFactor
+            }
         };
+        policy.RecordIssued(_currentUser.UserId);
 
         _db.Policies.Add(policy);
 
@@ -138,50 +99,124 @@ public class PolicyService : IPolicyService
             }
         }
 
-        return Map(policy, policyType.Code);
+        return await LoadResponseAsync(policy.Id, today, cancellationToken);
     }
 
     public async Task<PolicyResponse> GetByIdAsync(
         Guid policyId, CancellationToken cancellationToken = default)
     {
-        var policy = await LoadVisibleAsync(policyId, cancellationToken);
-        var code = await _db.PolicyTypes
-            .Where(pt => pt.Id == policy.PolicyTypeId)
-            .Select(pt => pt.Code)
-            .FirstAsync(cancellationToken);
-        return Map(policy, code);
+        return await LoadResponseAsync(policyId, Today, cancellationToken);
+    }
+
+    public async Task<PolicyDetailResponse> GetDetailAsync(
+        Guid policyId, CancellationToken cancellationToken = default)
+    {
+        var today = Today;
+        var visible = PolicyAccess.VisibleTo(_db.Policies.AsNoTracking(), _currentUser)
+            .Where(p => p.Id == policyId);
+
+        // Three fixed queries: the policy with its vehicle and pricing, then
+        // its payments, then its history.
+        var row = await visible
+            .Select(p => new
+            {
+                Response = new PolicyRow(
+                    p.Id, p.PolicyNumber, p.CustomerId, p.VehicleId, p.PolicyTypeId, p.PolicyType.Code,
+                    p.AgentId, p.StartDate, p.EndDate, p.Premium, p.Status, p.CreatedAt,
+                    p.Vehicle.Make, p.Vehicle.Model, p.Vehicle.Year, p.Vehicle.PlateNumber),
+                HolderName = p.Customer.FullName,
+                p.Vehicle.Vin,
+                p.Vehicle.EngineCapacityCc,
+                p.Pricing
+            })
+            .FirstOrDefaultAsync(cancellationToken)
+            ?? throw new NotFoundException(nameof(Policy), policyId);
+
+        var payments = await _db.Payments.AsNoTracking()
+            .Where(pay => pay.PolicyId == policyId)
+            .OrderBy(pay => pay.PaidAt)
+            .Select(pay => new PolicyPaymentResponse(
+                pay.Id, pay.Amount, Tariff.Currency, pay.Method, pay.Status, pay.PaidAt, pay.Reference))
+            .ToListAsync(cancellationToken);
+
+        var history = await _db.PolicyStatusHistory.AsNoTracking()
+            .Where(h => h.PolicyId == policyId)
+            .OrderBy(h => h.ChangedAt)
+            .Select(h => new PolicyHistoryEntry(h.FromStatus, h.ToStatus, h.ChangedAt, false))
+            .ToListAsync(cancellationToken);
+
+        var policy = row.Response.ToResponse(today);
+        if (policy.Status == PolicyStatus.Expired && row.Response.Status == PolicyStatus.Active)
+        {
+            // Nobody performs the expiry, so it has no row; show it where it happened.
+            history.Add(new PolicyHistoryEntry(
+                PolicyStatus.Active,
+                PolicyStatus.Expired,
+                policy.EndDate.AddDays(1).ToDateTime(TimeOnly.MinValue),
+                Automatic: true));
+        }
+
+        var vehicle = new VehicleResponse(
+            row.Response.VehicleId, row.Response.CustomerId, row.Response.Make, row.Response.Model,
+            row.Response.Year, row.EngineCapacityCc, row.Response.PlateNumber, row.Vin);
+
+        var pricing = row.Pricing is { } p
+            ? new PremiumBreakdown(p.BaseRate, p.EngineFactor, p.DriverAgeFactor, p.ExperienceFactor,
+                p.VehicleAgeFactor, p.BonusMalusFactor, p.TermFactor, p.TotalFactor, policy.Premium, Tariff.Currency)
+            : null;
+
+        return new PolicyDetailResponse(policy, row.HolderName, vehicle, pricing, payments, history);
     }
 
     public async Task<PagedResult<PolicyResponse>> ListAsync(
-        int page, int pageSize, CancellationToken cancellationToken = default)
+        ListPoliciesQuery query, CancellationToken cancellationToken = default)
     {
-        page = Math.Max(1, page);
-        pageSize = Math.Clamp(pageSize, 1, MaxPageSize);
+        var page = Math.Max(1, query.Page);
+        var pageSize = Math.Clamp(query.PageSize, 1, MaxPageSize);
+        var today = Today;
 
-        var query = _db.Policies.AsNoTracking().AsQueryable();
-        query = ApplyRoleFilter(query);
+        var policies = PolicyAccess.VisibleTo(_db.Policies.AsNoTracking(), _currentUser);
 
-        var totalCount = await query.CountAsync(cancellationToken);
+        if (query.Status is { } status)
+        {
+            policies = policies.WhereEffectiveStatus(status, today);
+        }
 
-        var items = await (
-            from p in query
-            join pt in _db.PolicyTypes on p.PolicyTypeId equals pt.Id
-            orderby p.CreatedAt descending
-            select new { Policy = p, Code = pt.Code })
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
+        if (!string.IsNullOrWhiteSpace(query.PolicyTypeCode))
+        {
+            var code = query.PolicyTypeCode.Trim().ToUpperInvariant();
+            policies = policies.Where(p => p.PolicyType.Code == code);
+        }
+
+        var term = query.Search?.Trim();
+        if (!string.IsNullOrEmpty(term))
+        {
+            if (term.Length > PolicyValidation.MaxSearchLength)
+            {
+                throw new ValidationException("search", PolicyValidation.Messages.SearchTooLong);
+            }
+            // Policy numbers and plates are stored upper-case, so an
+            // upper-cased needle makes the match case-insensitive on any provider.
+            var needle = term.ToUpperInvariant();
+            policies = policies.Where(p =>
+                p.PolicyNumber.Contains(needle) || p.Vehicle.PlateNumber.Contains(needle));
+        }
+
+        var totalCount = await policies.CountAsync(cancellationToken);
+
+        var rows = await Project(Sort(policies, query.SortBy, query.SortDir)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize))
             .ToListAsync(cancellationToken);
 
-        var mapped = items
-            .Select(x => Map(x.Policy, x.Code))
-            .ToList();
-
-        return new PagedResult<PolicyResponse>(mapped, page, pageSize, totalCount);
+        var items = rows.Select(r => r.ToResponse(today)).ToList();
+        return new PagedResult<PolicyResponse>(items, page, pageSize, totalCount);
     }
 
     public async Task<PayPolicyResponse> PayAsync(
         Guid policyId, CancellationToken cancellationToken = default)
     {
+        var today = Today;
         var policy = await LoadVisibleAsync(policyId, cancellationToken);
 
         // Idempotency guard: a Draft policy becomes Active once paid. Any
@@ -190,6 +225,13 @@ public class PolicyService : IPolicyService
         {
             throw new ConflictException(
                 $"Policy {policy.PolicyNumber} is in status {policy.Status} and cannot be paid.");
+        }
+
+        // Paying a draft whose start date has passed would activate cover
+        // backdated to before the payment — insurance bought after the event.
+        if (DateOnly.FromDateTime(policy.StartDate) < today)
+        {
+            throw new ConflictException(PolicyValidation.Messages.DraftStartPassed);
         }
 
         var receipt = await _paymentGateway.ChargeAsync(
@@ -203,26 +245,22 @@ public class PolicyService : IPolicyService
             Amount = policy.Premium,
             PaidAt = receipt.ProcessedAt,
             Method = PaymentMethod.Online,
-            Status = PaymentStatus.Completed
+            Status = PaymentStatus.Completed,
+            Reference = receipt.Reference
         };
         _db.Payments.Add(payment);
 
-        policy.Activate();
+        policy.Activate(_currentUser.UserId);
 
-        // SaveChanges wraps the payment insert and the policy update in one
-        // implicit transaction, so either both land or neither does.
+        // SaveChanges wraps the payment insert, the policy update and the
+        // history row in one implicit transaction: all land or none do.
         await _db.SaveChangesAsync(cancellationToken);
 
-        var code = await _db.PolicyTypes
-            .Where(pt => pt.Id == policy.PolicyTypeId)
-            .Select(pt => pt.Code)
-            .FirstAsync(cancellationToken);
-
         return new PayPolicyResponse(
-            Policy: Map(policy, code),
+            Policy: await LoadResponseAsync(policy.Id, today, cancellationToken),
             PaymentId: payment.Id,
             Amount: payment.Amount,
-            Currency: Pricing.Tariff.Currency,
+            Currency: Tariff.Currency,
             Reference: receipt.Reference,
             PaidAt: payment.PaidAt);
     }
@@ -230,28 +268,155 @@ public class PolicyService : IPolicyService
     public async Task<PolicyResponse> CancelAsync(
         Guid policyId, CancellationToken cancellationToken = default)
     {
+        var today = Today;
         var policy = await LoadVisibleAsync(policyId, cancellationToken);
-        policy.Cancel();
+
+        if (policy.StatusOn(today) == PolicyStatus.Expired)
+        {
+            throw new InvalidStateTransitionException(PolicyValidation.Messages.AlreadyExpired);
+        }
+
+        policy.Cancel(_currentUser.UserId);
         await _db.SaveChangesAsync(cancellationToken);
 
-        var code = await _db.PolicyTypes
-            .Where(pt => pt.Id == policy.PolicyTypeId)
-            .Select(pt => pt.Code)
-            .FirstAsync(cancellationToken);
-
-        return Map(policy, code);
+        return await LoadResponseAsync(policy.Id, today, cancellationToken);
     }
 
-    private IQueryable<Policy> ApplyRoleFilter(IQueryable<Policy> query) =>
-        PolicyAccess.VisibleTo(query, _currentUser);
+    // Validates the request, checks ownership and overlap, and prices it from
+    // stored data. Shared by Quote and Create so the quoted premium is exactly
+    // the premium that gets charged.
+    private async Task<PricedPolicy> PriceAsync(
+        CreatePolicyRequest request, DateOnly today, CancellationToken cancellationToken)
+    {
+        var customerId = ResolveCustomerId(request.CustomerId);
+        ValidateRequest(request, today);
+
+        var customer = await _db.Customers.AsNoTracking()
+            .Where(c => c.Id == customerId)
+            .Select(c => new { c.BirthDate, c.DrivingLicenseDate })
+            .FirstOrDefaultAsync(cancellationToken)
+            ?? throw new NotFoundException(nameof(Customer), customerId);
+
+        var vehicle = await _db.Vehicles.AsNoTracking()
+            .FirstOrDefaultAsync(v => v.Id == request.VehicleId, cancellationToken);
+
+        // 404 (not 403) for someone else's vehicle, so a caller cannot probe
+        // which vehicle ids exist.
+        if (vehicle is null || vehicle.CustomerId != customerId)
+        {
+            throw new NotFoundException(nameof(Vehicle), request.VehicleId);
+        }
+
+        var code = request.PolicyTypeCode.Trim().ToUpperInvariant();
+        var policyType = await _db.PolicyTypes.AsNoTracking()
+            .FirstOrDefaultAsync(pt => pt.Code == code, cancellationToken)
+            ?? throw new NotFoundException(nameof(PolicyType), request.PolicyTypeCode);
+
+        var startDate = request.StartDate.ToDateTime(TimeOnly.MinValue);
+        var endDate = request.StartDate.AddMonths(request.TermMonths).AddDays(-1);
+        var endDateTime = endDate.ToDateTime(TimeOnly.MinValue);
+
+        // Reject overlapping Draft/Active cover for the same vehicle + type
+        // (inclusive ranges, same rule as Policy.OverlapsWith).
+        var overlaps = await _db.Policies.AnyAsync(p =>
+            p.VehicleId == vehicle.Id
+            && p.PolicyTypeId == policyType.Id
+            && (p.Status == PolicyStatus.Draft || p.Status == PolicyStatus.Active)
+            && p.StartDate <= endDateTime
+            && startDate <= p.EndDate, cancellationToken);
+        if (overlaps)
+        {
+            throw new ConflictException(PolicyValidation.Messages.Overlap);
+        }
+
+        var threeYearsAgo = UtcNow.AddYears(-3);
+        var claimCount = await _db.Claims
+            .Where(c => c.Policy.CustomerId == customerId)
+            .Where(c => c.Status == ClaimStatus.Approved || c.Status == ClaimStatus.Paid)
+            .Where(c => c.IncidentDate >= threeYearsAgo)
+            .CountAsync(cancellationToken);
+
+        // Premium is ALWAYS computed server-side from stored data — the caller
+        // doesn't send one, and even if a client-side estimate differed we
+        // trust only this calculation.
+        var breakdown = _calculator.Calculate(new PremiumCalculationInput(
+            PolicyTypeCode: policyType.Code,
+            BaseRate: policyType.BaseRate,
+            EngineCapacityCc: vehicle.EngineCapacityCc,
+            DriverBirthDate: DateOnly.FromDateTime(customer.BirthDate),
+            DrivingLicenseDate: DateOnly.FromDateTime(customer.DrivingLicenseDate),
+            VehicleYear: vehicle.Year,
+            ClaimsInLast3Years: claimCount,
+            TermMonths: request.TermMonths,
+            AsOfDate: today));
+
+        return new PricedPolicy(customerId, vehicle, policyType, endDate, breakdown);
+    }
+
+    private sealed record PricedPolicy(
+        Guid CustomerId, Vehicle Vehicle, PolicyType PolicyType, DateOnly EndDate, PremiumBreakdown Breakdown);
+
+    private static void ValidateRequest(CreatePolicyRequest request, DateOnly today)
+    {
+        var errors = new Dictionary<string, string[]>();
+
+        if (request.VehicleId == Guid.Empty)
+            errors[nameof(request.VehicleId)] = [PolicyValidation.Messages.VehicleRequired];
+
+        if (string.IsNullOrWhiteSpace(request.PolicyTypeCode))
+            errors[nameof(request.PolicyTypeCode)] = [PolicyValidation.Messages.PolicyTypeRequired];
+
+        if (request.StartDate < today)
+            errors[nameof(request.StartDate)] = [PolicyValidation.Messages.StartDateInPast];
+        else if (request.StartDate > today.AddDays(PolicyValidation.StartDateHorizonDays))
+            errors[nameof(request.StartDate)] = [PolicyValidation.Messages.StartDateTooFar];
+
+        if (request.TermMonths is < PolicyValidation.MinTermMonths or > PolicyValidation.MaxTermMonths)
+            errors[nameof(request.TermMonths)] = [PolicyValidation.Messages.TermOutOfRange];
+
+        if (errors.Count > 0)
+        {
+            throw new ValidationException(errors);
+        }
+    }
+
+    private static IQueryable<Policy> Sort(IQueryable<Policy> query, PolicySortBy sortBy, SortDirection dir)
+    {
+        var asc = dir == SortDirection.Asc;
+        IOrderedQueryable<Policy> ordered = sortBy switch
+        {
+            PolicySortBy.StartDate => asc ? query.OrderBy(p => p.StartDate) : query.OrderByDescending(p => p.StartDate),
+            PolicySortBy.EndDate => asc ? query.OrderBy(p => p.EndDate) : query.OrderByDescending(p => p.EndDate),
+            PolicySortBy.Premium => asc ? query.OrderBy(p => p.Premium) : query.OrderByDescending(p => p.Premium),
+            PolicySortBy.PolicyNumber => asc ? query.OrderBy(p => p.PolicyNumber) : query.OrderByDescending(p => p.PolicyNumber),
+            _ => asc ? query.OrderBy(p => p.CreatedAt) : query.OrderByDescending(p => p.CreatedAt)
+        };
+        // Unique tie-breaker so paging is stable when sort values repeat.
+        return ordered.ThenBy(p => p.Id);
+    }
+
+    internal static IQueryable<PolicyRow> Project(IQueryable<Policy> query) =>
+        query.Select(p => new PolicyRow(
+            p.Id, p.PolicyNumber, p.CustomerId, p.VehicleId, p.PolicyTypeId, p.PolicyType.Code,
+            p.AgentId, p.StartDate, p.EndDate, p.Premium, p.Status, p.CreatedAt,
+            p.Vehicle.Make, p.Vehicle.Model, p.Vehicle.Year, p.Vehicle.PlateNumber));
+
+    private async Task<PolicyResponse> LoadResponseAsync(
+        Guid policyId, DateOnly today, CancellationToken cancellationToken)
+    {
+        var row = await Project(PolicyAccess.VisibleTo(_db.Policies.AsNoTracking(), _currentUser)
+                .Where(p => p.Id == policyId))
+            .FirstOrDefaultAsync(cancellationToken)
+            ?? throw new NotFoundException(nameof(Policy), policyId);
+        return row.ToResponse(today);
+    }
 
     // Loads a tracked policy the current user is allowed to see. Returns
     // NotFoundException both when the row is missing AND when it belongs to
     // somebody else — never leaks existence of other users' policies.
     private async Task<Policy> LoadVisibleAsync(Guid policyId, CancellationToken cancellationToken)
     {
-        var query = _db.Policies.Where(p => p.Id == policyId);
-        query = ApplyRoleFilter(query);
+        var query = PolicyAccess.VisibleTo(_db.Policies.Where(p => p.Id == policyId), _currentUser);
 
         return await query.FirstOrDefaultAsync(cancellationToken)
             ?? throw new NotFoundException(nameof(Policy), policyId);
@@ -288,34 +453,36 @@ public class PolicyService : IPolicyService
         }
         return requestedCustomerId.Value;
     }
+}
 
-    private static void ValidateStartDate(DateOnly startDate, DateOnly today)
+// Flat projection row: one SELECT with the type code and vehicle summary.
+internal sealed record PolicyRow(
+    Guid Id,
+    string PolicyNumber,
+    Guid CustomerId,
+    Guid VehicleId,
+    Guid PolicyTypeId,
+    string PolicyTypeCode,
+    Guid? AgentId,
+    DateTime StartDate,
+    DateTime EndDate,
+    decimal Premium,
+    PolicyStatus Status,
+    DateTime CreatedAt,
+    string Make,
+    string Model,
+    int Year,
+    string PlateNumber)
+{
+    public PolicyResponse ToResponse(DateOnly today)
     {
-        if (startDate < today)
-        {
-            throw new ValidationException(nameof(CreatePolicyRequest.StartDate),
-                "Start date cannot be in the past.");
-        }
-
-        if (startDate > today.AddDays(StartDateHorizonDays))
-        {
-            throw new ValidationException(nameof(CreatePolicyRequest.StartDate),
-                $"Start date cannot be more than {StartDateHorizonDays} days in the future.");
-        }
+        var effective = Status == PolicyStatus.Active && DateOnly.FromDateTime(EndDate) < today
+            ? PolicyStatus.Expired
+            : Status;
+        return new PolicyResponse(
+            Id, PolicyNumber, CustomerId, VehicleId, PolicyTypeId, PolicyTypeCode, AgentId,
+            DateOnly.FromDateTime(StartDate), DateOnly.FromDateTime(EndDate), Premium, Tariff.Currency,
+            effective, CreatedAt,
+            new PolicyVehicleSummary(VehicleId, Make, Model, Year, PlateNumber));
     }
-
-    internal static PolicyResponse Map(Policy p, string code) => new(
-        Id: p.Id,
-        PolicyNumber: p.PolicyNumber,
-        CustomerId: p.CustomerId,
-        VehicleId: p.VehicleId,
-        PolicyTypeId: p.PolicyTypeId,
-        PolicyTypeCode: code,
-        AgentId: p.AgentId,
-        StartDate: DateOnly.FromDateTime(p.StartDate),
-        EndDate: DateOnly.FromDateTime(p.EndDate),
-        Premium: p.Premium,
-        Currency: Pricing.Tariff.Currency,
-        Status: p.Status,
-        CreatedAt: p.CreatedAt);
 }

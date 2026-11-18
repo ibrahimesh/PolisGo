@@ -41,12 +41,15 @@ every change in this repo.
 | ------ | ----- | ------ |
 | POST | `/api/auth/register` · `/api/auth/login` | Anonymous |
 | GET | `/api/auth/me` | Any signed-in user |
+| GET, PUT | `/api/me` · POST `/api/me/change-password` | Any signed-in user (always the caller's own account) |
+| GET | `/api/me/overview` · `/api/me/reminders` | Client |
+| POST | `/api/me/reminders/{policyId}/read` · `/read-all` | Client; the policy goes through `PolicyAccess` |
 | POST | `/api/users/staff` | Admin |
 | POST | `/api/quotes/calculate` | Anonymous |
 | GET | `/api/policy-types` | Anonymous (public cache 5 min) |
 | GET, POST | `/api/vehicles` | Signed in; Clients see/create only their own |
-| GET | `/api/policies` · `/api/policies/{id}` | Signed in, scoped by `PolicyAccess` |
-| POST | `/api/policies` · `/api/policies/{id}/pay` | Client, Agent, Admin |
+| GET | `/api/policies` (status, type, search, sort, paged) · `/api/policies/{id}` (detail) | Signed in, scoped by `PolicyAccess` |
+| POST | `/api/policies/quote` · `/api/policies` · `/api/policies/{id}/pay` | Client, Agent, Admin |
 | POST | `/api/policies/{id}/cancel` | Signed in, scoped by `PolicyAccess` |
 | GET | `/api/claims` · `/{id}` · `/{id}/history` · `/{id}/documents/{docId}` | Signed in, scoped by `ClaimAccess` |
 | POST | `/api/claims` | Client, Agent, Admin |
@@ -71,6 +74,16 @@ every change in this repo.
   Avoid `EF.Functions` that exist on only one provider and `DateTime`
   subtraction in queries (it silently runs client-side); see
   `AdminStatsService` for a portable date-difference pattern.
+- **Policy status is effective on read.** Nothing stores `Expired`: an Active
+  policy past its inclusive end date reads and filters as Expired
+  (`Policy.StatusOn`, `PolicyStatusFilter`). Use them in any new policy query.
+- **Status changes go through the entity** (`RecordIssued`, `Activate`,
+  `Cancel`), which append `PolicyStatusHistory`. Pricing factors are frozen
+  on the policy at issue (`Policy.Pricing`); quote and create share
+  `PolicyService.PriceAsync` so the quoted premium is the charged one.
+- **Shared rule classes with stable messages** (`AuthValidation`,
+  `VehicleValidation`, `PolicyValidation`): the SPA's `apiErrors.test.ts`
+  reads them and fails on a message without a translation.
 - **Index what new queries filter, group or sort on**, in the entity's
   configuration, shipped with a migration in the same commit.
 
@@ -129,9 +142,19 @@ React Router, TanStack Query, React Hook Form + Zod, react-i18next.
   through `endpoints.ts`; anonymous endpoints pass `anonymous: true`.
 - `src/auth` — session (`AuthProvider`), route guard (`RequireAuth`). Guards
   are UX only; the API's `[Authorize(Roles = ...)]` is the real check. Which
-  role sees which workspace section lives in `features/workspace/sections.ts`.
+  role sees which workspace section lives in `features/workspace/sections.ts`
+  — the router guards, sidebar, bottom bar and palette all read it.
+- Sign-out: `useRequestSignOut()` navigates to `/` with state; the public
+  layout finishes it (`useCompleteSignOut`). Don't call `logout()` from a
+  protected page, or its guard bounces the user to `/login` first.
 - `src/components/ui` — design-system components; `components/layout` — shell.
-- `src/features/<area>` — feature code; `src/pages` — route screens.
+- `src/features/<area>` — feature code; `src/pages` — route screens. The
+  client cabinet: `cabinet` (shell, sidebar, bottom bar, user menu, private
+  queries under the `['cabinet']` key prefix), `overview`, `policies`,
+  `wizard` (purchase), `reminders`, `profile`, `help`, `vehicles`,
+  `certificate` (PDF).
+- Every private query lives under `cabinetKeys.all`; a write invalidates
+  that prefix (`useInvalidateCabinet`), and sign-out clears the cache.
 - `src/i18n` — setup, `locales/{en,ru,az}.json`, API error mapping, number
   formatting. `src/lib` — dates and hooks. `e2e/` — Playwright suite.
 - Routes are lazy-loaded (`React.lazy` in `App.tsx`); add new pages the same way.
@@ -156,6 +179,9 @@ React Router, TanStack Query, React Hook Form + Zod, react-i18next.
   icon-in-circle grids.
 - Motion only via `<Reveal>` (scroll), hover and focus; content must stay
   visible by default and respect `prefers-reduced-motion`.
+- Signed-in pages use `PageHeader` (40px serif h1, 28px on phones), not the
+  landing's 64–96px headings. Data cards are `Card variant="paper"`; status
+  badges on paper use `onPaper`.
 - Landing sections are listed once in `components/layout/navigation.ts`;
   header, mobile menu, command palette (Ctrl/⌘+K) and footer read it.
 - Keep the factor-axes diagram (`features/quote/FactorDiagram.tsx`) and its
@@ -182,6 +208,17 @@ React Router, TanStack Query, React Hook Form + Zod, react-i18next.
   checks — it skips every object-level refinement in the form.
 - Sign-in and register never render the form over an existing session; they
   show `SessionNotice` (checking / already signed in) instead.
+- Guard async submits with `useExclusive()` (lib/hooks) as well as the
+  button's `loading`: it drops a second submit before the re-render.
+- A radio group's empty value is `null`: give its zod type an `error`
+  message, or zod's English text reaches the user. RHF can't focus radios;
+  set `shouldFocusError: false` and focus in field order yourself.
+- The purchase wizard keeps its state in sessionStorage per user
+  (`wizardState.ts`); going back to edit cancels the unpaid draft.
+- PDF certificates: `features/certificate` (pdf-lib + fontkit, MIT; static
+  Fontsource WOFF files, OFL). Fontsource splits fonts by Unicode subset, so
+  text is drawn in runs per file (`textRuns.ts`); add a character range to
+  `subsetsFor` if a new string needs another file. The chunk loads on click.
 
 ### i18n
 
@@ -203,7 +240,14 @@ Run from `frontend/`:
 - `npm run e2e` — Playwright + axe against the real API (needs the Docker
   stack on `:8080`, rebuilt from the current branch; starts the dev server
   itself). Covers happy paths, negative form cases, server-400 mapping,
-  the command palette, the mobile menu and axe in both themes. Creates real
-  users with `@polisgo.test` emails. Not run in CI yet.
-- `npm run e2e:screenshots` — regenerates `frontend/docs/screenshots`.
+  the command palette, the mobile menu and axe in both themes, and the client
+  cabinet (`cabinet-*.spec.ts`: purchase, certificate, renewal, account,
+  notifications, forbidden access, axe and 390px width). The `mobile`
+  project reruns the cabinet specs at 390×844. Arrange data through the API
+  (`registerSession`, `useSession`, `cabinetApi` in `e2e/helpers.ts`);
+  test through the UI only what the test is about. Creates real users with
+  `@polisgo.test` emails. Not run in CI yet.
+- `npm run e2e:screenshots` — regenerates `frontend/docs/screenshots`
+  (landing full page; cabinet pages first screen, dark and light, desktop and
+  mobile).
 - First-time e2e setup: `npx playwright install chromium`.

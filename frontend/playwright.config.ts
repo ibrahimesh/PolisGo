@@ -18,6 +18,13 @@ export default defineConfig({
       name: 'chromium',
       use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } },
     },
+    // The signed-in cabinet again at phone width: bottom bar, sheet-style
+    // panels, and no horizontal scroll at 390px.
+    {
+      name: 'mobile',
+      testMatch: /cabinet-.*\.spec\.ts/,
+      use: { ...devices['Desktop Chrome'], viewport: { width: 390, height: 844 } },
+    },
   ],
   webServer: {
     command: 'npm run dev',

@@ -3,26 +3,33 @@ import type {
   ApproveClaimRequest,
   AuthResponse,
   CalculateQuoteRequest,
+  ChangePasswordRequest,
   ClaimDetailResponse,
   ClaimHistoryEntry,
   ClaimResponse,
+  ClientOverviewResponse,
   CreatePolicyRequest,
   CreateStaffUserRequest,
   CreateVehicleRequest,
   CurrentUserResponse,
   Guid,
+  ListPoliciesQuery,
   ListClaimsQuery,
   LoginRequest,
   PagedResult,
   PayClaimRequest,
   PayPolicyResponse,
+  PolicyDetailResponse,
   PolicyResponse,
   PolicyTypeResponse,
   PremiumBreakdown,
+  ProfileResponse,
   RegisterRequest,
+  ReminderResponse,
   RejectClaimRequest,
   ReviewClaimRequest,
   SubmitClaimRequest,
+  UpdateProfileRequest,
   VehicleResponse,
 } from './types';
 
@@ -34,6 +41,23 @@ export const authApi = {
   register: (body: RegisterRequest) =>
     request<AuthResponse>('/api/auth/register', { method: 'POST', body, anonymous: true }),
   me: (signal?: Signal) => request<CurrentUserResponse>('/api/auth/me', { signal }),
+};
+
+export const profileApi = {
+  get: (signal?: Signal) => request<ProfileResponse>('/api/me', { signal }),
+  update: (body: UpdateProfileRequest) =>
+    request<ProfileResponse>('/api/me', { method: 'PUT', body }),
+  changePassword: (body: ChangePasswordRequest) =>
+    request<undefined>('/api/me/change-password', { method: 'POST', body }),
+};
+
+// Client-only read models; staff get 403.
+export const cabinetApi = {
+  overview: (signal?: Signal) => request<ClientOverviewResponse>('/api/me/overview', { signal }),
+  reminders: (signal?: Signal) => request<ReminderResponse[]>('/api/me/reminders', { signal }),
+  markRead: (policyId: Guid) =>
+    request<undefined>(`/api/me/reminders/${policyId}/read`, { method: 'POST' }),
+  markAllRead: () => request<undefined>('/api/me/reminders/read-all', { method: 'POST' }),
 };
 
 export const quotesApi = {
@@ -58,9 +82,13 @@ export const vehiclesApi = {
 };
 
 export const policiesApi = {
-  list: (page = 1, pageSize = 20, signal?: Signal) =>
-    request<PagedResult<PolicyResponse>>('/api/policies', { query: { page, pageSize }, signal }),
-  get: (id: Guid, signal?: Signal) => request<PolicyResponse>(`/api/policies/${id}`, { signal }),
+  list: (query: ListPoliciesQuery = {}, signal?: Signal) =>
+    request<PagedResult<PolicyResponse>>('/api/policies', { query: { ...query }, signal }),
+  get: (id: Guid, signal?: Signal) =>
+    request<PolicyDetailResponse>(`/api/policies/${id}`, { signal }),
+  // Priced from the customer's stored data: the premium that will be charged.
+  quote: (body: CreatePolicyRequest, signal?: Signal) =>
+    request<PremiumBreakdown>('/api/policies/quote', { method: 'POST', body, signal }),
   create: (body: CreatePolicyRequest) =>
     request<PolicyResponse>('/api/policies', { method: 'POST', body }),
   pay: (id: Guid) => request<PayPolicyResponse>(`/api/policies/${id}/pay`, { method: 'POST' }),

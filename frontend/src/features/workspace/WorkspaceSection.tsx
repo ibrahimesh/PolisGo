@@ -3,7 +3,7 @@ import { ButtonLink } from '../../components/ui/Button';
 import { EmptyState } from '../../components/ui/EmptyState';
 import type { WorkspaceSectionId } from './sections';
 
-// Placeholder for role areas that ship in later steps; the guard around it is real.
+// Placeholder for areas that ship in later steps; the guard around it is real.
 export function WorkspaceSection({ section }: { section: WorkspaceSectionId }) {
   const { t } = useTranslation();
   return (

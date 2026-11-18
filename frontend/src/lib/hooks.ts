@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 
 // Compares by serialized value, so a structurally equal object (a fresh form
 // snapshot on every render) doesn't restart the timer.
@@ -62,4 +62,20 @@ export function useTweenedValues(target: readonly number[], durationMs = 260): r
   }, [key, durationMs, reduced]);
 
   return reduced || current.length !== target.length ? target : current;
+}
+
+// Runs one async task at a time; calls made while one is in flight are
+// dropped. Guards submits in the gap between a click (or a held Enter) and the
+// re-render that disables the button.
+export function useExclusive() {
+  const busy = useRef(false);
+  return useCallback(async (task: () => Promise<void>): Promise<void> => {
+    if (busy.current) return;
+    busy.current = true;
+    try {
+      await task();
+    } finally {
+      busy.current = false;
+    }
+  }, []);
 }

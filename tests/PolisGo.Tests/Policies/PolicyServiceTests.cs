@@ -392,7 +392,7 @@ public class PolicyServiceTests
         var admin = Admin(Guid.NewGuid());
         var sut = NewSut(fixture.Db, admin);
 
-        var result = await sut.ListAsync(page: 1, pageSize: 500);
+        var result = await sut.ListAsync(new ListPoliciesQuery(PageSize: 500));
         Assert.Equal(50, result.PageSize);
     }
 
@@ -414,7 +414,7 @@ public class PolicyServiceTests
             .CreateAsync(new CreatePolicyRequest(vehicleB, "MTPL", Today, 12, null));
 
         var adminView = await NewSut(fixture.Db, Admin(Guid.NewGuid()))
-            .ListAsync(page: 1, pageSize: 10);
+            .ListAsync(new ListPoliciesQuery(PageSize: 10));
         Assert.Equal(2, adminView.TotalCount);
     }
 
@@ -438,7 +438,7 @@ public class PolicyServiceTests
             .CreateAsync(new CreatePolicyRequest(vehicleB, "MTPL", Today, 12, null));
 
         var aliceSees = await NewSut(fixture.Db, Client(userA, customerAId))
-            .ListAsync(1, 10);
+            .ListAsync(new ListPoliciesQuery(PageSize: 10));
         Assert.Single(aliceSees.Items);
         Assert.Equal(customerAId, aliceSees.Items.Single().CustomerId);
     }
@@ -459,7 +459,7 @@ public class PolicyServiceTests
         await NewSut(fixture.Db, Agent(agent2Id))
             .CreateAsync(new CreatePolicyRequest(vehicleId, "CASCO", Today, 12, customerId));
 
-        var agent1View = await NewSut(fixture.Db, Agent(agent1Id)).ListAsync(1, 10);
+        var agent1View = await NewSut(fixture.Db, Agent(agent1Id)).ListAsync(new ListPoliciesQuery(PageSize: 10));
         Assert.Single(agent1View.Items);
         Assert.Equal(agent1Id, agent1View.Items.Single().AgentId);
     }

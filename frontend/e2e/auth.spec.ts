@@ -30,14 +30,14 @@ test.describe('Auth', () => {
       expect((await response).status()).toBe(200);
 
       await expect(page).toHaveURL(/\/app$/);
-      await expect(page.getByRole('heading', { level: 1 })).toHaveText(`Hello, ${user.fullName}`);
-      await expect(page.getByText(user.email, { exact: true })).toBeVisible();
-      await expect(page.getByText('Client', { exact: true }).first()).toBeVisible();
+      // A new client: greeted by first name, with a real empty state.
+      await expect(page.getByRole('heading', { level: 1 })).toHaveText('Hello, Leyla');
+      await expect(page.getByRole('heading', { name: 'No policies yet' })).toBeVisible();
     });
 
     await test.step('session survives a reload', async () => {
       await page.reload();
-      await expect(page.getByRole('heading', { level: 1 })).toHaveText(`Hello, ${user.fullName}`);
+      await expect(page.getByRole('heading', { level: 1 })).toHaveText('Hello, Leyla');
     });
 
     await test.step('role guard blocks a Client from the admin area', async () => {
@@ -48,6 +48,7 @@ test.describe('Auth', () => {
     });
 
     await test.step('sign out', async () => {
+      await page.getByRole('button', { name: `${user.fullName}, account menu` }).click();
       await page.getByRole('button', { name: 'Sign out' }).click();
       await expect(page).toHaveURL(/\/$/);
       await expect(page.getByText('You have been signed out.')).toBeVisible();
@@ -60,7 +61,7 @@ test.describe('Auth', () => {
       await page.getByLabel('Password', { exact: true }).fill(user.password);
       await page.getByRole('button', { name: 'Sign in' }).click();
       await expect(page).toHaveURL(/\/app$/);
-      await expect(page.getByText(user.email, { exact: true })).toBeVisible();
+      await expect(page.getByRole('heading', { level: 1 })).toHaveText('Hello, Leyla');
     });
   });
 

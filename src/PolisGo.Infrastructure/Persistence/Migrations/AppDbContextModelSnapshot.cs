@@ -17,7 +17,7 @@ namespace PolisGo.Infrastructure.Persistence.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.0")
+                .HasAnnotation("ProductVersion", "10.0.15")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -218,6 +218,10 @@ namespace PolisGo.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("PolicyId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("Reference")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(16)
@@ -225,7 +229,7 @@ namespace PolisGo.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("PolicyId");
+                    b.HasIndex("PolicyId", "PaidAt");
 
                     b.ToTable("Payments");
                 });
@@ -276,8 +280,6 @@ namespace PolisGo.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("CreatedAt");
 
-                    b.HasIndex("CustomerId");
-
                     b.HasIndex("PolicyNumber")
                         .IsUnique();
 
@@ -287,7 +289,71 @@ namespace PolisGo.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("VehicleId");
 
+                    b.HasIndex("CustomerId", "StartDate");
+
+                    b.HasIndex("CustomerId", "Status", "EndDate");
+
                     b.ToTable("Policies");
+                });
+
+            modelBuilder.Entity("PolisGo.Domain.Entities.PolicyReminderRead", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("PolicyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("ReadAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("PolicyId", "UserId")
+                        .IsUnique();
+
+                    b.ToTable("PolicyReminderReads");
+                });
+
+            modelBuilder.Entity("PolisGo.Domain.Entities.PolicyStatusHistory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("ChangedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("ChangedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("FromStatus")
+                        .HasMaxLength(16)
+                        .HasColumnType("nvarchar(16)");
+
+                    b.Property<Guid>("PolicyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ToStatus")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("nvarchar(16)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChangedAt");
+
+                    b.HasIndex("ChangedByUserId");
+
+                    b.HasIndex("PolicyId", "ChangedAt");
+
+                    b.ToTable("PolicyStatusHistory");
                 });
 
             modelBuilder.Entity("PolisGo.Domain.Entities.PolicyType", b =>
@@ -516,13 +582,85 @@ namespace PolisGo.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.OwnsOne("PolisGo.Domain.Entities.PolicyPricing", "Pricing", b1 =>
+                        {
+                            b1.Property<Guid>("PolicyId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<decimal>("BaseRate")
+                                .HasColumnType("decimal(18,2)");
+
+                            b1.Property<decimal>("BonusMalusFactor")
+                                .HasColumnType("decimal(9,4)");
+
+                            b1.Property<decimal>("DriverAgeFactor")
+                                .HasColumnType("decimal(9,4)");
+
+                            b1.Property<decimal>("EngineFactor")
+                                .HasColumnType("decimal(9,4)");
+
+                            b1.Property<decimal>("ExperienceFactor")
+                                .HasColumnType("decimal(9,4)");
+
+                            b1.Property<decimal>("TermFactor")
+                                .HasColumnType("decimal(9,4)");
+
+                            b1.Property<decimal>("TotalFactor")
+                                .HasColumnType("decimal(9,4)");
+
+                            b1.Property<decimal>("VehicleAgeFactor")
+                                .HasColumnType("decimal(9,4)");
+
+                            b1.HasKey("PolicyId");
+
+                            b1.ToTable("Policies");
+
+                            b1.WithOwner()
+                                .HasForeignKey("PolicyId");
+                        });
+
                     b.Navigation("Agent");
 
                     b.Navigation("Customer");
 
                     b.Navigation("PolicyType");
 
+                    b.Navigation("Pricing");
+
                     b.Navigation("Vehicle");
+                });
+
+            modelBuilder.Entity("PolisGo.Domain.Entities.PolicyReminderRead", b =>
+                {
+                    b.HasOne("PolisGo.Domain.Entities.Policy", "Policy")
+                        .WithMany()
+                        .HasForeignKey("PolicyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PolisGo.Domain.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Policy");
+                });
+
+            modelBuilder.Entity("PolisGo.Domain.Entities.PolicyStatusHistory", b =>
+                {
+                    b.HasOne("PolisGo.Domain.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("ChangedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("PolisGo.Domain.Entities.Policy", "Policy")
+                        .WithMany("StatusHistory")
+                        .HasForeignKey("PolicyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Policy");
                 });
 
             modelBuilder.Entity("PolisGo.Domain.Entities.Vehicle", b =>
@@ -555,6 +693,8 @@ namespace PolisGo.Infrastructure.Persistence.Migrations
                     b.Navigation("Claims");
 
                     b.Navigation("Payments");
+
+                    b.Navigation("StatusHistory");
                 });
 
             modelBuilder.Entity("PolisGo.Domain.Entities.PolicyType", b =>
