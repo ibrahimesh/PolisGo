@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
-import { API_URL, randomUser, usePreferences } from './helpers';
+import { API_URL, randomUser, seedPreferences } from './helpers';
 
 // Negative paths: invalid input must be stopped with a translated, field-level
 // message and must never reach the API.
@@ -40,7 +40,7 @@ async function fillRegister(
 
 test.describe('Register validation', () => {
   test.beforeEach(async ({ page }) => {
-    await usePreferences(page, { lang: 'en' });
+    await seedPreferences(page, { lang: 'en' });
     await page.goto('/register');
   });
 
@@ -170,7 +170,7 @@ test.describe('Register validation', () => {
 
 test.describe('Sign-in validation and session handling', () => {
   test.beforeEach(async ({ page }) => {
-    await usePreferences(page, { lang: 'en' });
+    await seedPreferences(page, { lang: 'en' });
   });
 
   test('rejects a malformed email and an empty password without calling the API', async ({

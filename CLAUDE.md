@@ -261,7 +261,8 @@ Run from `frontend/`:
   cabinet (`cabinet-*.spec.ts`: purchase, certificate, renewal, account,
   notifications, forbidden access, axe and 390px width). The `mobile`
   project reruns the cabinet specs at 390×844. Arrange data through the API
-  (`registerSession`, `useSession`, `cabinetApi` in `e2e/helpers.ts`);
+  (`registerSession`, `openSession`, `cabinetApi` in `e2e/helpers.ts`;
+  no `use…` names there: ESLint's hooks rules cover `e2e/` too);
   test through the UI only what the test is about. Creates real users with
   `@polisgo.test` emails. Runs in CI (the `e2e` job) against a fresh
   `docker compose` stack. Adjuster steps use the dev seed admin

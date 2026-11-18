@@ -1,9 +1,9 @@
 import { expect, test } from '@playwright/test';
-import { chooseSegment, randomUser, registerViaApi, usePreferences } from './helpers';
+import { chooseSegment, randomUser, registerViaApi, seedPreferences } from './helpers';
 
 test.describe('Auth', () => {
   test.beforeEach(async ({ page }) => {
-    await usePreferences(page, { lang: 'en' });
+    await seedPreferences(page, { lang: 'en' });
   });
 
   test('protected routes redirect anonymous visitors to sign-in', async ({ page }) => {

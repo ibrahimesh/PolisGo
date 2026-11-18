@@ -9,8 +9,8 @@ import {
   FILES,
   isoToday,
   registerSession,
-  usePreferences,
-  useSession,
+  seedPreferences,
+  openSession,
 } from './helpers';
 
 const isClaimSubmit = (url: string, method: string) =>
@@ -19,7 +19,7 @@ const isClaimSubmit = (url: string, method: string) =>
 async function signedInClientWithPolicy(page: Page) {
   const { session, user } = await registerSession(page);
   const { vehicle, policy } = await cabinetApi(page, session).activePolicy();
-  await useSession(page, session);
+  await openSession(page, session);
   return { session, user, vehicle, policy };
 }
 
@@ -53,7 +53,7 @@ async function fillIncident(page: Page, patch: Partial<Record<string, string>> =
 
 test.describe('Cabinet claims', () => {
   test.beforeEach(async ({ page }) => {
-    await usePreferences(page, { lang: 'en', theme: 'dark' });
+    await seedPreferences(page, { lang: 'en', theme: 'dark' });
   });
 
   test('file a claim end to end with photos', async ({ page }) => {
@@ -200,7 +200,7 @@ test.describe('Cabinet claims', () => {
     const laterVehicle = await api.vehicle();
     const later = await api.policy(laterVehicle.id, 'MTPL', 12, isoToday(10));
     await api.pay(later.id);
-    await useSession(page, session);
+    await openSession(page, session);
 
     await page.goto('/app/claims/new');
     const unpaid = page.getByRole('radio', { name: new RegExp(draftVehicle.plateNumber) });
@@ -224,7 +224,7 @@ test.describe('Cabinet claims', () => {
       const body = route.request().postDataJSON() as Record<string, unknown>;
       await route.continue({ postData: JSON.stringify({ ...body, claimedAmount: 100.555 }) });
     });
-    await usePreferences(page, { lang: 'ru', theme: 'dark' }, { override: true });
+    await seedPreferences(page, { lang: 'ru', theme: 'dark' }, { override: true });
 
     await page.goto('/app/claims/new');
     await page.getByRole('radio', { name: new RegExp(vehicle.plateNumber) }).check();
@@ -321,7 +321,7 @@ test.describe('Cabinet claims', () => {
     const claim = await claimsApi(page, owner.session).file(policy.id);
 
     const { session } = await registerSession(page);
-    await useSession(page, session);
+    await openSession(page, session);
     await page.goto(`/app/claims/${claim.id}`);
     await expect(page.getByRole('heading', { level: 1 })).toHaveText("This claim wasn't found");
     await expect(page.getByText(claim.claimNumber)).toHaveCount(0);

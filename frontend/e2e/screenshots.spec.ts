@@ -8,8 +8,8 @@ import {
   randomUser,
   uniqueVehicle,
   registerSession,
-  usePreferences,
-  useSession,
+  seedPreferences,
+  openSession,
   waitForPremium,
 } from './helpers';
 import type { Theme } from './helpers';
@@ -48,7 +48,7 @@ for (const size of SIZES) {
         // A full-page capture never scrolls, so the scroll reveal would leave
         // lower sections blank; reduced motion shows everything at once.
         await page.emulateMedia({ reducedMotion: 'reduce' });
-        await usePreferences(page, { theme: shot.theme, lang: 'en' });
+        await seedPreferences(page, { theme: shot.theme, lang: 'en' });
         await page.goto(shot.path);
         await settle(page, shot.path);
         await page.screenshot({
@@ -122,8 +122,8 @@ for (const size of SIZES) {
       test(`cabinet-${theme}-${size.label}`, async ({ page }) => {
         await page.emulateMedia({ reducedMotion: 'reduce' });
         const { session, policyId, claimId } = await seedClient(page);
-        await usePreferences(page, { theme, lang: 'en' });
-        await useSession(page, session);
+        await seedPreferences(page, { theme, lang: 'en' });
+        await openSession(page, session);
 
         const paths: Record<(typeof CABINET_PAGES)[number], string> = {
           overview: '/app',

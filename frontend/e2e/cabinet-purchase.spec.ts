@@ -7,8 +7,8 @@ import {
   isoToday,
   registerSession,
   uniqueVehicle,
-  usePreferences,
-  useSession,
+  seedPreferences,
+  openSession,
 } from './helpers';
 
 // The purchase wizard end to end, against the real API: client validation,
@@ -19,12 +19,12 @@ const yourPremium = (page: Page) => page.getByText(/^Your premium: [\d.,\s]+ AZN
 
 test.describe('Purchase wizard', () => {
   test.beforeEach(async ({ page }) => {
-    await usePreferences(page, { lang: 'en', theme: 'dark' });
+    await seedPreferences(page, { lang: 'en', theme: 'dark' });
   });
 
   test('buy a policy end to end and download its certificate', async ({ page }) => {
     const { session } = await registerSession(page);
-    await useSession(page, session);
+    await openSession(page, session);
     const vehicle = uniqueVehicle();
 
     await test.step('cover: client validation, then a valid choice', async () => {
@@ -150,8 +150,8 @@ test.describe('Purchase wizard', () => {
     const { session } = await registerSession(page);
     const api = cabinetApi(page, session);
     await api.activePolicy(12, 'MTPL');
-    await usePreferences(page, { lang: 'ru' }, { override: true });
-    await useSession(page, session);
+    await seedPreferences(page, { lang: 'ru' }, { override: true });
+    await openSession(page, session);
 
     await page.goto('/app/buy');
     await page.getByRole('radio', { name: /^ОСАГО/ }).check();
@@ -170,7 +170,7 @@ test.describe('Purchase wizard', () => {
   test('maps a server-side 400 onto the start date field', async ({ page }) => {
     const { session } = await registerSession(page);
     await cabinetApi(page, session).vehicle();
-    await useSession(page, session);
+    await openSession(page, session);
     await page.goto('/app/buy');
     await page.getByRole('radio', { name: /^CASCO/ }).check();
     await expect(yourPremium(page)).toBeAttached({ timeout: 15_000 });
@@ -191,7 +191,7 @@ test.describe('Purchase wizard', () => {
   test('renew from a reminder pre-fills the next period', async ({ page }) => {
     const { session } = await registerSession(page);
     const { vehicle, policy } = await cabinetApi(page, session).activePolicy(1, 'MTPL');
-    await useSession(page, session);
+    await openSession(page, session);
 
     await page.goto('/app');
     await expect(page.getByText('1 policy ends within 30 days.')).toBeVisible();
@@ -215,7 +215,7 @@ test.describe('Purchase wizard', () => {
     const api = cabinetApi(page, session);
     const vehicle = await api.vehicle();
     const draft = await api.policy(vehicle.id, 'CASCO', 6);
-    await useSession(page, session);
+    await openSession(page, session);
 
     await page.goto(`/app/policies/${draft.id}`);
     await page.getByRole('link', { name: 'Pay now' }).click();

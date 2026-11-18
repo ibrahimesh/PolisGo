@@ -8,8 +8,8 @@ import {
   FILES,
   expectNoHorizontalScroll,
   registerSession,
-  usePreferences,
-  useSession,
+  seedPreferences,
+  openSession,
 } from './helpers';
 import type { Theme } from './helpers';
 
@@ -44,8 +44,8 @@ for (const theme of THEMES) {
     const claim = await claimsApi(page, session).file(policy.id);
     await claimsApi(page, session).upload(claim.id, 'front.png', FILES.png);
     await (await adminApi(page)).act(claim.id, 'review', { comment: 'Looking at the photos.' });
-    await usePreferences(page, { theme, lang: 'en' });
-    await useSession(page, session);
+    await seedPreferences(page, { theme, lang: 'en' });
+    await openSession(page, session);
 
     const pages: { path: string; ready: (p: Page) => Promise<void> }[] = [
       {

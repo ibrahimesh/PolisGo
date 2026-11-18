@@ -11,7 +11,7 @@ export type Theme = 'dark' | 'light';
 // visitor's browser would have them. Only when unset, so a change the test
 // makes in the app survives the next reload; `override` replaces an earlier
 // seed (e.g. a describe-level default) instead.
-export async function usePreferences(
+export async function seedPreferences(
   page: Page,
   prefs: { theme?: Theme; lang?: string },
   { override = false }: { override?: boolean } = {},
@@ -100,7 +100,7 @@ export async function registerSession(page: Page, user: TestUser = randomUser())
 
 // Starts the tab already signed in, exactly as a reload after sign-in would
 // (tokenStore rehydrates from sessionStorage). Login itself has its own test.
-export async function useSession(page: Page, session: Session) {
+export async function openSession(page: Page, session: Session) {
   await page.addInitScript((s) => {
     sessionStorage.setItem('polisgo.session', JSON.stringify(s));
   }, session);

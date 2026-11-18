@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { chooseSegment, premiumText, quoteBody, usePreferences, waitForPremium } from './helpers';
+import { chooseSegment, premiumText, quoteBody, seedPreferences, waitForPremium } from './helpers';
 
 test.describe('Landing', () => {
   test('loads in the dark theme by default', async ({ page }) => {
@@ -24,7 +24,7 @@ test.describe('Landing', () => {
   });
 
   test('switches language between EN, RU and AZ', async ({ page }) => {
-    await usePreferences(page, { lang: 'en' });
+    await seedPreferences(page, { lang: 'en' });
     await page.goto('/');
     const h1 = page.getByRole('heading', { level: 1 });
 
@@ -45,7 +45,7 @@ test.describe('Landing', () => {
   });
 
   test('calculator reprices from the live API when inputs change', async ({ page }) => {
-    await usePreferences(page, { lang: 'en' });
+    await seedPreferences(page, { lang: 'en' });
     await page.goto('/');
     const initial = await waitForPremium(page);
 
@@ -70,7 +70,7 @@ test.describe('Landing', () => {
   });
 
   test('invalid input is flagged and not priced', async ({ page }) => {
-    await usePreferences(page, { lang: 'en' });
+    await seedPreferences(page, { lang: 'en' });
     await page.goto('/');
     await waitForPremium(page);
 
