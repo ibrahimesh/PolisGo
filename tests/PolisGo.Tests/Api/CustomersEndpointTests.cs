@@ -36,10 +36,21 @@ public class CustomersEndpointTests : IClassFixture<ApiFactory>
     [InlineData(UserRole.Admin)]
     [InlineData(UserRole.Agent)]
     [InlineData(UserRole.Adjuster)]
-    public async Task Staff_can_list_and_open_customers(UserRole role)
+    public async Task Staff_can_list_and_open_customers_in_their_scope(UserRole role)
     {
-        var id = SeedCustomer($"Staff View {role}");
-        var client = _factory.ClientAs(role);
+        var client = _factory.ClientAs(role, out var userId, out _);
+        // In scope: assigned to the agent; for the adjuster, a claim in the queue.
+        var id = _factory.WithDb(db =>
+        {
+            var data = new TestData(db);
+            var customer = data.Customer(
+                fullName: $"Staff View {role}", agentId: role == UserRole.Agent ? userId : null);
+            if (role == UserRole.Adjuster)
+            {
+                data.Claim(data.Policy(customer, data.Vehicle(customer.Id)));
+            }
+            return customer.Id;
+        });
 
         var list = await client.GetAsync($"/api/customers?search=Staff%20View%20{role}&sortBy=fullName&sortDir=asc");
         Assert.Equal(HttpStatusCode.OK, list.StatusCode);

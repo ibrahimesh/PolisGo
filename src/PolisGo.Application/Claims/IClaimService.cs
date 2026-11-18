@@ -13,6 +13,9 @@ public interface IClaimService
 
     Task<PagedResult<ClaimResponse>> ListAsync(ListClaimsFilter filter, CancellationToken cancellationToken = default);
 
+    // Every row the list would page through, for the CSV export (capped).
+    Task<IReadOnlyList<ClaimResponse>> ExportAsync(ListClaimsFilter filter, CancellationToken cancellationToken = default);
+
     Task<ClaimResponse> ReviewAsync(Guid claimId, ReviewClaimRequest request, CancellationToken cancellationToken = default);
 
     Task<ClaimResponse> ApproveAsync(Guid claimId, ApproveClaimRequest request, CancellationToken cancellationToken = default);

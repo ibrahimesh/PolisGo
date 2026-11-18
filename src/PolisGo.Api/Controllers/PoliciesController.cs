@@ -61,7 +61,7 @@ public class PoliciesController : ControllerBase
     /// <response code="400">Invalid start date, term or missing fields.</response>
     /// <response code="401">No or invalid bearer token.</response>
     /// <response code="403">The caller is an Adjuster.</response>
-    /// <response code="404">Unknown policy type, or a vehicle the caller can't use.</response>
+    /// <response code="404">Unknown policy type, a vehicle the caller can't use, or (Agents) a customer not assigned to them.</response>
     /// <response code="409">A Draft or Active policy of this type already covers the vehicle then.</response>
     [HttpPost]
     [Authorize(Roles = "Client,Agent,Admin")]
@@ -83,7 +83,7 @@ public class PoliciesController : ControllerBase
     /// </summary>
     /// <param name="status">Effective status: Expired includes Active policies past their end date.</param>
     /// <param name="type">Policy type code, e.g. MTPL.</param>
-    /// <param name="search">Part of a policy number or plate, any case. Max 100 characters.</param>
+    /// <param name="search">Part of a policy number, plate or holder name, any case. Max 100 characters.</param>
     /// <param name="sortBy">CreatedAt (default), StartDate, EndDate, Premium or PolicyNumber.</param>
     /// <param name="sortDir">Asc or Desc (default).</param>
     /// <param name="page">1-based page number.</param>
@@ -109,6 +109,39 @@ public class PoliciesController : ControllerBase
         var result = await _policies.ListAsync(
             new ListPoliciesQuery(status, type, search, sortBy, sortDir, page, pageSize), cancellationToken);
         return Ok(result);
+    }
+
+    /// <summary>
+    /// The caller's policies as CSV, with the same filters and sort as GET /api/policies.
+    /// </summary>
+    /// <remarks>
+    /// UTF-8 with a BOM (Excel reads Cyrillic and Azerbaijani letters
+    /// correctly), comma-separated, CRLF line ends. Text cells starting with
+    /// = + - @ are prefixed with an apostrophe so a spreadsheet never runs
+    /// them as formulas. Statuses are effective. At most 5000 rows.
+    /// </remarks>
+    /// <response code="200">The CSV file.</response>
+    /// <response code="400">Invalid filter or sort value, search too long, or more than 5000 rows.</response>
+    /// <response code="401">No or invalid bearer token.</response>
+    /// <response code="403">The caller is not an Agent or Admin.</response>
+    [HttpGet("export")]
+    [Authorize(Roles = "Agent,Admin")]
+    [ProducesResponseType<FileContentResult>(StatusCodes.Status200OK, "text/csv")]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> Export(
+        [FromQuery] PolicyStatus? status,
+        [FromQuery] string? type,
+        [FromQuery] string? search,
+        [FromQuery] PolicySortBy sortBy = PolicySortBy.CreatedAt,
+        [FromQuery] SortDirection sortDir = SortDirection.Desc,
+        CancellationToken cancellationToken = default)
+    {
+        var policies = await _policies.ExportAsync(
+            new ListPoliciesQuery(status, type, search, sortBy, sortDir), cancellationToken);
+        return File(CsvExports.Policies(policies), "text/csv; charset=utf-8",
+            $"policies-{DateTime.UtcNow:yyyy-MM-dd}.csv");
     }
 
     /// <summary>

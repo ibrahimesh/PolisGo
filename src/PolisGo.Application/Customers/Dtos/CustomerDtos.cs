@@ -46,11 +46,17 @@ public record CustomerDetailResponse(
     DateOnly DrivingLicenseDate,
     DateTime CreatedAt,
     bool HasAccount,
+    // The agent who looks after the customer; null when nobody does.
+    Guid? AgentId,
+    string? AgentName,
     IReadOnlyList<VehicleResponse> Vehicles,
     // Newest first; same visibility rules as GET /api/policies.
     IReadOnlyList<PolicyResponse> Policies,
     CustomerClaimsSummary Claims
 );
+
+// Admin only: hand a customer to an agent, or null to release them.
+public record AssignAgentRequest(Guid? AgentId);
 
 public record CustomerClaimsSummary(
     int Total,

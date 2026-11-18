@@ -28,5 +28,13 @@ public class CustomerConfiguration : IEntityTypeConfiguration<Customer>
             .WithOne(u => u.Customer!)
             .HasForeignKey<Customer>(c => c.UserId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        // The agent's directory filters on AgentId. NoAction: SQL Server
+        // refuses a second cascade path from Users; agents aren't deleted.
+        builder.HasOne(c => c.Agent)
+            .WithMany()
+            .HasForeignKey(c => c.AgentId)
+            .OnDelete(DeleteBehavior.NoAction);
+        builder.HasIndex(c => c.AgentId);
     }
 }

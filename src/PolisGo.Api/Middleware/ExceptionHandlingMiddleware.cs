@@ -52,6 +52,13 @@ public class ExceptionHandlingMiddleware
             LogExpected(ex, context);
             await WriteProblem(context, StatusCodes.Status404NotFound, "Not found", ex.Message);
         }
+        // Before ConflictException, which it extends: same title as EF's own
+        // concurrency failure below, so clients handle both one way.
+        catch (ConcurrencyConflictException ex)
+        {
+            LogExpected(ex, context);
+            await WriteProblem(context, StatusCodes.Status409Conflict, ConcurrentUpdateTitle, ex.Message);
+        }
         catch (ConflictException ex)
         {
             LogExpected(ex, context);
@@ -66,8 +73,7 @@ public class ExceptionHandlingMiddleware
         {
             LogExpected(ex, context);
             await WriteProblem(context, StatusCodes.Status409Conflict,
-                "Concurrent update",
-                "The record was modified by someone else — reload and retry.");
+                ConcurrentUpdateTitle, ConcurrencyConflictException.DefaultMessage);
         }
         catch (DbUpdateException ex) when (IsUniqueConstraintViolation(ex))
         {
@@ -92,6 +98,8 @@ public class ExceptionHandlingMiddleware
                     : "An unexpected error occurred. Please contact support with the trace id.");
         }
     }
+
+    public const string ConcurrentUpdateTitle = "Concurrent update";
 
     private void LogExpected(Exception ex, HttpContext context)
     {

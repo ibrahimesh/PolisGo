@@ -17,7 +17,9 @@ public record PolicyResponse(
     // Effective status: an Active policy past its end date reads as Expired.
     PolicyStatus Status,
     DateTime CreatedAt,
-    PolicyVehicleSummary Vehicle
+    PolicyVehicleSummary Vehicle,
+    // The policyholder as recorded on the customer.
+    string CustomerName
 );
 
 // Enough to recognise the car in a list without a second request.

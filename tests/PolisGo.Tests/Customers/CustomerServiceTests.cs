@@ -105,7 +105,8 @@ public class CustomerServiceTests : IDisposable
         var adjuster = _data.User(UserRole.Adjuster);
         var otherAdjuster = _data.User(UserRole.Adjuster);
 
-        var customer = _data.Customer(userId: _data.User(UserRole.Client).Id);
+        // Assigned to agent; otherAgent sold one policy before that.
+        var customer = _data.Customer(userId: _data.User(UserRole.Client).Id, agentId: agent.Id);
         var vehicle = _data.Vehicle(customer.Id);
         _data.Vehicle(customer.Id);
         var mine = _data.Policy(customer, vehicle, PolicyStatus.Active, agentId: agent.Id);
@@ -186,7 +187,7 @@ public class CustomerServiceTests : IDisposable
     public async Task Detail_for_an_agent_shows_only_their_policies_and_claims()
     {
         var agent = _data.User(UserRole.Agent);
-        var customer = _data.Customer();
+        var customer = _data.Customer(agentId: agent.Id);
         var vehicle = _data.Vehicle(customer.Id);
         var mine = _data.Policy(customer, vehicle, agentId: agent.Id);
         var theirs = _data.Policy(customer, vehicle, agentId: _data.User(UserRole.Agent).Id);
@@ -197,7 +198,7 @@ public class CustomerServiceTests : IDisposable
 
         Assert.Equal(mine.Id, Assert.Single(detail.Policies).Id);
         Assert.Equal(1, detail.Claims.Total);
-        Assert.Single(detail.Vehicles); // vehicles are visible to all staff, as in /api/vehicles
+        Assert.Single(detail.Vehicles); // the customer is theirs, so all of the customer's vehicles
     }
 
     [Fact]

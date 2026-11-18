@@ -63,7 +63,7 @@ public class ClaimsController : ControllerBase
     /// <param name="assignedToMe">Adjusters: only claims assigned to the caller.</param>
     /// <param name="from">Incident on or after this date.</param>
     /// <param name="to">Incident on or before this date.</param>
-    /// <param name="search">Part of a claim or policy number, any case. Max 100 characters.</param>
+    /// <param name="search">Part of a claim or policy number or the customer's name, any case. Max 100 characters.</param>
     /// <param name="sortBy">CreatedAt (default), IncidentDate, ClaimedAmount or ClaimNumber.</param>
     /// <param name="sortDir">Asc or Desc (default).</param>
     /// <param name="page">1-based page number.</param>
@@ -96,9 +96,52 @@ public class ClaimsController : ControllerBase
     }
 
     /// <summary>
+    /// The claims queue as CSV, with the same filters and sort as GET /api/claims.
+    /// </summary>
+    /// <remarks>
+    /// UTF-8 with a BOM (Excel reads Cyrillic and Azerbaijani letters
+    /// correctly), comma-separated, CRLF line ends. Text cells starting with
+    /// = + - @ are prefixed with an apostrophe so a spreadsheet never runs
+    /// them as formulas. At most 5000 rows; past that the filters must be
+    /// narrowed.
+    /// </remarks>
+    /// <response code="200">The CSV file.</response>
+    /// <response code="400">Invalid filter or sort value, search too long, or more than 5000 rows.</response>
+    /// <response code="401">No or invalid bearer token.</response>
+    /// <response code="403">The caller is not an Adjuster or Admin.</response>
+    [HttpGet("export")]
+    [Authorize(Roles = "Adjuster,Admin")]
+    [ProducesResponseType<FileContentResult>(StatusCodes.Status200OK, "text/csv")]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> Export(
+        [FromQuery] ClaimStatus? status,
+        [FromQuery] bool? open,
+        [FromQuery] bool? assignedToMe,
+        [FromQuery] DateTime? from,
+        [FromQuery] DateTime? to,
+        [FromQuery] string? search,
+        [FromQuery] ClaimSortBy sortBy = ClaimSortBy.CreatedAt,
+        [FromQuery] SortDirection sortDir = SortDirection.Desc,
+        CancellationToken cancellationToken = default)
+    {
+        var claims = await _claims.ExportAsync(
+            new ListClaimsFilter(status, assignedToMe, from, to, 1, ExportLimits.MaxRows, open, search, sortBy, sortDir),
+            cancellationToken);
+        return File(CsvExports.Claims(claims), "text/csv; charset=utf-8",
+            $"claims-{DateTime.UtcNow:yyyy-MM-dd}.csv");
+    }
+
+    /// <summary>
     /// One claim with its policy, status history, documents and what the
     /// caller may do next.
     /// </summary>
+    /// <remarks>
+    /// <c>actions</c> lists every action of the caller's role with whether it
+    /// is allowed now and, if not, why (a stable code). The endpoints enforce
+    /// the same rules. Send <c>claim.rowVersion</c> back with a decision.
+    /// </remarks>
     /// <response code="200">The claim.</response>
     /// <response code="401">No or invalid bearer token.</response>
     /// <response code="404">No such claim, or one the caller can't see.</response>
@@ -153,12 +196,13 @@ public class ClaimsController : ControllerBase
     }
 
     /// <summary>Takes a Submitted claim into review and assigns it to the caller.</summary>
+    /// <remarks>With <c>rowVersion</c>, a claim changed since the caller loaded it is a 409 "Concurrent update".</remarks>
     /// <response code="200">The claim, now UnderReview.</response>
     /// <response code="400">Comment longer than 1000 characters.</response>
     /// <response code="401">No or invalid bearer token.</response>
     /// <response code="403">The caller is not an Adjuster or Admin.</response>
     /// <response code="404">No such claim, or one the caller can't see.</response>
-    /// <response code="409">The claim is not Submitted.</response>
+    /// <response code="409">The claim is not Submitted, or changed since the caller loaded it.</response>
     [HttpPost("{id:guid}/review")]
     [Authorize(Roles = "Adjuster,Admin")]
     [ProducesResponseType<ClaimResponse>(StatusCodes.Status200OK)]
@@ -174,12 +218,13 @@ public class ClaimsController : ControllerBase
     }
 
     /// <summary>Approves a claim under review for an amount up to the claimed one.</summary>
+    /// <remarks>The comment is optional. With <c>rowVersion</c>, a claim changed since the caller loaded it is a 409 "Concurrent update".</remarks>
     /// <response code="200">The Approved claim.</response>
-    /// <response code="400">Comment longer than 1000 characters.</response>
+    /// <response code="400">Amount not positive, more than two decimals or above the claimed amount; comment longer than 1000 characters.</response>
     /// <response code="401">No or invalid bearer token.</response>
     /// <response code="403">The caller is not an Adjuster or Admin.</response>
     /// <response code="404">No such claim, or one the caller can't see.</response>
-    /// <response code="409">Not under review, not the assigned adjuster, or an invalid amount.</response>
+    /// <response code="409">Not under review, not the assigned adjuster, or changed since the caller loaded it.</response>
     [HttpPost("{id:guid}/approve")]
     [Authorize(Roles = "Adjuster,Admin")]
     [ProducesResponseType<ClaimResponse>(StatusCodes.Status200OK)]
@@ -194,13 +239,14 @@ public class ClaimsController : ControllerBase
         return Ok(await _claims.ApproveAsync(id, request, cancellationToken));
     }
 
-    /// <summary>Rejects a claim under review; the reason is required.</summary>
+    /// <summary>Rejects a claim under review; the reason (comment) is required.</summary>
+    /// <remarks>The reason is shown to the customer. With <c>rowVersion</c>, a claim changed since the caller loaded it is a 409 "Concurrent update".</remarks>
     /// <response code="200">The Rejected claim.</response>
-    /// <response code="400">Comment longer than 1000 characters.</response>
+    /// <response code="400">No reason, or one longer than 1000 characters.</response>
     /// <response code="401">No or invalid bearer token.</response>
     /// <response code="403">The caller is not an Adjuster or Admin.</response>
     /// <response code="404">No such claim, or one the caller can't see.</response>
-    /// <response code="409">Not under review, not the assigned adjuster, or no reason.</response>
+    /// <response code="409">Not under review, not the assigned adjuster, or changed since the caller loaded it.</response>
     [HttpPost("{id:guid}/reject")]
     [Authorize(Roles = "Adjuster,Admin")]
     [ProducesResponseType<ClaimResponse>(StatusCodes.Status200OK)]
@@ -216,12 +262,13 @@ public class ClaimsController : ControllerBase
     }
 
     /// <summary>Pays out an Approved claim through the payout gateway.</summary>
+    /// <remarks>With <c>rowVersion</c>, a claim changed since the caller loaded it is a 409 "Concurrent update".</remarks>
     /// <response code="200">The Paid claim.</response>
     /// <response code="400">Comment longer than 1000 characters.</response>
     /// <response code="401">No or invalid bearer token.</response>
     /// <response code="403">The caller is not an Adjuster or Admin.</response>
     /// <response code="404">No such claim, or one the caller can't see.</response>
-    /// <response code="409">The claim is not Approved.</response>
+    /// <response code="409">The claim is not Approved, or changed since the caller loaded it.</response>
     [HttpPost("{id:guid}/pay")]
     [Authorize(Roles = "Adjuster,Admin")]
     [ProducesResponseType<ClaimResponse>(StatusCodes.Status200OK)]

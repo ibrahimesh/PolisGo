@@ -33,6 +33,10 @@ public static class ClaimValidation
         public const string ReasonTooLong = "Reason must be at most 500 characters.";
         public const string CommentTooLong = "Comment must be at most 1000 characters.";
         public const string SearchTooLong = "Search must be at most 100 characters.";
+        public const string RejectionReasonRequired = "A rejection reason is required.";
+        public const string ApprovedAmountNotPositive = "Approved amount must be greater than zero.";
+        public const string ApprovedAmountPrecision = "Approved amount can have at most two decimal places.";
+        public const string ApprovedAmountAboveClaimed = "Approved amount cannot exceed the claimed amount.";
 
         public const string FileRequired = "File is required.";
         public const string FileSize = "File size must be between 1 byte and 5 MB.";

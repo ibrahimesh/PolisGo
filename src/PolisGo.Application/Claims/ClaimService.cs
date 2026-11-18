@@ -5,6 +5,7 @@ using PolisGo.Application.Claims.Documents;
 using PolisGo.Application.Claims.Dtos;
 using PolisGo.Application.Common;
 using PolisGo.Application.Common.Exceptions;
+using PolisGo.Application.Policies;
 using PolisGo.Application.Policies.Dtos;
 using PolisGo.Domain.Entities;
 using PolisGo.Domain.Enums;
@@ -42,7 +43,9 @@ public class ClaimService : IClaimService
     {
         var customerId = ResolveCustomerId(request.CustomerId);
 
-        var policy = await _db.Policies
+        // PolicyAccess: an agent files only on policies they sold, as for
+        // every other policy endpoint.
+        var policy = await PolicyAccess.VisibleTo(_db.Policies, _currentUser)
             .FirstOrDefaultAsync(p => p.Id == request.PolicyId, cancellationToken)
             ?? throw new NotFoundException(nameof(Policy), request.PolicyId);
 
@@ -127,7 +130,9 @@ public class ClaimService : IClaimService
             {
                 p.Id, p.PolicyNumber, p.PolicyType.Code, p.StartDate, p.EndDate,
                 Vehicle = new PolicyVehicleSummary(p.VehicleId, p.Vehicle.Make, p.Vehicle.Model,
-                    p.Vehicle.Year, p.Vehicle.PlateNumber)
+                    p.Vehicle.Year, p.Vehicle.PlateNumber),
+                Customer = new ClaimCustomerSummary(p.CustomerId, p.Customer.FullName, p.Customer.Email,
+                    p.Customer.Phone)
             })
             .FirstAsync(cancellationToken);
 
@@ -147,11 +152,13 @@ public class ClaimService : IClaimService
             claim,
             new ClaimPolicySummary(policy.Id, policy.PolicyNumber, policy.Code,
                 DateOnly.FromDateTime(policy.StartDate), DateOnly.FromDateTime(policy.EndDate), policy.Vehicle),
+            policy.Customer,
             history,
             documents,
             CanWithdraw: open && CanWithdrawRole(_currentUser.Role),
             CanAddDocuments: open && documents.Count < ClaimValidation.MaxDocumentsPerClaim,
-            MaxDocuments: ClaimValidation.MaxDocumentsPerClaim);
+            MaxDocuments: ClaimValidation.MaxDocumentsPerClaim,
+            Actions: ClaimActions.For(claim.Status, claim.AssignedAdjusterId, _currentUser));
     }
 
     public async Task<IReadOnlyList<ClaimHistoryEntry>> GetHistoryAsync(
@@ -168,6 +175,32 @@ public class ClaimService : IClaimService
         var page = Math.Max(1, filter.Page);
         var pageSize = Math.Clamp(filter.PageSize, 1, MaxPageSize);
 
+        var query = Filter(filter);
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        var items = await Project(Sort(query, filter.SortBy, filter.SortDir))
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        return new PagedResult<ClaimResponse>(items, page, pageSize, totalCount);
+    }
+
+    public async Task<IReadOnlyList<ClaimResponse>> ExportAsync(
+        ListClaimsFilter filter, CancellationToken cancellationToken = default)
+    {
+        var query = Filter(filter);
+        if (await query.CountAsync(cancellationToken) > ExportLimits.MaxRows)
+        {
+            throw new ValidationException("export", ExportLimits.TooManyRows);
+        }
+        return await Project(Sort(query, filter.SortBy, filter.SortDir)).ToListAsync(cancellationToken);
+    }
+
+    // The list's filters, shared by the page and the CSV export so a download
+    // holds exactly what the queue shows.
+    private IQueryable<DomainClaim> Filter(ListClaimsFilter filter)
+    {
         var query = ClaimAccess.VisibleTo(_db.Claims.AsNoTracking(), _currentUser);
 
         if (filter.Status.HasValue)
@@ -193,17 +226,11 @@ public class ClaimService : IClaimService
             }
             var needle = term.ToUpperInvariant();
             query = query.Where(c =>
-                c.ClaimNumber.ToUpper().Contains(needle) || c.Policy.PolicyNumber.ToUpper().Contains(needle));
+                c.ClaimNumber.ToUpper().Contains(needle) || c.Policy.PolicyNumber.ToUpper().Contains(needle)
+                || c.Policy.Customer.FullName.ToUpper().Contains(needle));
         }
 
-        var totalCount = await query.CountAsync(cancellationToken);
-
-        var items = await Project(Sort(query, filter.SortBy, filter.SortDir))
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .ToListAsync(cancellationToken);
-
-        return new PagedResult<ClaimResponse>(items, page, pageSize, totalCount);
+        return query;
     }
 
     // ---------- Workflow transitions (delegate rules to the entity) ----------
@@ -213,7 +240,8 @@ public class ClaimService : IClaimService
     {
         EnsureCommentLength(request.Comment);
         var claim = await LoadVisibleAsync(claimId, cancellationToken);
-        claim.StartReview(_currentUser.UserId, request.Comment);
+        EnsureVersion(claim, request.RowVersion);
+        claim.StartReview(_currentUser.UserId, NullIfBlank(request.Comment));
         await _db.SaveChangesAsync(cancellationToken);
         return await ProjectOneAsync(claim.Id, cancellationToken);
     }
@@ -222,8 +250,24 @@ public class ClaimService : IClaimService
         Guid claimId, ApproveClaimRequest request, CancellationToken cancellationToken = default)
     {
         EnsureCommentLength(request.Comment);
+        if (request.ApprovedAmount <= 0)
+        {
+            throw new ValidationException("approvedAmount", M.ApprovedAmountNotPositive);
+        }
+        if (decimal.Round(request.ApprovedAmount, 2) != request.ApprovedAmount)
+        {
+            throw new ValidationException("approvedAmount", M.ApprovedAmountPrecision);
+        }
+
         var claim = await LoadVisibleAsync(claimId, cancellationToken);
-        claim.Approve(request.ApprovedAmount, _currentUser.UserId, request.Comment,
+        EnsureVersion(claim, request.RowVersion);
+        // A field error only while a decision is possible; otherwise the
+        // state conflict from the entity is the real answer.
+        if (claim.Status == ClaimStatus.UnderReview && request.ApprovedAmount > claim.ClaimedAmount)
+        {
+            throw new ValidationException("approvedAmount", M.ApprovedAmountAboveClaimed);
+        }
+        claim.Approve(request.ApprovedAmount, _currentUser.UserId, NullIfBlank(request.Comment) ?? string.Empty,
             isAdmin: _currentUser.Role == UserRole.Admin);
         await _db.SaveChangesAsync(cancellationToken);
         return await ProjectOneAsync(claim.Id, cancellationToken);
@@ -233,8 +277,11 @@ public class ClaimService : IClaimService
         Guid claimId, RejectClaimRequest request, CancellationToken cancellationToken = default)
     {
         EnsureCommentLength(request.Comment);
+        var reason = NullIfBlank(request.Comment)
+            ?? throw new ValidationException("comment", M.RejectionReasonRequired);
         var claim = await LoadVisibleAsync(claimId, cancellationToken);
-        claim.Reject(_currentUser.UserId, request.Comment,
+        EnsureVersion(claim, request.RowVersion);
+        claim.Reject(_currentUser.UserId, reason,
             isAdmin: _currentUser.Role == UserRole.Admin);
         await _db.SaveChangesAsync(cancellationToken);
         return await ProjectOneAsync(claim.Id, cancellationToken);
@@ -245,13 +292,20 @@ public class ClaimService : IClaimService
     {
         EnsureCommentLength(request.Comment);
         var claim = await LoadVisibleAsync(claimId, cancellationToken);
+        EnsureVersion(claim, request.RowVersion);
+        if (claim.Status != ClaimStatus.Approved)
+        {
+            // Throws the usual transition error before the gateway: no payout
+            // may go out for a claim that then can't be marked paid.
+            claim.MarkPaid(_currentUser.UserId);
+        }
 
         // Gateway call BEFORE SaveChanges so a payout failure aborts without
         // touching the DB. Fake gateway always succeeds today.
         _ = await _payoutGateway.PayoutAsync(
             claim.Id, claim.ApprovedAmount ?? 0m, cancellationToken);
 
-        claim.MarkPaid(_currentUser.UserId, request.Comment);
+        claim.MarkPaid(_currentUser.UserId, NullIfBlank(request.Comment));
         await _db.SaveChangesAsync(cancellationToken);
 
         return await ProjectOneAsync(claim.Id, cancellationToken);
@@ -323,7 +377,11 @@ public class ClaimService : IClaimService
             c.Status,
             c.AssignedAdjusterId,
             c.CreatedAt,
-            c.StatusHistory.Max(h => (DateTime?)h.ChangedAt) ?? c.CreatedAt));
+            c.StatusHistory.Max(h => (DateTime?)h.ChangedAt) ?? c.CreatedAt,
+            c.Policy.CustomerId,
+            c.Policy.Customer.FullName,
+            c.AssignedAdjuster != null ? c.AssignedAdjuster.FullName : null,
+            c.RowVersion));
 
     private static IQueryable<DomainClaim> Sort(IQueryable<DomainClaim> query, ClaimSortBy sortBy, SortDirection dir)
     {
@@ -369,6 +427,20 @@ public class ClaimService : IClaimService
         }
         return requestedCustomerId.Value;
     }
+
+    // The caller decided on the version they saw; if someone has changed the
+    // claim since, refuse rather than apply a decision made on stale facts.
+    // SaveChanges still checks the token for a change landing in between.
+    private static void EnsureVersion(DomainClaim claim, Guid? expected)
+    {
+        if (expected is { } version && version != claim.RowVersion)
+        {
+            throw new ConcurrencyConflictException();
+        }
+    }
+
+    private static string? NullIfBlank(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 
     // The history Comment column is 1000 characters; SQL Server would fail the
     // insert with a 500 (SQLite ignores the length), so check it up front.

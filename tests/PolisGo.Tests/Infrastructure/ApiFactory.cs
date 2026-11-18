@@ -67,13 +67,19 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
     // registration) and returns a client carrying that user's real JWT.
     public HttpClient ClientAs(UserRole role) => ClientAs(role, out _);
 
-    public HttpClient ClientAs(UserRole role, out Guid? customerId)
+    public HttpClient ClientAs(UserRole role, out Guid? customerId) => ClientAs(role, out _, out customerId);
+
+    // Staff tests need the caller's user id (an agent's book, an adjuster's
+    // assignments).
+    public HttpClient ClientAs(UserRole role, out Guid userId, out Guid? customerId)
     {
         Guid? linkedCustomer = null;
+        var createdUserId = Guid.Empty;
         var token = WithDb(db =>
         {
             var data = new TestData(db);
             var user = data.User(role);
+            createdUserId = user.Id;
             if (role == UserRole.Client)
             {
                 linkedCustomer = data.Customer(fullName: user.FullName, email: user.Email, userId: user.Id).Id;
@@ -85,6 +91,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
         });
 
         customerId = linkedCustomer;
+        userId = createdUserId;
         var client = CreateClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
         return client;
