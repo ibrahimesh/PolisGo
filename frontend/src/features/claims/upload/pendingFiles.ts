@@ -54,7 +54,16 @@ export async function loadPendingFiles(key: string): Promise<File[]> {
   }
 }
 
-export async function savePendingFiles(key: string, files: readonly File[]): Promise<void> {
+// Writes run one after another: two in flight could land out of order, and a
+// file removed just before a reload would come back.
+let writes: Promise<void> = Promise.resolve();
+
+export function savePendingFiles(key: string, files: readonly File[]): Promise<void> {
+  writes = writes.then(() => write(key, files));
+  return writes;
+}
+
+async function write(key: string, files: readonly File[]): Promise<void> {
   try {
     if (files.length === 0) {
       await run('readwrite', (s) => s.delete(key));
@@ -76,10 +85,13 @@ export async function clearPendingFiles(key: string): Promise<void> {
   await savePendingFiles(key, []);
 }
 
-export async function clearAllPendingFiles(): Promise<void> {
-  try {
-    await run('readwrite', (s) => s.clear());
-  } catch {
-    // Nothing stored.
-  }
+export function clearAllPendingFiles(): Promise<void> {
+  writes = writes.then(async () => {
+    try {
+      await run('readwrite', (s) => s.clear());
+    } catch {
+      // Nothing stored.
+    }
+  });
+  return writes;
 }
