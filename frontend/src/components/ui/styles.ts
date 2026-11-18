@@ -38,6 +38,7 @@ export function describedBy(
   id: string,
   { hint, error }: { hint?: unknown; error?: string | undefined },
 ): string | undefined {
-  const ids = [hint ? `${id}-hint` : null, error ? `${id}-error` : null].filter(Boolean);
+  // Field shows the hint or the error, never both; point only at what renders.
+  const ids = [hint && !error ? `${id}-hint` : null, error ? `${id}-error` : null].filter(Boolean);
   return ids.length > 0 ? ids.join(' ') : undefined;
 }

@@ -54,6 +54,7 @@ const SERVER_MESSAGE_KEYS: Record<string, string> = {
   'The start date of this draft has passed. Start a new purchase to choose a new date.':
     'errors.draftStartPassed',
   'This policy has already expired.': 'errors.policyExpired',
+  'A vehicle with this plate number is already registered.': 'errors.plateTaken',
 };
 
 export function serverMessageKey(message: string | undefined): string | undefined {
@@ -62,6 +63,15 @@ export function serverMessageKey(message: string | undefined): string | undefine
 
 export function fieldMessageKey(messages: readonly string[] | undefined): string {
   return serverMessageKey(messages?.[0]) ?? 'validation.invalidField';
+}
+
+// For a 400 whose fields aren't on the current screen (e.g. the quote
+// rejecting a vehicle year while the user is choosing cover), the first
+// field message says more than the generic "some details need attention".
+export function firstFieldMessageKey(error: unknown): string | undefined {
+  if (!isApiError(error) || error.status !== 400) return undefined;
+  const first = Object.values(error.problem?.errors ?? {})[0];
+  return first ? fieldMessageKey(first) : undefined;
 }
 
 export interface DescribedError {

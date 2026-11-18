@@ -366,7 +366,8 @@
     "unknownProduct": "This insurance product isn't available.",
     "policyOverlap": "This vehicle already has a draft or active policy of this type for those dates.",
     "draftStartPassed": "The start date of this draft has passed. Start a new purchase to choose a new date.",
-    "policyExpired": "This policy has already expired."
+    "policyExpired": "This policy has already expired.",
+    "plateTaken": "A vehicle with this plate is already registered."
   },
   "validation": {
     "required": "Required.",
@@ -416,7 +417,9 @@
     "startDateTooFar": "Choose a start date within the next 60 days.",
     "policyTypeRequired": "Choose a type of cover.",
     "vehicleRequired": "Choose a vehicle.",
-    "searchTooLong": "Use 100 characters or fewer."
+    "searchTooLong": "Use 100 characters or fewer.",
+    "startDateRequired": "Choose the day cover starts.",
+    "acceptRequired": "Confirm the details to continue."
   },
   "common": {
     "loading": "Loading",
@@ -633,5 +636,87 @@
     "history": "Status history",
     "historyAutomatic": "automatically, at the end of the period",
     "historyIssued": "Issued as a draft"
+  },
+  "vehicle": {
+    "add": "Add a vehicle",
+    "addTitle": "New vehicle",
+    "make": "Make",
+    "model": "Model",
+    "year": "Model year",
+    "engine": "Engine capacity",
+    "plate": "Plate number",
+    "plateHint": "As on the registration, e.g. 10-AA-123",
+    "vin": "VIN",
+    "vinHint": "17 characters, on the registration certificate",
+    "save": "Save vehicle",
+    "cancel": "Cancel"
+  },
+  "wizard": {
+    "title": "Buy a policy",
+    "lead": "Choose your cover, see the exact price as you go, and pay in one step.",
+    "progress": "Purchase progress",
+    "stepOf": "Step {{step}} of {{total}}",
+    "completed": "completed",
+    "continue": "Continue",
+    "back": "Back",
+    "editCover": "Change cover details",
+    "startFresh": "Start a new purchase",
+    "noVehicles": "You have no vehicles yet. Add one to continue.",
+    "coverEnds": "Cover runs until {{date}}, inclusive.",
+    "steps": {
+      "cover": {
+        "title": "What would you like to insure?",
+        "short": "Cover"
+      },
+      "vehicle": {
+        "title": "Which vehicle?",
+        "short": "Vehicle"
+      },
+      "review": {
+        "title": "Check the details",
+        "short": "Review"
+      },
+      "payment": {
+        "title": "Payment",
+        "short": "Payment"
+      },
+      "done": {
+        "title": "You’re covered.",
+        "short": "Done"
+      }
+    },
+    "fields": {
+      "type": "Type of cover",
+      "startDate": "Cover starts on",
+      "startDateHint": "Today or within the next 60 days",
+      "term": "Term",
+      "vehicle": "Vehicle"
+    },
+    "quote": {
+      "label": "Your premium",
+      "note": "Priced from your account details and this vehicle. This is the amount you pay.",
+      "needVehicle": "Choose a vehicle to see your exact price.",
+      "errorTitle": "This combination can’t be priced"
+    },
+    "review": {
+      "period": "Period of cover",
+      "driver": "Born {{birth}} · licence since {{licence}}",
+      "pricedFrom": "The price uses the details on your account. To correct your date of birth or licence date, contact support.",
+      "draftNote": "Draft {{number}} is waiting for payment. Changing the cover or vehicle replaces it.",
+      "accept": "I confirm these details are correct and accept the policy terms.",
+      "acceptLabel": "Confirmation",
+      "confirm": "Confirm and continue to payment",
+      "edit": "Change"
+    },
+    "payment": {
+      "amount": "Amount to pay",
+      "demo": "Payments go through the demo gateway of this portfolio project: no card is needed and no money moves.",
+      "pay": "Pay {{amount}}"
+    },
+    "done": {
+      "lead": "Payment received. Policy {{number}} is active.",
+      "viewPolicy": "View the policy",
+      "another": "Buy another policy"
+    }
   }
 }

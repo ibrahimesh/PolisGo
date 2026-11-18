@@ -14,3 +14,15 @@ export function addDays(isoDate: string, days: number): string {
   date.setUTCDate(date.getUTCDate() + days);
   return date.toISOString().slice(0, 10);
 }
+
+// Same rule as PolicyService: start.AddMonths(n) - 1 day, where AddMonths
+// clamps to the month's last day (Jan 31 + 1 month = Feb 28).
+export function endDateFor(startDate: string, months: number): string {
+  const [y, m, d] = startDate.split('-').map(Number) as [number, number, number];
+  const target = new Date(Date.UTC(y, m - 1 + months, 1));
+  const lastDay = new Date(
+    Date.UTC(target.getUTCFullYear(), target.getUTCMonth() + 1, 0),
+  ).getUTCDate();
+  target.setUTCDate(Math.min(d, lastDay));
+  return addDays(target.toISOString().slice(0, 10), -1);
+}

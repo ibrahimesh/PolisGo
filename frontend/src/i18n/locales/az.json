@@ -366,7 +366,8 @@
     "unknownProduct": "Bu sığorta məhsulu mövcud deyil.",
     "policyOverlap": "Bu avtomobilin həmin tarixlər üçün bu növdə qaralama və ya qüvvədə olan polisi artıq var.",
     "draftStartPassed": "Bu qaralamanın başlama tarixi keçib. Yeni tarix seçmək üçün alışı yenidən başladın.",
-    "policyExpired": "Bu polisin müddəti artıq bitib."
+    "policyExpired": "Bu polisin müddəti artıq bitib.",
+    "plateTaken": "Bu dövlət nömrə nişanı ilə avtomobil artıq qeydiyyatdadır."
   },
   "validation": {
     "required": "Mütləq doldurulmalıdır.",
@@ -416,7 +417,9 @@
     "startDateTooFar": "Növbəti 60 gün ərzində başlama tarixi seçin.",
     "policyTypeRequired": "Sığorta növünü seçin.",
     "vehicleRequired": "Avtomobili seçin.",
-    "searchTooLong": "Ən çox 100 simvol."
+    "searchTooLong": "Ən çox 100 simvol.",
+    "startDateRequired": "Sığortanın başlama tarixini seçin.",
+    "acceptRequired": "Davam etmək üçün məlumatları təsdiqləyin."
   },
   "common": {
     "loading": "Yüklənir",
@@ -633,5 +636,87 @@
     "history": "Status tarixçəsi",
     "historyAutomatic": "avtomatik olaraq, müddətin sonunda",
     "historyIssued": "Qaralama kimi rəsmiləşdirilib"
+  },
+  "vehicle": {
+    "add": "Avtomobil əlavə et",
+    "addTitle": "Yeni avtomobil",
+    "make": "Marka",
+    "model": "Model",
+    "year": "Buraxılış ili",
+    "engine": "Mühərrikin həcmi",
+    "plate": "Dövlət nömrə nişanı",
+    "plateHint": "Qeydiyyat şəhadətnaməsindəki kimi, məsələn 10-AA-123",
+    "vin": "VIN",
+    "vinHint": "17 simvol, qeydiyyat şəhadətnaməsində göstərilib",
+    "save": "Avtomobili saxla",
+    "cancel": "Ləğv et"
+  },
+  "wizard": {
+    "title": "Polis alışı",
+    "lead": "Əhatəni seçin, dəqiq qiyməti dərhal görün və bir addımda ödəyin.",
+    "progress": "Alış mərhələləri",
+    "stepOf": "Addım {{step}} / {{total}}",
+    "completed": "tamamlanıb",
+    "continue": "Davam et",
+    "back": "Geri",
+    "editCover": "Şərtləri dəyiş",
+    "startFresh": "Alışı yenidən başla",
+    "noVehicles": "Hələ avtomobiliniz yoxdur. Davam etmək üçün avtomobil əlavə edin.",
+    "coverEnds": "Sığorta {{date}} tarixinədək (daxil olmaqla) qüvvədədir.",
+    "steps": {
+      "cover": {
+        "title": "Nəyi sığortalamaq istəyirsiniz?",
+        "short": "Əhatə"
+      },
+      "vehicle": {
+        "title": "Hansı avtomobil?",
+        "short": "Avtomobil"
+      },
+      "review": {
+        "title": "Məlumatları yoxlayın",
+        "short": "Yoxlama"
+      },
+      "payment": {
+        "title": "Ödəniş",
+        "short": "Ödəniş"
+      },
+      "done": {
+        "title": "Siz sığortalısınız.",
+        "short": "Hazırdır"
+      }
+    },
+    "fields": {
+      "type": "Sığorta növü",
+      "startDate": "Başlama tarixi",
+      "startDateHint": "Bu gün və ya növbəti 60 gün ərzində",
+      "term": "Müddət",
+      "vehicle": "Avtomobil"
+    },
+    "quote": {
+      "label": "Sığorta haqqınız",
+      "note": "Hesabınızdakı məlumatlar və bu avtomobil əsasında hesablanıb. Ödəyəcəyiniz məbləğ budur.",
+      "needVehicle": "Dəqiq qiyməti görmək üçün avtomobil seçin.",
+      "errorTitle": "Bu seçim üçün qiymət hesablanmır"
+    },
+    "review": {
+      "period": "Sığorta müddəti",
+      "driver": "Doğum tarixi {{birth}} · sürücülük vəsiqəsi {{licence}} tarixindən",
+      "pricedFrom": "Qiymət hesabınızdakı məlumatlarla hesablanıb. Doğum tarixini və ya vəsiqə tarixini düzəltmək üçün dəstək xidmətinə müraciət edin.",
+      "draftNote": "{{number}} qaralaması ödəniş gözləyir. Əhatəni və ya avtomobili dəyişsəniz, o əvəz olunacaq.",
+      "accept": "Məlumatların düzgün olduğunu təsdiq edirəm və polis şərtlərini qəbul edirəm.",
+      "acceptLabel": "Təsdiq",
+      "confirm": "Təsdiqlə və ödənişə keç",
+      "edit": "Dəyiş"
+    },
+    "payment": {
+      "amount": "Ödəniləcək məbləğ",
+      "demo": "Ödəniş bu portfolio layihəsinin nümayiş şlüzündən keçir: kart lazım deyil, pul köçürülmür.",
+      "pay": "{{amount}} ödə"
+    },
+    "done": {
+      "lead": "Ödəniş qəbul edildi. {{number}} polisi qüvvədədir.",
+      "viewPolicy": "Polisə bax",
+      "another": "Daha bir polis al"
+    }
   }
 }

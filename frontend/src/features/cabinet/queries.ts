@@ -42,10 +42,11 @@ export function usePolicies(query: ListPoliciesQuery) {
   });
 }
 
-export function usePolicy(id: Guid) {
+export function usePolicy(id: Guid, { enabled = true }: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: cabinetKeys.policy(id),
     queryFn: ({ signal }) => policiesApi.get(id, signal),
+    enabled: enabled && id !== '',
   });
 }
 

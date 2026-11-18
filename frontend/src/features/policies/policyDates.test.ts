@@ -1,4 +1,4 @@
-import { addDays, termMonths } from './policyDates';
+import { addDays, endDateFor, termMonths } from './policyDates';
 
 describe('termMonths', () => {
   it.each([
@@ -18,5 +18,17 @@ describe('addDays', () => {
     expect(addDays('2026-12-31', 1)).toBe('2027-01-01');
     expect(addDays('2028-02-28', 1)).toBe('2028-02-29');
     expect(addDays('2026-03-01', -1)).toBe('2026-02-28');
+  });
+});
+
+describe('endDateFor', () => {
+  it.each([
+    ['2026-11-18', 12, '2027-11-17'],
+    ['2026-01-31', 1, '2026-02-27'],
+    ['2028-02-29', 12, '2029-02-27'],
+    ['2026-12-15', 3, '2027-03-14'],
+  ])('%s + %i months ends %s, and termMonths reads it back', (start, months, end) => {
+    expect(endDateFor(start, months)).toBe(end);
+    expect(termMonths(start, end)).toBe(months);
   });
 });

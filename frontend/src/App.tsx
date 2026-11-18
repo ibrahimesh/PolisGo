@@ -27,6 +27,9 @@ const PoliciesPage = lazy(() =>
 const PolicyDetailPage = lazy(() =>
   import('./features/policies/PolicyDetailPage').then((m) => ({ default: m.PolicyDetailPage })),
 );
+const BuyPolicyPage = lazy(() =>
+  import('./features/wizard/BuyPolicyPage').then((m) => ({ default: m.BuyPolicyPage })),
+);
 const WorkspaceSection = lazy(() =>
   import('./features/workspace/WorkspaceSection').then((m) => ({
     default: m.WorkspaceSection,
@@ -56,7 +59,11 @@ export function App() {
             <Route path=":id" element={<PolicyDetailPage />} />
           </Route>
 
-          {(['buy', 'profile', 'help'] as const).map((id) => (
+          <Route path="buy" element={guard('buy')}>
+            <Route index element={<BuyPolicyPage />} />
+          </Route>
+
+          {(['profile', 'help'] as const).map((id) => (
             <Route key={id} path={id} element={guard(id)}>
               <Route index element={<WorkspaceSection section={id} />} />
             </Route>
