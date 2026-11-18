@@ -9,7 +9,8 @@ import { ChevronDownIcon } from '../../components/ui/icons';
 const GROUPS = {
   buying: ['price', 'exact', 'dates', 'payment', 'renew'],
   policies: ['certificate', 'expired', 'cancel', 'reminders'],
-  account: ['details', 'password', 'preferences', 'claims', 'licensed'],
+  claims: ['claims', 'claimDocs', 'claimStatuses', 'claimWithdraw', 'claimUpdates'],
+  account: ['details', 'password', 'preferences', 'licensed'],
 } as const;
 
 export function HelpPage() {
