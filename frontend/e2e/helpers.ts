@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
 
@@ -162,4 +164,89 @@ export async function expectNoHorizontalScroll(page: Page) {
     clientWidth: document.documentElement.clientWidth,
   }));
   expect(scrollWidth, 'horizontal overflow').toBeLessThanOrEqual(clientWidth);
+}
+
+/* ---------- Claims ---------- */
+
+// A real 1×1 PNG and the first bytes of real JPEG/PDF/EXE files: the API
+// checks the bytes, not only the name.
+export const FILES = {
+  png: Buffer.from(
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+    'base64',
+  ),
+  jpeg: Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x49, 0x46, 0x00, 0x01]),
+  pdf: Buffer.from('%PDF-1.4\n%e2e\n1 0 obj<<>>endobj\ntrailer<<>>\n%%EOF\n'),
+  exe: Buffer.from([0x4d, 0x5a, 0x90, 0x00, 0x03, 0x00, 0x00, 0x00]),
+  gif: Buffer.from('GIF89a'),
+};
+
+export function claimBody(policyId: string, patch: Record<string, unknown> = {}) {
+  return {
+    policyId,
+    incidentDate: isoToday(),
+    incidentType: 'Collision',
+    location: 'Baku, Nizami street 10',
+    description: 'Hit from behind while waiting at a red light.',
+    // Random so two claims on one policy never trip the duplicate check.
+    claimedAmount: 500 + Math.floor(Math.random() * 400),
+    ...patch,
+  };
+}
+
+export function claimsApi(page: Page, session: Session) {
+  const headers = { Authorization: `Bearer ${session.token}` };
+  return {
+    async file(policyId: string, patch: Record<string, unknown> = {}) {
+      const response = await page.request.post(`${API_URL}/api/claims`, {
+        headers,
+        data: claimBody(policyId, patch),
+      });
+      expect(response.status(), await response.text()).toBe(201);
+      return (await response.json()) as { id: string; claimNumber: string };
+    },
+    async upload(claimId: string, name: string, buffer: Buffer, mimeType = 'image/png') {
+      const response = await page.request.post(`${API_URL}/api/claims/${claimId}/documents`, {
+        headers,
+        multipart: { file: { name, mimeType, buffer } },
+      });
+      expect(response.status(), await response.text()).toBe(201);
+      return (await response.json()) as { id: string; fileName: string };
+    },
+  };
+}
+
+// The dev seed admin (ASPNETCORE_ENVIRONMENT=Development), acting as an
+// adjuster. CI passes E2E_ADMIN_*; locally they come from the repo's .env.
+function adminCredentials() {
+  let email = process.env.E2E_ADMIN_EMAIL;
+  let password = process.env.E2E_ADMIN_PASSWORD;
+  if (!email || !password) {
+    const env = Object.fromEntries(
+      readFileSync(resolve(process.cwd(), '../.env'), 'utf8')
+        .split(/\r?\n/)
+        .filter((line) => line.includes('=') && !line.startsWith('#'))
+        .map((line) => [line.slice(0, line.indexOf('=')), line.slice(line.indexOf('=') + 1)]),
+    );
+    email ??= env.SEED_ADMIN_EMAIL;
+    password ??= env.SEED_ADMIN_PASSWORD;
+  }
+  if (!email || !password) throw new Error('Set E2E_ADMIN_EMAIL and E2E_ADMIN_PASSWORD.');
+  return { email, password };
+}
+
+export async function adminApi(page: Page) {
+  const login = await page.request.post(`${API_URL}/api/auth/login`, { data: adminCredentials() });
+  expect(login.status(), await login.text()).toBe(200);
+  const { token } = (await login.json()) as Session;
+  const headers = { Authorization: `Bearer ${token}` };
+  const post = async (path: string, data: unknown) =>
+    page.request.post(`${API_URL}${path}`, { headers, data });
+  return {
+    post,
+    async act(claimId: string, action: 'review' | 'approve' | 'reject', data: unknown = {}) {
+      const response = await post(`/api/claims/${claimId}/${action}`, data);
+      expect(response.status(), await response.text()).toBe(200);
+    },
+  };
 }

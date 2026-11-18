@@ -2,7 +2,10 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 import {
+  adminApi,
   cabinetApi,
+  claimsApi,
+  FILES,
   expectNoHorizontalScroll,
   registerSession,
   usePreferences,
@@ -36,6 +39,11 @@ for (const theme of THEMES) {
     // A 1-month policy ends inside the reminder window, so the overview,
     // the bell and the detail page all have real content to check.
     const { policy } = await api.activePolicy(1, 'MTPL');
+    // A claim under review with a photo: timeline, documents and the
+    // uploader all render, and withdraw is still allowed.
+    const claim = await claimsApi(page, session).file(policy.id);
+    await claimsApi(page, session).upload(claim.id, 'front.png', FILES.png);
+    await (await adminApi(page)).act(claim.id, 'review', { comment: 'Looking at the photos.' });
     await usePreferences(page, { theme, lang: 'en' });
     await useSession(page, session);
 
@@ -62,6 +70,19 @@ for (const theme of THEMES) {
         ready: (p) => expect(p.getByRole('heading', { name: 'Personal details' })).toBeVisible(),
       },
       {
+        path: '/app/claims',
+        ready: (p) => expect(p.getByText('1 claim', { exact: true })).toBeVisible(),
+      },
+      {
+        path: `/app/claims/${claim.id}`,
+        ready: (p) => expect(p.getByRole('heading', { name: 'History' })).toBeVisible(),
+      },
+      {
+        path: '/app/claims/new',
+        ready: (p) =>
+          expect(p.getByRole('heading', { name: 'Which policy is the claim for?' })).toBeVisible(),
+      },
+      {
         path: '/app/help',
         ready: (p) => expect(p.getByRole('heading', { name: 'Buying a policy' })).toBeVisible(),
       },
@@ -83,10 +104,28 @@ for (const theme of THEMES) {
       await expectAccessible(page);
     });
 
+    await test.step('claim wizard with an error summary', async () => {
+      await page.goto('/app/claims/new');
+      await page.getByRole('radio', { name: /MTPL/ }).first().check();
+      await page.getByRole('button', { name: 'Continue' }).click();
+      await page.getByRole('button', { name: 'Continue' }).click();
+      await expect(page.getByTestId('error-summary')).toBeVisible();
+      await expectNoHorizontalScroll(page);
+      await expectAccessible(page);
+    });
+
+    await test.step('withdraw dialog open', async () => {
+      await page.goto(`/app/claims/${claim.id}`);
+      await page.getByRole('button', { name: 'Withdraw claim' }).click();
+      await expect(page.getByRole('dialog')).toBeVisible();
+      await expectAccessible(page);
+      await page.keyboard.press('Escape');
+    });
+
     await test.step('notifications panel and user menu open', async () => {
       await page.goto('/app');
       await page.getByRole('button', { name: /^Notifications/ }).click();
-      await expect(page.getByRole('region', { name: 'Reminders', exact: true })).toBeVisible();
+      await expect(page.getByRole('region', { name: 'Updates', exact: true })).toBeVisible();
       await expectNoHorizontalScroll(page);
       await expectAccessible(page);
       await page.keyboard.press('Escape');

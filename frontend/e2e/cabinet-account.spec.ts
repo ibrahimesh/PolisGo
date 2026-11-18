@@ -131,7 +131,7 @@ test.describe('Cabinet account', () => {
     const bell = page.getByRole('button', { name: 'Notifications, 2 unread' });
     await bell.click();
     await expect(bell).toHaveAttribute('aria-expanded', 'true');
-    const panel = page.getByRole('region', { name: 'Reminders', exact: true });
+    const panel = page.getByRole('region', { name: 'Updates', exact: true });
     await expect(panel.getByRole('listitem')).toHaveCount(2);
 
     await panel
@@ -155,7 +155,8 @@ test.describe('Cabinet account', () => {
     const { session } = await registerSession(page);
     await useSession(page, session);
 
-    for (const path of ['/app/admin', '/app/agent', '/app/claims']) {
+    // /app/claims is the client's own claims page; the staff desks are not.
+    for (const path of ['/app/admin', '/app/agent']) {
       await page.goto(path);
       await expect(
         page.getByRole('heading', { name: "This area isn't available for your role" }),
