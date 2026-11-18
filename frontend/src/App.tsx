@@ -3,7 +3,7 @@ import { Route, Routes } from 'react-router';
 import { RequireAuth } from './auth/RequireAuth';
 import { AppShell } from './components/layout/AppShell';
 import { CabinetShell } from './features/cabinet/CabinetShell';
-import { rolesFor, STAFF_SECTION_IDS } from './features/workspace/sections';
+import { rolesFor } from './features/workspace/sections';
 import type { WorkspaceSectionId } from './features/workspace/sections';
 
 // One chunk per route: the shells (header, auth, i18n) ship in the entry
@@ -39,11 +39,25 @@ const HelpPage = lazy(() =>
 const ClaimsHome = lazy(() =>
   import('./features/claims/ClaimsHome').then((m) => ({ default: m.ClaimsHome })),
 );
+const ClaimDetailHome = lazy(() =>
+  import('./features/claims/ClaimsHome').then((m) => ({ default: m.ClaimDetailHome })),
+);
+const CustomersPage = lazy(() =>
+  import('./features/staff/customers/CustomersPage').then((m) => ({ default: m.CustomersPage })),
+);
+const CustomerDetailPage = lazy(() =>
+  import('./features/staff/customers/CustomerDetailPage').then((m) => ({
+    default: m.CustomerDetailPage,
+  })),
+);
+const SellPolicyPage = lazy(() =>
+  import('./features/staff/sales/SellPolicyPage').then((m) => ({ default: m.SellPolicyPage })),
+);
+const SalesPage = lazy(() =>
+  import('./features/staff/sales/SalesPage').then((m) => ({ default: m.SalesPage })),
+);
 const NewClaimPage = lazy(() =>
   import('./features/claims/wizard/NewClaimPage').then((m) => ({ default: m.NewClaimPage })),
-);
-const ClaimDetailPage = lazy(() =>
-  import('./features/claims/ClaimDetailPage').then((m) => ({ default: m.ClaimDetailPage })),
 );
 const WorkspaceSection = lazy(() =>
   import('./features/workspace/WorkspaceSection').then((m) => ({
@@ -78,16 +92,30 @@ export function App() {
             <Route index element={<BuyPolicyPage />} />
           </Route>
 
-          {/* Clients' claims and the staff desk share the path. */}
+          {/* Clients' claims and the claims queue share the path; the page
+              picks by role. Filing a claim is the Client's alone. */}
           <Route
             path="claims"
             element={<RequireAuth roles={[...rolesFor('myClaims'), ...rolesFor('claims')]} />}
           >
             <Route index element={<ClaimsHome />} />
+            <Route path=":id" element={<ClaimDetailHome />} />
             <Route element={guard('myClaims')}>
               <Route path="new" element={<NewClaimPage />} />
-              <Route path=":id" element={<ClaimDetailPage />} />
             </Route>
+          </Route>
+
+          <Route path="customers" element={guard('customers')}>
+            <Route index element={<CustomersPage />} />
+            <Route path=":id" element={<CustomerDetailPage />} />
+            {/* Selling uses the sales section's roles, as the API does. */}
+            <Route element={guard('sales')}>
+              <Route path=":id/sell" element={<SellPolicyPage />} />
+            </Route>
+          </Route>
+
+          <Route path="sales" element={guard('sales')}>
+            <Route index element={<SalesPage />} />
           </Route>
 
           <Route path="profile" element={guard('profile')}>
@@ -97,11 +125,10 @@ export function App() {
             <Route index element={<HelpPage />} />
           </Route>
 
-          {STAFF_SECTION_IDS.filter((id) => id !== 'claims').map((id) => (
-            <Route key={id} path={id} element={guard(id)}>
-              <Route index element={<WorkspaceSection section={id} />} />
-            </Route>
-          ))}
+          {/* The admin panel is the next step; its guard is already real. */}
+          <Route path="admin" element={guard('admin')}>
+            <Route index element={<WorkspaceSection section="admin" />} />
+          </Route>
 
           <Route path="*" element={<NotFoundPage />} />
         </Route>

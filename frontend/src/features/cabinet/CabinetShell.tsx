@@ -4,7 +4,7 @@ import { Outlet, useLocation } from 'react-router';
 import { useAuth } from '../../auth/AuthContext';
 import { useScrollOnNavigate } from '../../components/layout/useScrollOnNavigate';
 import { NotificationsButton } from '../reminders/NotificationsButton';
-import { sectionsFor } from '../workspace/sections';
+import { mobileSectionsFor, sectionsFor } from '../workspace/sections';
 import { BottomNav } from './BottomNav';
 import { CabinetHeader } from './CabinetHeader';
 import { CabinetSkeleton } from './CabinetSkeleton';
@@ -53,7 +53,7 @@ export function CabinetShell() {
         </main>
       </div>
 
-      <BottomNav sections={sections.filter((section) => section.mobile)} />
+      <BottomNav sections={mobileSectionsFor(user.role)} />
     </div>
   );
 }

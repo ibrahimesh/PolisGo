@@ -74,6 +74,15 @@ const SERVER_MESSAGE_KEYS: Record<string, string> = {
   'File content does not match the declared extension.': 'errors.fileContent',
   'A claim can have at most 10 documents.': 'errors.tooManyDocuments',
   'Documents can only be added while the claim is open.': 'errors.claimClosed',
+  'A rejection reason is required.': 'validation.rejectionReasonRequired',
+  'Approved amount must be greater than zero.': 'validation.approvedAmountPositive',
+  'Approved amount can have at most two decimal places.': 'validation.approvedAmountPrecision',
+  'Approved amount cannot exceed the claimed amount.': 'validation.approvedAmountAboveClaimed',
+  // Staff desks: concurrency (ConcurrencyConflictException), exports
+  // (ExportLimits) and agent assignment (CustomerService).
+  'The record was modified by someone else — reload and retry.': 'errors.concurrentUpdate',
+  'Too many rows to export; narrow the filters to at most 5000.': 'errors.tooManyRows',
+  'No agent with this id.': 'errors.agentNotFound',
 };
 
 export function serverMessageKey(message: string | undefined): string | undefined {
