@@ -19,6 +19,7 @@ public class CustomerService : ICustomerService
     // Shorter digit runs would match almost every phone number.
     private const int MinPhoneDigits = 3;
     private const string LikeEscape = "\\";
+    private const string PhoneSeparators = " +-()";
 
     private readonly IApplicationDbContext _db;
     private readonly ICurrentUser _currentUser;
@@ -171,7 +172,11 @@ public class CustomerService : ICustomerService
         var pattern = $"%{EscapeLike(term)}%";
         var digits = new string(term.Where(char.IsAsciiDigit).ToArray());
 
-        if (digits.Length < MinPhoneDigits)
+        // Digits are compared as a phone only when the term is written like
+        // one. An email or a name with digits in it ("e2e.k3o4@...") would
+        // otherwise match every phone that happens to contain them.
+        var looksLikePhone = term.All(c => char.IsAsciiDigit(c) || PhoneSeparators.Contains(c));
+        if (!looksLikePhone || digits.Length < MinPhoneDigits)
         {
             return customers.Where(c =>
                 EF.Functions.Like(c.FullName, pattern, LikeEscape)

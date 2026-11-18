@@ -25,7 +25,7 @@ public class CustomersController : ControllerBase
     /// <summary>
     /// Paged customer directory with optional search and sorting.
     /// </summary>
-    /// <param name="search">Matches name, email or phone (phone ignores spaces, dashes and brackets). Max 100 characters.</param>
+    /// <param name="search">Matches name, email or phone; a term written like a phone (digits, spaces, + - ( )) matches phone digits. Max 100 characters.</param>
     /// <param name="sortBy">CreatedAt (default), FullName or Email.</param>
     /// <param name="sortDir">Asc or Desc (default).</param>
     /// <param name="page">1-based page number.</param>

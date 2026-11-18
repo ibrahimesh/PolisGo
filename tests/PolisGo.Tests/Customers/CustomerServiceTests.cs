@@ -59,6 +59,20 @@ public class CustomerServiceTests : IDisposable
         Assert.Equal(1, result.TotalCount);
     }
 
+    [Theory]
+    [InlineData("rauf123@mail.az")]   // an email with digits is not a phone
+    [InlineData("Unit 501234")]       // nor a name or text with digits
+    public async Task List_search_uses_phone_digits_only_for_phone_like_terms(string search)
+    {
+        // Both phones contain "1234" / "501234"; only text matches may count.
+        var byEmail = _data.Customer("Rauf Aliyev", "rauf123@mail.az", "+994 55 765 43 21");
+        _data.Customer("Aysel Hasanova", "aysel.h@mail.az", "+994 50 123 45 67");
+
+        var result = await Sut(Admin()).ListAsync(new ListCustomersQuery(Search: search));
+
+        Assert.Equal(search.Contains('@') ? [byEmail.Id] : Array.Empty<Guid>(), result.Items.Select(c => c.Id));
+    }
+
     [Fact]
     public async Task List_search_treats_wildcards_literally()
     {
