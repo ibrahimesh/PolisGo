@@ -197,3 +197,22 @@ export const CarIcon = () => (
     <path d="M2 10.5V8l1.5-3.5h9L14 8v2.5ZM2 10.5V12h2.25v-1.5M14 10.5V12h-2.25v-1.5M4.75 8h.01M11.25 8h.01" />
   </Icon>
 );
+
+export const UploadIcon = () => (
+  <Icon>
+    <path d="M8 10.5V2.5M5 5.5l3-3 3 3M2.5 10v3.5h11V10" />
+  </Icon>
+);
+
+export const FileIcon = () => (
+  <Icon>
+    <path d="M9.5 1.5H4a.5.5 0 0 0-.5.5v12a.5.5 0 0 0 .5.5h8a.5.5 0 0 0 .5-.5V4.5l-3-3Z" />
+    <path d="M9.5 1.5v3h3" />
+  </Icon>
+);
+
+export const TrashIcon = () => (
+  <Icon>
+    <path d="M2.5 4h11M6 4V2.5h4V4M4 4l.75 9.5h6.5L12 4M6.75 6.5v4.5M9.25 6.5v4.5" />
+  </Icon>
+);

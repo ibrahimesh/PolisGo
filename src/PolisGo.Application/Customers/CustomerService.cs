@@ -98,10 +98,9 @@ public class CustomerService : ICustomerService
             })
             .ToListAsync(cancellationToken);
 
-        var recent = await claims
-            .OrderByDescending(c => c.CreatedAt)
-            .Take(RecentClaimsLimit)
-            .Select(c => new { Claim = c, c.Policy.PolicyNumber })
+        var recent = await ClaimService.Project(claims
+                .OrderByDescending(c => c.CreatedAt).ThenBy(c => c.Id)
+                .Take(RecentClaimsLimit))
             .ToListAsync(cancellationToken);
 
         var summary = new CustomerClaimsSummary(
@@ -112,7 +111,7 @@ public class CustomerService : ICustomerService
                 .ToList(),
             ClaimedAmount: byStatus.Sum(s => s.Claimed),
             PaidAmount: byStatus.Where(s => s.Status == ClaimStatus.Paid).Sum(s => s.Approved ?? 0m),
-            Recent: recent.Select(r => ClaimService.Map(r.Claim, r.PolicyNumber)).ToList());
+            Recent: recent);
 
         return new CustomerDetailResponse(
             customer.Id,

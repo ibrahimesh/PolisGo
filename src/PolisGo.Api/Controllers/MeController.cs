@@ -103,6 +103,65 @@ public class MeController : ControllerBase
     }
 
     /// <summary>
+    /// Status changes on the caller's claims made by someone else (an
+    /// adjuster, an agent), newest first.
+    /// </summary>
+    /// <remarks>
+    /// One entry per claim: its latest such change in the last 90 days.
+    /// Derived from the claim history on every read; only read marks are
+    /// stored. <c>readAt</c> is null while the change is unread.
+    /// </remarks>
+    /// <response code="200">The updates.</response>
+    /// <response code="401">No or invalid bearer token.</response>
+    /// <response code="403">The caller is not a Client.</response>
+    [HttpGet("claim-updates")]
+    [Authorize(Roles = "Client")]
+    [ProducesResponseType<IReadOnlyList<ClaimUpdateResponse>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<ActionResult<IReadOnlyList<ClaimUpdateResponse>>> ClaimUpdates(
+        CancellationToken cancellationToken)
+    {
+        return Ok(await _cabinet.GetClaimUpdatesAsync(cancellationToken));
+    }
+
+    /// <summary>
+    /// Marks the updates of one claim as read, up to now.
+    /// </summary>
+    /// <response code="204">Marked; later changes show as unread again.</response>
+    /// <response code="401">No or invalid bearer token.</response>
+    /// <response code="403">The caller is not a Client.</response>
+    /// <response code="404">No such claim, or one the caller can't see.</response>
+    [HttpPost("claim-updates/{claimId:guid}/read")]
+    [Authorize(Roles = "Client")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> MarkClaimUpdateRead(Guid claimId, CancellationToken cancellationToken)
+    {
+        await _cabinet.MarkClaimUpdateReadAsync(claimId, cancellationToken);
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Marks every current claim update as read.
+    /// </summary>
+    /// <response code="204">Marked.</response>
+    /// <response code="401">No or invalid bearer token.</response>
+    /// <response code="403">The caller is not a Client.</response>
+    [HttpPost("claim-updates/read-all")]
+    [Authorize(Roles = "Client")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> MarkAllClaimUpdatesRead(CancellationToken cancellationToken)
+    {
+        await _cabinet.MarkAllClaimUpdatesReadAsync(cancellationToken);
+        return NoContent();
+    }
+
+    /// <summary>
     /// The signed-in user's profile.
     /// </summary>
     /// <remarks>

@@ -311,7 +311,8 @@
       "policies": "My policies",
       "buy": "Buy a policy",
       "profile": "Profile and settings",
-      "help": "Help and questions"
+      "help": "Help and questions",
+      "myClaims": "My claims"
     },
     "comingSoonTitle": "This area is next on the roadmap",
     "comingSoonBody": "Policies, vehicles and claims will appear here once the screens for this role are built.",
@@ -324,7 +325,8 @@
       "claims": "Claims",
       "admin": "Admin",
       "profile": "Profile",
-      "help": "Help"
+      "help": "Help",
+      "myClaims": "Claims"
     }
   },
   "roles": {
@@ -367,7 +369,15 @@
     "policyOverlap": "This vehicle already has a draft or active policy of this type for those dates.",
     "draftStartPassed": "The start date of this draft has passed. Start a new purchase to choose a new date.",
     "policyExpired": "This policy has already expired.",
-    "plateTaken": "A vehicle with this plate is already registered."
+    "plateTaken": "A vehicle with this plate is already registered.",
+    "claimDuplicate": "A claim for this policy, date and amount is already on file.",
+    "claimPolicyNotActive": "Claims can only be filed on active policies.",
+    "claimClosed": "This claim is closed, so no more documents can be added.",
+    "tooManyDocuments": "A claim can have up to 10 documents.",
+    "fileRequired": "Choose a file to upload.",
+    "fileSize": "Files must be under 5 MB.",
+    "fileType": "Only JPG, PNG or PDF files are accepted.",
+    "fileContent": "The file's content doesn't match its type."
   },
   "validation": {
     "required": "Required.",
@@ -419,7 +429,22 @@
     "vehicleRequired": "Choose a vehicle.",
     "searchTooLong": "Use 100 characters or fewer.",
     "startDateRequired": "Choose the day cover starts.",
-    "acceptRequired": "Confirm the details to continue."
+    "acceptRequired": "Confirm the details to continue.",
+    "claimPolicyRequired": "Choose the policy the claim is for.",
+    "incidentDateRequired": "Enter the date of the incident.",
+    "incidentInFuture": "The incident date can't be in the future.",
+    "incidentOutsideCover": "The incident date must be within the policy's period of cover.",
+    "incidentTypeRequired": "Choose what happened.",
+    "locationLength": "Enter where it happened, 3 to 200 characters.",
+    "descriptionLength": "Describe what happened in 10 to 2,000 characters.",
+    "amountRequired": "Enter your estimate of the damage.",
+    "amountNumber": "Enter an amount in numbers, e.g. 850 or 850.50.",
+    "amountPositive": "The amount must be greater than zero.",
+    "amountTooHigh": "Online claims go up to 50,000 AZN. For more, contact support.",
+    "amountPrecision": "Use at most two decimal places.",
+    "claimAcceptRequired": "Confirm the details before filing the claim.",
+    "reasonTooLong": "Keep the reason to 500 characters.",
+    "commentTooLong": "Keep the comment to 1,000 characters."
   },
   "common": {
     "loading": "Loading",
@@ -476,7 +501,10 @@
       "awaiting_one": "{{count}} policy is waiting for payment.",
       "awaiting_other": "{{count}} policies are waiting for payment.",
       "review": "Review",
-      "pay": "Go to payment"
+      "pay": "Go to payment",
+      "claimUpdates_one": "{{count}} claim has an update.",
+      "claimUpdates_other": "{{count}} claims have updates.",
+      "claims": "See claims"
     },
     "stats": {
       "label": "Your cover at a glance",
@@ -509,8 +537,18 @@
         "UnderReview": "Claim {{ref}} is under review",
         "Approved": "Claim {{ref}} approved",
         "Rejected": "Claim {{ref}} rejected",
-        "Paid": "Claim {{ref}} paid out"
+        "Paid": "Claim {{ref}} paid out",
+        "Withdrawn": "Claim {{ref}} withdrawn"
       }
+    },
+    "claims": {
+      "title": "Claims",
+      "open_one": "{{count}} claim awaiting a decision.",
+      "open_other": "{{count}} claims awaiting a decision.",
+      "noneOpen": "Nothing awaiting a decision.",
+      "latest": "Latest update",
+      "none": "No claims yet.",
+      "all": "My claims"
     }
   },
   "reminders": {
@@ -723,8 +761,11 @@
     "button_zero": "Notifications, none unread",
     "button_one": "Notifications, {{count}} unread",
     "button_other": "Notifications, {{count}} unread",
-    "note": "Reminders appear 30 days before a policy ends. They are shown here only; nothing is sent to your phone or email.",
-    "title": "Reminders"
+    "note": "Claim updates and renewal reminders are shown only here and on your overview. Nothing is sent to your phone or email.",
+    "title": "Updates",
+    "claims": "Claim updates",
+    "renewals": "Renewal reminders",
+    "noClaimUpdates": "No claim updates in the last 90 days."
   },
   "profile": {
     "title": "Profile and settings",
@@ -749,7 +790,8 @@
     "groups": {
       "buying": "Buying a policy",
       "policies": "Your policies",
-      "account": "Your account"
+      "account": "Your account",
+      "claims": "Claims"
     },
     "items": {
       "price": {
@@ -801,15 +843,271 @@
         "a": "On this device. Change them in the header, in Profile and settings, or with Ctrl/⌘ + K."
       },
       "claims": {
-        "q": "How do I report an incident?",
-        "a": "Online claims are not in the cabinet yet; they are next on the roadmap."
+        "q": "How do I file a claim?",
+        "a": "Open My claims and choose File a claim, or use the button on an active policy's page. Choose the policy, say when, where and what happened, estimate the damage, add photos if you have them, then check and file. Your answers are kept if the page reloads."
       },
       "licensed": {
         "q": "Is PolisGo a licensed insurer?",
         "a": "No. PolisGo is a portfolio project that demonstrates an insurance platform; its policies and certificates are not real insurance."
+      },
+      "claimDocs": {
+        "q": "Which documents help?",
+        "a": "Clear photos of the damage and the scene, the other vehicle's plate, a police report or the accident form signed by both drivers, and a repair quote or invoice. JPG, PNG or PDF up to 5 MB each, 10 per claim. You can add more from the claim's page while it is open."
+      },
+      "claimStatuses": {
+        "q": "What do the claim statuses mean?",
+        "a": "Submitted: waiting for an adjuster. Under review: an adjuster is assessing it. Approved: accepted, with the approved amount. Rejected: not covered; the adjuster's note says why. Paid out: the approved amount has been paid. Withdrawn: you took the claim back."
+      },
+      "claimWithdraw": {
+        "q": "Can I withdraw a claim?",
+        "a": "Yes, until an adjuster decides on it. Open the claim and choose Withdraw claim. It can't be undone; you can add a reason for the adjuster."
+      },
+      "claimUpdates": {
+        "q": "How will I know the claim has moved?",
+        "a": "Every step appears in the claim's history and under the bell, with a dot until you read it. Nothing is sent by phone or email."
       }
     },
     "more": "Questions about pricing and cover in general?",
     "moreLink": "See the questions on the main site"
+  },
+  "claimStatus": {
+    "Submitted": "Submitted",
+    "UnderReview": "Under review",
+    "Approved": "Approved",
+    "Rejected": "Rejected",
+    "Paid": "Paid out",
+    "Withdrawn": "Withdrawn"
+  },
+  "incidentType": {
+    "Collision": "Collision",
+    "Theft": "Theft or break-in",
+    "Vandalism": "Vandalism",
+    "Fire": "Fire",
+    "NaturalHazard": "Storm, flood or hail",
+    "Glass": "Broken glass",
+    "Other": "Something else"
+  },
+  "upload": {
+    "dropLabel": "Drag photos or documents here",
+    "choose": "Choose files",
+    "hint": "JPG, PNG or PDF, up to {{size}} MB each, {{count}} per claim.",
+    "full": "This claim has all the documents it can take.",
+    "added_one": "{{count}} file added.",
+    "added_other": "{{count}} files added.",
+    "notAdded_one": "{{count}} file was not added.",
+    "notAdded_other": "{{count}} files were not added.",
+    "rejected": "{{name}} was not added: {{reason}}",
+    "problems": {
+      "fileType": "only JPG, PNG or PDF files are accepted.",
+      "fileEmpty": "the file is empty.",
+      "fileTooLarge": "it is larger than {{size}} MB.",
+      "fileContent": "its content doesn't match its type.",
+      "tooMany": "a claim can have up to {{count}} documents."
+    },
+    "listLabel": "Files to upload",
+    "progressLabel": "Uploading {{name}}",
+    "remove": "Remove",
+    "status": {
+      "done": "Uploaded"
+    }
+  },
+  "claims": {
+    "title": "My claims",
+    "lead": "Claims you have filed, their status and what the adjuster decided.",
+    "file": "File a claim",
+    "filters": "Filter claims",
+    "search": "Search",
+    "searchPlaceholder": "Claim or policy number",
+    "status": "Status",
+    "allStatuses": "All statuses",
+    "openOnly": "Open (awaiting a decision)",
+    "sort": "Sort by",
+    "sortOptions": {
+      "newest": "Newest first",
+      "oldest": "Oldest first",
+      "incidentLatest": "Incident date, latest",
+      "incidentEarliest": "Incident date, earliest",
+      "amountHigh": "Amount, highest",
+      "amountLow": "Amount, lowest",
+      "number": "Claim number"
+    },
+    "results": "Claims",
+    "count_one": "{{count}} claim",
+    "count_other": "{{count}} claims",
+    "noMatchTitle": "No claims match",
+    "noMatchBody": "Try another status or search, or clear the filters.",
+    "emptyTitle": "No claims yet",
+    "emptyBody": "If something happens to an insured vehicle, file a claim here. It takes a few minutes, and photos can be added now or later.",
+    "pagination": "Claims pages",
+    "caption": "Your claims",
+    "columns": {
+      "number": "Claim",
+      "incident": "Incident",
+      "amount": "Amount",
+      "updated": "Last update",
+      "status": "Status"
+    },
+    "approvedAmount": "{{amount}} approved"
+  },
+  "claimWizard": {
+    "title": "File a claim",
+    "lead": "Five short steps. Your answers are kept if you reload the page.",
+    "progress": "Claim steps",
+    "steps": {
+      "policy": {
+        "short": "Policy",
+        "title": "Which policy is the claim for?"
+      },
+      "incident": {
+        "short": "Incident",
+        "title": "What happened?"
+      },
+      "damage": {
+        "short": "Damage",
+        "title": "How much is the damage?"
+      },
+      "documents": {
+        "short": "Documents",
+        "title": "Photos and documents"
+      },
+      "review": {
+        "short": "Review",
+        "title": "Check and file the claim"
+      },
+      "done": {
+        "short": "Done",
+        "title": "Claim filed"
+      }
+    },
+    "policy": {
+      "legend": "Policy",
+      "hint": "Only active policies can take a claim. The others are listed with the reason.",
+      "noneEligible": "None of your policies can take a claim today; the reason is shown on each.",
+      "noneTitle": "No policies yet",
+      "noneBody": "A claim is filed on an active policy. Buy one first.",
+      "reasons": {
+        "unpaid": "Not paid yet, so there is no cover.",
+        "ended": "Cover ended on {{date}}.",
+        "cancelled": "This policy was cancelled.",
+        "notStarted": "Cover starts on {{date}}."
+      }
+    },
+    "incident": {
+      "date": "Date of the incident",
+      "dateHint": "Between {{from}} and {{to}}.",
+      "type": "What happened",
+      "typePlaceholder": "Choose…",
+      "location": "Where it happened",
+      "locationHint": "City and street, or the road and the nearest landmark.",
+      "description": "Description",
+      "descriptionHint": "What happened, in your own words: at least {{min}} characters."
+    },
+    "damage": {
+      "amount": "Estimated damage",
+      "amountHint": "Up to {{max}} online.",
+      "estimate": "A garage quote, an invoice or your best estimate is enough for now. Attach it on the next step if you have one.",
+      "cover": {
+        "MTPL": "MTPL covers damage you cause to other people and their property, not your own vehicle.",
+        "CASCO": "CASCO covers damage to your own vehicle, including theft and natural hazards.",
+        "other": "The adjuster checks what your policy covers."
+      },
+      "review": "The adjuster reviews the estimate and may approve a different amount."
+    },
+    "documents": {
+      "lead": "Optional, but it speeds up the decision. You can add more from the claim's page while it is open.",
+      "tips": {
+        "photos": "Photos of the damage, the scene and the other vehicle's plate.",
+        "police": "A police report or the accident form signed by both drivers.",
+        "estimate": "A repair quote or invoice."
+      },
+      "skip": "Continue without documents"
+    },
+    "review": {
+      "accept": "I confirm that these details are true to the best of my knowledge.",
+      "acceptLabel": "Confirmation",
+      "submit": "File the claim",
+      "retryUploads": "Try the uploads again",
+      "noDocuments": "None",
+      "documents_one": "{{count}} file, uploaded after filing",
+      "documents_other": "{{count}} files, uploaded after filing",
+      "policyGone": "That policy can't be used for a claim any more. Choose another one.",
+      "filedWithFailures_one": "Claim {{number}} is filed, but {{count}} file could not be uploaded.",
+      "filedWithFailures_other": "Claim {{number}} is filed, but {{count}} files could not be uploaded.",
+      "failuresHelp": "Remove the files marked below or try again. You can also add documents later from the claim's page.",
+      "continueWithout": "Continue without them"
+    },
+    "done": {
+      "filed": "Claim filed",
+      "documents_one": "{{count}} document attached.",
+      "documents_other": "{{count}} documents attached.",
+      "noDocuments": "No documents attached yet.",
+      "next": "An adjuster will review it. Each step appears on the claim's page and under the bell.",
+      "channels": "Nothing is sent by phone or email: check the cabinet for updates.",
+      "view": "View the claim",
+      "all": "My claims",
+      "another": "File another claim"
+    }
+  },
+  "claimDetail": {
+    "back": "Back to my claims",
+    "title": "Claim {{number}}",
+    "notFoundTitle": "This claim wasn't found",
+    "notFoundBody": "It doesn't exist or isn't on your account.",
+    "summary": "Claim summary",
+    "claimed": "Claimed",
+    "approved": "Approved",
+    "policy": "Policy",
+    "filed": "Filed",
+    "timelineTitle": "History",
+    "timeline": {
+      "Submitted": "Claim filed",
+      "UnderReview": "Taken into review",
+      "Approved": "Approved",
+      "Rejected": "Rejected",
+      "Paid": "Paid out",
+      "Withdrawn": "Withdrawn"
+    },
+    "actor": {
+      "you": "by you",
+      "Client": "by {{name}}",
+      "Agent": "by your agent, {{name}}",
+      "Adjuster": "by the adjuster, {{name}}",
+      "Admin": "by PolisGo staff"
+    },
+    "decision": {
+      "approved": "Approved for {{amount}}",
+      "rejected": "This claim was rejected",
+      "reason": "Adjuster's note",
+      "paid": "The approved amount has been paid out."
+    },
+    "documents": {
+      "title": "Documents",
+      "empty": "No documents yet.",
+      "download": "Download",
+      "add": "Add photos or documents",
+      "uploaded_one": "{{count}} document added.",
+      "uploaded_other": "{{count}} documents added.",
+      "full": "The claim has the maximum of {{count}} documents.",
+      "closed": "Documents can only be added while the claim is open."
+    },
+    "withdraw": "Withdraw claim",
+    "withdrawTitle": "Withdraw claim {{number}}?",
+    "withdrawBody": "The claim will be closed and the adjuster will stop working on it. This can't be undone; you would need to file a new claim.",
+    "reasonLabel": "Reason (optional)",
+    "keep": "Keep the claim",
+    "confirmWithdraw": "Withdraw",
+    "withdrawn": "Claim {{number}} withdrawn.",
+    "withdrawConflict": "This claim already has a decision, so it can't be withdrawn.",
+    "withdrawnNote": "You withdrew this claim. It stays here for your records."
+  },
+  "claimUpdates": {
+    "status": {
+      "Submitted": "Claim {{number}} was filed for you",
+      "UnderReview": "Claim {{number}} is under review",
+      "Approved": "Claim {{number}} was approved",
+      "Rejected": "Claim {{number}} was rejected",
+      "Paid": "Claim {{number}} was paid out",
+      "Withdrawn": "Claim {{number}} was withdrawn"
+    }
   }
 }

@@ -10,7 +10,26 @@ export const USER_ROLES = ['Client', 'Agent', 'Adjuster', 'Admin'] as const;
 export type UserRole = (typeof USER_ROLES)[number];
 
 export type PolicyStatus = 'Draft' | 'Active' | 'Expired' | 'Cancelled';
-export type ClaimStatus = 'Submitted' | 'UnderReview' | 'Approved' | 'Rejected' | 'Paid';
+export type ClaimStatus =
+  'Submitted' | 'UnderReview' | 'Approved' | 'Rejected' | 'Paid' | 'Withdrawn';
+export const CLAIM_STATUSES = [
+  'Submitted',
+  'UnderReview',
+  'Approved',
+  'Rejected',
+  'Paid',
+  'Withdrawn',
+] as const satisfies readonly ClaimStatus[];
+export const INCIDENT_TYPES = [
+  'Collision',
+  'Theft',
+  'Vandalism',
+  'Fire',
+  'NaturalHazard',
+  'Glass',
+  'Other',
+] as const;
+export type IncidentType = (typeof INCIDENT_TYPES)[number];
 
 // Seeded by PolicyTypeConfiguration; GET /api/policy-types lists them.
 export const POLICY_TYPE_CODES = ['MTPL', 'CASCO'] as const;
@@ -235,7 +254,9 @@ export interface PayPolicyResponse {
 
 export interface SubmitClaimRequest {
   policyId: Guid;
-  incidentDate: IsoDateTime;
+  incidentDate: IsoDate;
+  incidentType: IncidentType;
+  location: string;
   description: string;
   claimedAmount: number;
   customerId?: Guid | null;
@@ -246,13 +267,19 @@ export interface ClaimResponse {
   claimNumber: string;
   policyId: Guid;
   policyNumber: string;
+  policyTypeCode: string;
   incidentDate: IsoDateTime;
+  // Null on claims filed before these were collected.
+  incidentType: IncidentType | null;
+  location: string | null;
   description: string;
   claimedAmount: number;
   approvedAmount: number | null;
   status: ClaimStatus;
   assignedAdjusterId: Guid | null;
   createdAt: IsoDateTime;
+  // The latest status change.
+  updatedAt: IsoDateTime;
 }
 
 export interface ClaimHistoryEntry {
@@ -260,6 +287,8 @@ export interface ClaimHistoryEntry {
   fromStatus: ClaimStatus | null;
   toStatus: ClaimStatus;
   changedByUserId: Guid;
+  changedByRole: UserRole;
+  changedByName: string;
   comment: string;
   changedAt: IsoDateTime;
 }
@@ -267,17 +296,39 @@ export interface ClaimHistoryEntry {
 export interface ClaimDocumentResponse {
   id: Guid;
   fileName: string;
+  contentType: string;
   uploadedAt: IsoDateTime;
+}
+
+export interface ClaimPolicySummary {
+  id: Guid;
+  policyNumber: string;
+  policyTypeCode: string;
+  startDate: IsoDate;
+  endDate: IsoDate;
+  vehicle: PolicyVehicleSummary;
 }
 
 export interface ClaimDetailResponse {
   claim: ClaimResponse;
+  policy: ClaimPolicySummary;
+  // Oldest first.
   history: ClaimHistoryEntry[];
   documents: ClaimDocumentResponse[];
+  canWithdraw: boolean;
+  canAddDocuments: boolean;
+  maxDocuments: number;
 }
+
+export type ClaimSortBy = 'CreatedAt' | 'IncidentDate' | 'ClaimedAmount' | 'ClaimNumber';
 
 export interface ListClaimsQuery {
   status?: ClaimStatus;
+  // Submitted or UnderReview; ignored when status is set.
+  open?: boolean;
+  search?: string;
+  sortBy?: ClaimSortBy;
+  sortDir?: SortDirection;
   assignedToMe?: boolean;
   from?: IsoDateTime;
   to?: IsoDateTime;
@@ -285,6 +336,9 @@ export interface ListClaimsQuery {
   pageSize?: number;
 }
 
+export interface WithdrawClaimRequest {
+  reason?: string | null;
+}
 export interface ReviewClaimRequest {
   comment?: string | null;
 }
@@ -343,6 +397,10 @@ export interface ClientOverviewResponse {
   currency: string;
   unreadReminders: number;
   recentActivity: ActivityEntry[];
+  // Submitted or UnderReview.
+  openClaims: number;
+  unreadClaimUpdates: number;
+  latestClaimUpdate: LatestClaimUpdate | null;
 }
 
 /* ---- Common ---- */
@@ -364,4 +422,25 @@ export interface ProblemDetails {
   instance?: string;
   traceId?: string;
   errors?: Record<string, string[]>;
+}
+
+// The latest change someone else made on one of the client's claims.
+export interface ClaimUpdateResponse {
+  claimId: Guid;
+  claimNumber: string;
+  policyNumber: string;
+  fromStatus: ClaimStatus | null;
+  toStatus: ClaimStatus;
+  comment: string;
+  changedAt: IsoDateTime;
+  // Null while unread.
+  readAt: IsoDateTime | null;
+}
+
+export interface LatestClaimUpdate {
+  claimId: Guid;
+  claimNumber: string;
+  fromStatus: ClaimStatus | null;
+  toStatus: ClaimStatus;
+  at: IsoDateTime;
 }

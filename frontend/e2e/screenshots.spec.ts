@@ -1,12 +1,15 @@
 import { test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 import {
+  adminApi,
   cabinetApi,
+  claimsApi,
+  FILES,
   randomUser,
   uniqueVehicle,
   registerSession,
-  usePreferences,
-  useSession,
+  seedPreferences,
+  openSession,
   waitForPremium,
 } from './helpers';
 import type { Theme } from './helpers';
@@ -45,7 +48,7 @@ for (const size of SIZES) {
         // A full-page capture never scrolls, so the scroll reveal would leave
         // lower sections blank; reduced motion shows everything at once.
         await page.emulateMedia({ reducedMotion: 'reduce' });
-        await usePreferences(page, { theme: shot.theme, lang: 'en' });
+        await seedPreferences(page, { theme: shot.theme, lang: 'en' });
         await page.goto(shot.path);
         await settle(page, shot.path);
         await page.screenshot({
@@ -60,7 +63,16 @@ for (const size of SIZES) {
 
 /* ---------- Client cabinet: first screen only ---------- */
 
-const CABINET_PAGES = ['overview', 'policies', 'policy', 'buy', 'profile'] as const;
+const CABINET_PAGES = [
+  'overview',
+  'policies',
+  'policy',
+  'buy',
+  'claims',
+  'claim',
+  'claim-new',
+  'profile',
+] as const;
 const THEMES: Theme[] = ['dark', 'light'];
 
 // One client with real data behind every page: an active policy, one that
@@ -78,7 +90,28 @@ async function seedClient(page: Page) {
     plateNumber: `10-AA-${String(Math.floor(Math.random() * 1e5)).padStart(5, '0')}`,
   });
   await api.policy(spare.id, 'CASCO', 6);
-  return { session, policyId: policy.id };
+
+  // Claims: one decided (a full timeline with the adjuster's note), one open.
+  const claims = claimsApi(page, session);
+  const decided = await claims.file(policy.id, {
+    claimedAmount: 1240,
+    description: 'Rear bumper and boot lid dented at a red light; the other driver admitted fault.',
+  });
+  await claims.upload(decided.id, 'rear-bumper.png', FILES.png);
+  await claims.upload(decided.id, 'garage-estimate.pdf', FILES.pdf, 'application/pdf');
+  const admin = await adminApi(page);
+  await admin.act(decided.id, 'review', { comment: 'Checking the photos against the estimate.' });
+  await admin.act(decided.id, 'approve', {
+    approvedAmount: 1190,
+    comment: 'Approved minus the 50 AZN excess.',
+  });
+  await claims.file(policy.id, {
+    incidentType: 'Glass',
+    claimedAmount: 180,
+    location: 'Baku–Sumgait highway, km 12',
+    description: 'A stone from a truck cracked the windscreen.',
+  });
+  return { session, policyId: policy.id, claimId: decided.id };
 }
 
 for (const size of SIZES) {
@@ -88,15 +121,18 @@ for (const size of SIZES) {
     for (const theme of THEMES) {
       test(`cabinet-${theme}-${size.label}`, async ({ page }) => {
         await page.emulateMedia({ reducedMotion: 'reduce' });
-        const { session, policyId } = await seedClient(page);
-        await usePreferences(page, { theme, lang: 'en' });
-        await useSession(page, session);
+        const { session, policyId, claimId } = await seedClient(page);
+        await seedPreferences(page, { theme, lang: 'en' });
+        await openSession(page, session);
 
         const paths: Record<(typeof CABINET_PAGES)[number], string> = {
           overview: '/app',
           policies: '/app/policies',
           policy: `/app/policies/${policyId}`,
           buy: '/app/buy',
+          claims: '/app/claims',
+          claim: `/app/claims/${claimId}`,
+          'claim-new': '/app/claims/new',
           profile: '/app/profile',
         };
         for (const name of CABINET_PAGES) {
@@ -110,6 +146,10 @@ for (const size of SIZES) {
             await page.getByRole('radio', { name: /^MTPL/ }).check();
             await page.getByText(/^Your premium: /).waitFor({ state: 'attached', timeout: 15_000 });
           }
+          if (name === 'claims') await page.getByText('2 claims', { exact: true }).waitFor();
+          if (name === 'claim') await page.getByRole('heading', { name: 'History' }).waitFor();
+          if (name === 'claim-new')
+            await page.getByRole('heading', { name: 'Which policy is the claim for?' }).waitFor();
           if (name === 'profile') await page.getByLabel('Full name').waitFor();
           await page.evaluate(() => document.fonts.ready);
           await page.waitForTimeout(400);

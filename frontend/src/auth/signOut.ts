@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router';
 import { useToast } from '../components/ui/ToastProvider';
+import { clearAllPendingFiles } from '../features/claims/upload/pendingFiles';
 import { useAuth } from './AuthContext';
 
 // Sign-out is two steps: leave for the home page, then drop the session once
@@ -34,6 +35,9 @@ export function useCompleteSignOut() {
     if (!requested || handled.current === location.key) return;
     handled.current = location.key;
     logout();
+    // Photos picked for an unfinished claim are personal data: not left on
+    // the device for the next person at this browser.
+    void clearAllPendingFiles();
     toast({ title: t('auth.signedOut'), tone: 'info' });
     // Drop the flag so Back/Forward or a re-render can't sign out again.
     void navigate(location.pathname + location.hash, { replace: true, state: null });

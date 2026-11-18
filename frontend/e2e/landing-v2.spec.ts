@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { API_URL, usePreferences } from './helpers';
+import { API_URL, seedPreferences } from './helpers';
 
 interface PolicyType {
   code: string;
@@ -8,7 +8,7 @@ interface PolicyType {
 
 test.describe('Landing v2 sections', () => {
   test.beforeEach(async ({ page }) => {
-    await usePreferences(page, { lang: 'en' });
+    await seedPreferences(page, { lang: 'en' });
   });
 
   test('coverage table and numbers come from the policy-types API', async ({ page }) => {

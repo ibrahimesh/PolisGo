@@ -11,6 +11,7 @@ React frontend.
 | --------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
 | ![Landing page, dark theme](frontend/docs/screenshots/landing-dark-desktop.png) | ![Landing page, light theme](frontend/docs/screenshots/landing-light-desktop.png) |
 | ![Client overview, dark theme](frontend/docs/screenshots/cabinet-overview-dark-desktop.png) | ![Purchase wizard, light theme](frontend/docs/screenshots/cabinet-buy-light-desktop.png) |
+| ![Claim with its timeline, dark theme](frontend/docs/screenshots/cabinet-claim-dark-desktop.png) | ![Claim wizard, light theme](frontend/docs/screenshots/cabinet-claim-new-light-desktop.png) |
 
 ## What it is
 
@@ -34,9 +35,14 @@ product catalogue (`/api/policy-types`); health check.
   years; start date within 60 days; no overlapping policy of the same type.
 - Live quote from stored data (`POST /api/policies/quote`): the same calculation
   as issuing, so the quoted premium is the charged premium.
-- Pay a policy (Draft → Active) or cancel it; submit claims on own policies,
-  upload JPG/PNG/PDF documents (≤ 5 MB, ≤ 10 per claim), follow the status
-  history. Sees only their own vehicles, policies and claims.
+- Pay a policy (Draft → Active) or cancel it; file claims on own active
+  policies (incident date inside the cover, type, location, description,
+  amount ≤ 50,000 AZN), upload JPG/PNG/PDF documents (≤ 5 MB, ≤ 10 per claim,
+  checked by their first bytes) while the claim is open, follow the status
+  history, withdraw a claim before a decision. Sees only their own vehicles,
+  policies and claims.
+- Claim list with status (or "open") filter, search by claim or policy number
+  and sorting; claim updates (status changes made by staff) with read marks.
 - Policy list with status/type filters, search by number or plate and sorting;
   policy detail with the pricing frozen at issue, payments and status history.
 - Profile (`/api/me`): edit name and phone, change password. Overview figures
@@ -62,14 +68,23 @@ dark and light themes, Ctrl/⌘+K palette; design system in
 
 **Client cabinet** (`/app`) — sidebar on desktop, bottom bar on phones:
 - **Overview**: active policies, next renewal, insured vehicles, premiums paid
-  in 12 months, recent activity, renewal reminders.
+  in 12 months, recent activity, renewal reminders, open claims and the
+  latest claim update.
 - **My policies**: filters, search, sort and pages kept in the URL; policy
   detail with coverage, premium breakdown, payment and status history; a **PDF
   certificate** generated in the browser in EN / RU / AZ.
 - **Buy a policy**: five-step wizard with the exact live premium, inline
   vehicle registration, review, payment through the demo gateway and a success
   screen; survives a reload; renew-a-policy and resume-a-draft links.
-- **Notifications** panel for renewal reminders (unread badge, mark as read).
+- **My claims**: filters, search, sort and pages in the URL, cards on phones.
+  **File a claim**: five steps (policy, incident, damage, documents, review),
+  ineligible policies shown disabled with the reason, drag-and-drop photo and
+  PDF upload with previews and per-file progress, answers and picked files
+  kept across a reload. **Claim page**: timeline from the audit history,
+  the adjuster's decision, documents with download, more uploads while open,
+  withdraw with a confirmation.
+- **Notifications** panel for claim updates and renewal reminders (unread
+  badge, mark as read). Nothing is sent by phone or email, and the UI says so.
 - **Profile and settings** (name, phone, password, language, theme) and
   **Help**.
 
@@ -231,9 +246,10 @@ instead of `echo` — its redirect writes UTF-16, which Vite does not read.
 dotnet test PolisGo.slnx
 ```
 
-**334 backend tests** (xUnit): domain and service tests on SQLite in-memory
+**375 backend tests** (xUnit): domain and service tests on SQLite in-memory
 and HTTP tests via `WebApplicationFactory` (401/403/404 per role, JSON contract,
-and one client reading, paying or searching for another's policy → 404).
+and one client reading, paying, searching, uploading to or withdrawing
+another's policy or claim → 404).
 
 ```bash
 cd frontend
@@ -242,13 +258,16 @@ npx playwright install chromium
 npm run e2e
 ```
 
-**184 frontend unit tests** (Vitest) and **58 end-to-end tests** (Playwright +
-axe-core: 45 at 1440px, plus the 13 cabinet tests again at 390px) against the
+**238 frontend unit tests** (Vitest) and **78 end-to-end tests** (Playwright +
+axe-core: 57 at 1440px, plus the 21 cabinet tests again at 390px) against the
 real API — the e2e suite needs the Docker stack on `:8080`. They cover
 sign-up and sign-in, buying a policy end to end, the certificate download,
-renewal, notifications, profile and password changes, negative validation on
-the client and the server, forbidden staff routes and another client's policy,
-the live calculator, languages, and axe checks on every page in both themes.
+renewal, filing a claim with photos, withdrawing it, the claim timeline after
+an adjuster's decision, a keyboard-only claim, notifications, profile and
+password changes, negative validation on the client and the server (including
+a tampered request), forbidden staff routes and another client's policy or
+claim, field-length limits against SQL Server, the live calculator, languages,
+and axe checks on every page in both themes.
 
 ## CI
 
@@ -258,8 +277,11 @@ requests to `main`:
 - **Build and test** — Release build with warnings as errors, all backend tests
   with coverage (TRX and Cobertura uploaded as artifacts).
 - **Frontend** — Node 22, `npm ci`, lint, typecheck, Vitest, production build.
-- **Docker build** — builds the API image with Buildx (not pushed). E2E is not
-  in CI yet.
+- **End-to-end** — `docker compose` starts SQL Server and the API (fresh
+  database, migrations and the dev admin seed on start-up), then the full
+  Playwright suite runs against it; on failure the HTML report, traces,
+  screenshots and container logs are kept as artifacts.
+- **Docker build** — builds the API image with Buildx (not pushed).
 
 ## API overview
 
@@ -271,8 +293,9 @@ Generated from the controllers; full schemas in Swagger.
 | GET | `/api/auth/me` | Signed in |
 | GET, PUT | `/api/me` | Signed in (own profile) |
 | POST | `/api/me/change-password` | Signed in |
-| GET | `/api/me/overview`, `/api/me/reminders` | Client |
+| GET | `/api/me/overview`, `/api/me/reminders`, `/api/me/claim-updates` | Client |
 | POST | `/api/me/reminders/{policyId}/read`, `/api/me/reminders/read-all` | Client |
+| POST | `/api/me/claim-updates/{claimId}/read`, `/api/me/claim-updates/read-all` | Client |
 | POST | `/api/quotes/calculate` | Anonymous |
 | GET | `/api/policy-types` | Anonymous |
 | GET, POST | `/api/vehicles` | Signed in (Clients: own only) |
@@ -281,7 +304,8 @@ Generated from the controllers; full schemas in Swagger.
 | POST | `/api/policies/{id}/pay` | Client, Agent, Admin |
 | POST | `/api/policies/{id}/cancel` | Signed in, row-filtered |
 | POST | `/api/claims` | Client, Agent, Admin |
-| GET | `/api/claims`, `/api/claims/{id}`, `/api/claims/{id}/history` | Signed in, row-filtered |
+| GET | `/api/claims` (status, open, search, sort, paged), `/api/claims/{id}`, `/api/claims/{id}/history` | Signed in, row-filtered |
+| POST | `/api/claims/{id}/withdraw` | Client, Agent, Admin; row-filtered |
 | POST | `/api/claims/{id}/documents` | Signed in, row-filtered |
 | GET | `/api/claims/{id}/documents/{docId}` | Signed in, row-filtered |
 | POST | `/api/claims/{id}/review`, `/approve`, `/reject`, `/pay` | Adjuster, Admin |
@@ -294,14 +318,17 @@ Generated from the controllers; full schemas in Swagger.
 
 Not done yet:
 
-- Claims in the client cabinet (the API supports them), the adjuster claims
-  desk, agent desk and admin panel — those routes are still placeholders.
+- The adjuster claims desk, agent desk and admin panel — those routes are
+  still placeholders (claims are decided through the API for now).
+- Email or SMS notifications; today updates and reminders live in the
+  cabinet only.
+- Malware scanning and object storage for claim documents (they are checked
+  by type and first bytes and kept on a local volume).
 - A scheduled job that stores `Expired` (today it is derived from the end
   date on every read) and server-side language/theme preferences.
 - Revoking other sessions on a password change (tokens live up to 60 minutes).
 - Real payment and payout providers instead of the fake gateways.
 - Refresh tokens (sessions are a single 60-minute access token).
-- Running the e2e suite in CI.
 
 ## Author
 

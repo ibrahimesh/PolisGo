@@ -75,8 +75,15 @@ function OverviewContent({ data }: { data: ClientOverviewResponse }) {
 
   return (
     <>
-      {(data.unreadReminders > 0 || data.awaitingPayment > 0) && (
+      {(data.unreadReminders > 0 || data.awaitingPayment > 0 || data.unreadClaimUpdates > 0) && (
         <div className="space-y-3">
+          {data.unreadClaimUpdates > 0 && (
+            <Notice
+              text={t('overview.notices.claimUpdates', { count: data.unreadClaimUpdates })}
+              to="/app/claims"
+              action={t('overview.notices.claims')}
+            />
+          )}
           {data.unreadReminders > 0 && (
             <Notice
               text={t('overview.notices.reminders', { count: data.unreadReminders })}
@@ -160,9 +167,56 @@ function OverviewContent({ data }: { data: ClientOverviewResponse }) {
           )}
         </section>
 
-        <RemindersSection />
+        <div className="space-y-10 xl:col-span-5">
+          <ClaimsSection data={data} />
+          <RemindersSection />
+        </div>
       </div>
     </>
+  );
+}
+
+function ClaimsSection({ data }: { data: ClientOverviewResponse }) {
+  const { t } = useTranslation();
+  const format = useFormatters();
+  const latest = data.latestClaimUpdate;
+  return (
+    <section aria-labelledby="claims-title" className="space-y-4">
+      <div className="space-y-1">
+        <h2 id="claims-title" className="text-xl">
+          {t('overview.claims.title')}
+        </h2>
+        <p className="text-sm text-muted">
+          {data.openClaims > 0
+            ? t('overview.claims.open', { count: data.openClaims })
+            : t('overview.claims.noneOpen')}
+        </p>
+      </div>
+      <div className="border-y border-line py-4">
+        {latest ? (
+          <p>
+            <span className="block text-sm text-muted">{t('overview.claims.latest')}</span>
+            <Link
+              to={`/app/claims/${latest.claimId}`}
+              className="font-medium underline decoration-line-strong underline-offset-4 hover:decoration-current"
+            >
+              {t(`overview.activity.claim.${latest.toStatus}`, { ref: latest.claimNumber })}
+            </Link>
+            <span className="block text-sm text-muted tabular">{format.dateTime(latest.at)}</span>
+          </p>
+        ) : (
+          <p className="text-muted">{t('overview.claims.none')}</p>
+        )}
+      </div>
+      <div className="flex flex-wrap gap-3">
+        <ButtonLink to="/app/claims/new" variant="secondary" size="sm">
+          {t('claims.file')}
+        </ButtonLink>
+        <ButtonLink to="/app/claims" variant="ghost" size="sm">
+          {t('overview.claims.all')}
+        </ButtonLink>
+      </div>
+    </section>
   );
 }
 
@@ -171,11 +225,7 @@ function RemindersSection() {
   const reminders = useReminders();
 
   return (
-    <section
-      id="reminders"
-      aria-labelledby="reminders-title"
-      className="scroll-mt-24 space-y-4 xl:col-span-5"
-    >
+    <section id="reminders" aria-labelledby="reminders-title" className="scroll-mt-24 space-y-4">
       <div className="space-y-1">
         <h2 id="reminders-title" className="text-xl">
           {t('reminders.title')}

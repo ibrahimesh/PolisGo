@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
-import { usePreferences, waitForPremium } from './helpers';
+import { seedPreferences, waitForPremium } from './helpers';
 import type { Theme } from './helpers';
 
 const PAGES = [
@@ -13,7 +13,7 @@ const THEMES: Theme[] = ['dark', 'light'];
 for (const { name, path } of PAGES) {
   for (const theme of THEMES) {
     test(`${name} has no serious or critical axe violations (${theme})`, async ({ page }) => {
-      await usePreferences(page, { theme, lang: 'en' });
+      await seedPreferences(page, { theme, lang: 'en' });
       await page.goto(path);
       if (path === '/') await waitForPremium(page);
       await page.evaluate(() => document.fonts.ready);

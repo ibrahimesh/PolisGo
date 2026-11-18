@@ -20,4 +20,6 @@ public interface IClaimService
     Task<ClaimResponse> RejectAsync(Guid claimId, RejectClaimRequest request, CancellationToken cancellationToken = default);
 
     Task<ClaimResponse> PayAsync(Guid claimId, PayClaimRequest request, CancellationToken cancellationToken = default);
+
+    Task<ClaimResponse> WithdrawAsync(Guid claimId, WithdrawClaimRequest request, CancellationToken cancellationToken = default);
 }

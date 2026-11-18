@@ -10,8 +10,8 @@ namespace PolisGo.Application.Claims.Documents;
 
 public class ClaimDocumentService : IClaimDocumentService
 {
-    public const long MaxFileSizeBytes = 5 * 1024 * 1024;
-    public const int MaxDocumentsPerClaim = 10;
+    public const long MaxFileSizeBytes = ClaimValidation.MaxFileSizeBytes;
+    public const int MaxDocumentsPerClaim = ClaimValidation.MaxDocumentsPerClaim;
 
     private static readonly HashSet<string> AllowedExtensions = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -40,19 +40,23 @@ public class ClaimDocumentService : IClaimDocumentService
         // Ownership check — throws 404 if the caller can't see this claim.
         var claim = await LoadVisibleAsync(claimId, cancellationToken);
 
+        // A decided claim is a closed file; late evidence goes through the adjuster.
+        if (!claim.IsOpen)
+        {
+            throw new ConflictException(ClaimValidation.Messages.ClaimClosed);
+        }
+
         // Count guard against the 10-documents ceiling.
         var currentCount = await _db.ClaimDocuments
             .CountAsync(d => d.ClaimId == claim.Id, cancellationToken);
         if (currentCount >= MaxDocumentsPerClaim)
         {
-            throw new ConflictException(
-                $"A claim can have at most {MaxDocumentsPerClaim} documents.");
+            throw new ConflictException(ClaimValidation.Messages.TooManyDocuments);
         }
 
         if (contentLength <= 0 || contentLength > MaxFileSizeBytes)
         {
-            throw new ValidationException("file",
-                $"File size must be between 1 byte and {MaxFileSizeBytes / (1024 * 1024)} MB.");
+            throw new ValidationException("file", ClaimValidation.Messages.FileSize);
         }
 
         // Cross-platform sanitiser — Path.GetFileName only strips '\' on Windows,
@@ -62,8 +66,7 @@ public class ClaimDocumentService : IClaimDocumentService
         var extension = Path.GetExtension(safeDisplayName).ToLowerInvariant();
         if (!AllowedExtensions.Contains(extension))
         {
-            throw new ValidationException("file",
-                "Only .jpg, .jpeg, .png and .pdf files are accepted.");
+            throw new ValidationException("file", ClaimValidation.Messages.FileType);
         }
 
         // Magic-byte check: don't trust the extension alone. A .pdf that is
@@ -71,8 +74,7 @@ public class ClaimDocumentService : IClaimDocumentService
         var magic = await ReadHeaderAsync(content, cancellationToken);
         if (!IsDeclaredTypeMatchingHeader(extension, magic))
         {
-            throw new ValidationException("file",
-                "File content does not match the declared extension.");
+            throw new ValidationException("file", ClaimValidation.Messages.FileContentMismatch);
         }
 
         var storageKey = await _storage.SaveAsync(content, extension, cancellationToken);
@@ -99,7 +101,7 @@ public class ClaimDocumentService : IClaimDocumentService
             throw;
         }
 
-        return new ClaimDocumentResponse(document.Id, document.FileName, document.UploadedAt);
+        return new ClaimDocumentResponse(document.Id, document.FileName, ContentTypeFor(document.FileName), document.UploadedAt);
     }
 
     public async Task<ClaimDocumentDownload> DownloadAsync(
@@ -112,7 +114,7 @@ public class ClaimDocumentService : IClaimDocumentService
             ?? throw new NotFoundException(nameof(ClaimDocument), documentId);
 
         var stream = await _storage.OpenReadAsync(document.StoragePath, cancellationToken);
-        var contentType = ContentTypeFor(Path.GetExtension(document.FileName));
+        var contentType = ContentTypeFor(document.FileName);
         return new ClaimDocumentDownload(stream, document.FileName, contentType);
     }
 
@@ -160,7 +162,7 @@ public class ClaimDocumentService : IClaimDocumentService
         _ => false
     };
 
-    private static string ContentTypeFor(string extension) => extension.ToLowerInvariant() switch
+    public static string ContentTypeFor(string fileName) => Path.GetExtension(fileName).ToLowerInvariant() switch
     {
         ".jpg" or ".jpeg" => "image/jpeg",
         ".png" => "image/png",

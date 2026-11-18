@@ -7,6 +7,7 @@ import type {
   ClaimDetailResponse,
   ClaimHistoryEntry,
   ClaimResponse,
+  ClaimUpdateResponse,
   ClientOverviewResponse,
   CreatePolicyRequest,
   CreateStaffUserRequest,
@@ -30,6 +31,7 @@ import type {
   ReviewClaimRequest,
   SubmitClaimRequest,
   UpdateProfileRequest,
+  WithdrawClaimRequest,
   VehicleResponse,
 } from './types';
 
@@ -58,6 +60,13 @@ export const cabinetApi = {
   markRead: (policyId: Guid) =>
     request<undefined>(`/api/me/reminders/${policyId}/read`, { method: 'POST' }),
   markAllRead: () => request<undefined>('/api/me/reminders/read-all', { method: 'POST' }),
+  // Status changes someone else made on the client's claims.
+  claimUpdates: (signal?: Signal) =>
+    request<ClaimUpdateResponse[]>('/api/me/claim-updates', { signal }),
+  markClaimUpdateRead: (claimId: Guid) =>
+    request<undefined>(`/api/me/claim-updates/${claimId}/read`, { method: 'POST' }),
+  markAllClaimUpdatesRead: () =>
+    request<undefined>('/api/me/claim-updates/read-all', { method: 'POST' }),
 };
 
 export const quotesApi = {
@@ -103,6 +112,11 @@ export const claimsApi = {
     request<ClaimHistoryEntry[]>(`/api/claims/${id}/history`, { signal }),
   submit: (body: SubmitClaimRequest) =>
     request<ClaimResponse>('/api/claims', { method: 'POST', body }),
+  withdraw: (id: Guid, body: WithdrawClaimRequest = {}) =>
+    request<ClaimResponse>(`/api/claims/${id}/withdraw`, { method: 'POST', body }),
+  // Uploads go through uploadClaimDocument (XHR, for progress).
+  downloadDocument: (id: Guid, documentId: Guid) =>
+    request<Blob>(`/api/claims/${id}/documents/${documentId}`, { responseType: 'blob' }),
   review: (id: Guid, body: ReviewClaimRequest) =>
     request<ClaimResponse>(`/api/claims/${id}/review`, { method: 'POST', body }),
   approve: (id: Guid, body: ApproveClaimRequest) =>

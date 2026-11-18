@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using PolisGo.Application.Abstractions;
 using PolisGo.Application.Cabinet.Dtos;
+using PolisGo.Application.Claims;
 using PolisGo.Application.Common.Exceptions;
 using PolisGo.Application.Policies;
 using PolisGo.Application.Policies.Dtos;
@@ -17,6 +18,9 @@ public class CabinetService : ICabinetService
     // A client has a handful of policies; the cap only bounds a pathological case.
     private const int MaxReminders = 50;
     private const int ActivityLimit = 8;
+    // Claim updates older than this drop out of the notifications panel.
+    public const int ClaimUpdateWindowDays = 90;
+    private const int MaxClaimUpdates = 50;
 
     private readonly IApplicationDbContext _db;
     private readonly ICurrentUser _currentUser;
@@ -88,6 +92,12 @@ public class CabinetService : ICabinetService
             .Take(ActivityLimit)
             .ToList();
 
+        var openClaims = await _db.Claims.AsNoTracking()
+            .CountAsync(c => c.Policy.CustomerId == customerId
+                && (c.Status == ClaimStatus.Submitted || c.Status == ClaimStatus.UnderReview), cancellationToken);
+        var claimUpdates = await GetClaimUpdatesAsync(cancellationToken);
+        var latestClaim = claimEvents.FirstOrDefault();
+
         return new ClientOverviewResponse(
             ActivePolicies: activeCount,
             AwaitingPayment: awaitingPayment,
@@ -100,7 +110,113 @@ public class CabinetService : ICabinetService
             PaidLast12Months: paid,
             Currency: Tariff.Currency,
             UnreadReminders: reminders.Count(r => r.ReadAt is null),
-            RecentActivity: activity);
+            RecentActivity: activity,
+            OpenClaims: openClaims,
+            UnreadClaimUpdates: claimUpdates.Count(u => u.ReadAt is null),
+            LatestClaimUpdate: latestClaim is null
+                ? null
+                : new LatestClaimUpdate(latestClaim.ClaimId, latestClaim.ClaimNumber,
+                    latestClaim.FromStatus, latestClaim.ToStatus, latestClaim.ChangedAt));
+    }
+
+    // ---------- Claim updates ----------
+
+    public async Task<IReadOnlyList<ClaimUpdateResponse>> GetClaimUpdatesAsync(
+        CancellationToken cancellationToken = default)
+    {
+        var customerId = CustomerId;
+        var userId = _currentUser.UserId;
+        var since = UtcNow.AddDays(-ClaimUpdateWindowDays);
+
+        // Scalar subqueries per claim (not a nested object) so the query
+        // translates the same way on SQL Server and SQLite.
+        var rows = await _db.Claims.AsNoTracking()
+            .Where(c => c.Policy.CustomerId == customerId
+                && c.StatusHistory.Any(h => h.ChangedByUserId != userId && h.ChangedAt >= since))
+            .Select(c => new
+            {
+                c.Id,
+                c.ClaimNumber,
+                c.Policy.PolicyNumber,
+                LatestId = c.StatusHistory
+                    .Where(h => h.ChangedByUserId != userId && h.ChangedAt >= since)
+                    .OrderByDescending(h => h.ChangedAt).ThenByDescending(h => h.Id)
+                    .Select(h => h.Id)
+                    .First(),
+                ReadAt = _db.ClaimUpdateReads
+                    .Where(r => r.ClaimId == c.Id && r.UserId == userId)
+                    .Select(r => (DateTime?)r.ReadAt)
+                    .FirstOrDefault()
+            })
+            .Take(MaxClaimUpdates)
+            .ToListAsync(cancellationToken);
+
+        var latestIds = rows.Select(r => r.LatestId).ToList();
+        var latest = await _db.ClaimStatusHistory.AsNoTracking()
+            .Where(h => latestIds.Contains(h.Id))
+            .Select(h => new { h.Id, h.FromStatus, h.ToStatus, h.Comment, h.ChangedAt })
+            .ToDictionaryAsync(h => h.Id, cancellationToken);
+
+        return rows
+            .Select(r =>
+            {
+                var h = latest[r.LatestId];
+                var readAt = r.ReadAt is { } at && at >= h.ChangedAt ? r.ReadAt : null;
+                return new ClaimUpdateResponse(r.Id, r.ClaimNumber, r.PolicyNumber,
+                    h.FromStatus, h.ToStatus, h.Comment, h.ChangedAt, readAt);
+            })
+            .OrderByDescending(u => u.ChangedAt)
+            .ToList();
+    }
+
+    public async Task MarkClaimUpdateReadAsync(Guid claimId, CancellationToken cancellationToken = default)
+    {
+        // 404 for a claim the caller can't see, same as everywhere else.
+        var visible = await ClaimAccess.VisibleTo(_db.Claims.AsNoTracking(), _currentUser)
+            .AnyAsync(c => c.Id == claimId, cancellationToken);
+        if (!visible)
+        {
+            throw new NotFoundException(nameof(Claim), claimId);
+        }
+
+        await SetClaimReadMarksAsync([claimId], cancellationToken);
+    }
+
+    public async Task MarkAllClaimUpdatesReadAsync(CancellationToken cancellationToken = default)
+    {
+        var updates = await GetClaimUpdatesAsync(cancellationToken);
+        await SetClaimReadMarksAsync(updates.Select(u => u.ClaimId).ToList(), cancellationToken);
+    }
+
+    // Moves the mark forward to now: later updates on the claim show as unread again.
+    private async Task SetClaimReadMarksAsync(IReadOnlyCollection<Guid> claimIds, CancellationToken cancellationToken)
+    {
+        if (claimIds.Count == 0) return;
+
+        var userId = _currentUser.UserId;
+        var existing = await _db.ClaimUpdateReads
+            .Where(r => r.UserId == userId && claimIds.Contains(r.ClaimId))
+            .ToDictionaryAsync(r => r.ClaimId, cancellationToken);
+
+        var now = UtcNow;
+        foreach (var id in claimIds)
+        {
+            if (existing.TryGetValue(id, out var mark))
+            {
+                mark.ReadAt = now;
+            }
+            else
+            {
+                _db.ClaimUpdateReads.Add(new ClaimUpdateRead
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = userId,
+                    ClaimId = id,
+                    ReadAt = now
+                });
+            }
+        }
+        await _db.SaveChangesAsync(cancellationToken);
     }
 
     public async Task<IReadOnlyList<ReminderResponse>> GetRemindersAsync(

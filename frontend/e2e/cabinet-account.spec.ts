@@ -4,13 +4,13 @@ import {
   cabinetApi,
   randomUser,
   registerSession,
-  usePreferences,
-  useSession,
+  seedPreferences,
+  openSession,
 } from './helpers';
 
 test.describe('Cabinet account', () => {
   test.beforeEach(async ({ page }) => {
-    await usePreferences(page, { lang: 'en', theme: 'dark' });
+    await seedPreferences(page, { lang: 'en', theme: 'dark' });
   });
 
   test('sign in through the form lands on the overview', async ({ page }) => {
@@ -30,7 +30,7 @@ test.describe('Cabinet account', () => {
 
   test('edit name and phone, with client and server validation', async ({ page }) => {
     const { user, session } = await registerSession(page);
-    await useSession(page, session);
+    await openSession(page, session);
     await page.goto('/app/profile');
 
     const name = page.getByLabel('Full name');
@@ -76,8 +76,8 @@ test.describe('Cabinet account', () => {
     page,
   }) => {
     const { session } = await registerSession(page);
-    await usePreferences(page, { lang: 'ru' }, { override: true });
-    await useSession(page, session);
+    await seedPreferences(page, { lang: 'ru' }, { override: true });
+    await openSession(page, session);
     await page.goto('/app/profile');
 
     await page.getByLabel('Текущий пароль').fill('Wrong-password-1');
@@ -96,7 +96,7 @@ test.describe('Cabinet account', () => {
 
   test('change the password, then sign in with the new one', async ({ page }) => {
     const { user, session } = await registerSession(page);
-    await useSession(page, session);
+    await openSession(page, session);
     await page.goto('/app/profile');
 
     await page.getByLabel('Current password').fill(user.password);
@@ -125,13 +125,13 @@ test.describe('Cabinet account', () => {
     const api = cabinetApi(page, session);
     const first = await api.activePolicy(1, 'MTPL');
     await api.activePolicy(1, 'CASCO');
-    await useSession(page, session);
+    await openSession(page, session);
     await page.goto('/app');
 
     const bell = page.getByRole('button', { name: 'Notifications, 2 unread' });
     await bell.click();
     await expect(bell).toHaveAttribute('aria-expanded', 'true');
-    const panel = page.getByRole('region', { name: 'Reminders', exact: true });
+    const panel = page.getByRole('region', { name: 'Updates', exact: true });
     await expect(panel.getByRole('listitem')).toHaveCount(2);
 
     await panel
@@ -153,9 +153,10 @@ test.describe('Cabinet account', () => {
     const other = await registerSession(page, randomUser());
     const { policy } = await cabinetApi(page, other.session).activePolicy();
     const { session } = await registerSession(page);
-    await useSession(page, session);
+    await openSession(page, session);
 
-    for (const path of ['/app/admin', '/app/agent', '/app/claims']) {
+    // /app/claims is the client's own claims page; the staff desks are not.
+    for (const path of ['/app/admin', '/app/agent']) {
       await page.goto(path);
       await expect(
         page.getByRole('heading', { name: "This area isn't available for your role" }),

@@ -1,7 +1,7 @@
 import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback } from 'react';
-import { cabinetApi, policiesApi, profileApi, vehiclesApi } from '../../api/endpoints';
-import type { Guid, ListPoliciesQuery } from '../../api/types';
+import { cabinetApi, claimsApi, policiesApi, profileApi, vehiclesApi } from '../../api/endpoints';
+import type { Guid, ListClaimsQuery, ListPoliciesQuery } from '../../api/types';
 
 // Every private query sits under one prefix: a write invalidates the lot (a
 // payment changes the list, the detail, the overview and the reminders), and
@@ -14,6 +14,9 @@ export const cabinetKeys = {
   policy: (id: Guid) => [...cabinetKeys.all, 'policy', id] as const,
   vehicles: () => [...cabinetKeys.all, 'vehicles'] as const,
   profile: () => [...cabinetKeys.all, 'profile'] as const,
+  claims: (query: ListClaimsQuery) => [...cabinetKeys.all, 'claims', query] as const,
+  claim: (id: Guid) => [...cabinetKeys.all, 'claim', id] as const,
+  claimUpdates: () => [...cabinetKeys.all, 'claimUpdates'] as const,
 };
 
 export function useOverview() {
@@ -47,6 +50,30 @@ export function usePolicy(id: Guid, { enabled = true }: { enabled?: boolean } = 
     queryKey: cabinetKeys.policy(id),
     queryFn: ({ signal }) => policiesApi.get(id, signal),
     enabled: enabled && id !== '',
+  });
+}
+
+export function useClaims(query: ListClaimsQuery) {
+  return useQuery({
+    queryKey: cabinetKeys.claims(query),
+    queryFn: ({ signal }) => claimsApi.list(query, signal),
+    placeholderData: keepPreviousData,
+  });
+}
+
+export function useClaim(id: Guid) {
+  return useQuery({
+    queryKey: cabinetKeys.claim(id),
+    queryFn: ({ signal }) => claimsApi.get(id, signal),
+  });
+}
+
+export function useClaimUpdates() {
+  return useQuery({
+    queryKey: cabinetKeys.claimUpdates(),
+    queryFn: ({ signal }) => cabinetApi.claimUpdates(signal),
+    // An adjuster's decision should reach the bell without a reload.
+    refetchInterval: 2 * 60_000,
   });
 }
 

@@ -19,6 +19,10 @@ public class ClaimStatusHistoryConfiguration : IEntityTypeConfiguration<ClaimSta
         // claim and take MIN(ChangedAt): this index covers the whole lookup.
         builder.HasIndex(h => new { h.ToStatus, h.ClaimId, h.ChangedAt });
 
+        // A claim's timeline and its latest update (notifications) read by
+        // claim, newest or oldest first.
+        builder.HasIndex(h => new { h.ClaimId, h.ChangedAt });
+
         // Cascade with the parent claim: audit trail dies with the claim.
         builder.HasOne(h => h.Claim)
             .WithMany(c => c.StatusHistory)
