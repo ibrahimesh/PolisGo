@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { useExclusive } from '../../lib/hooks';
 import { vehiclesApi } from '../../api/endpoints';
 import { isApiError } from '../../api/errors';
-import type { VehicleResponse } from '../../api/types';
+import type { Guid, VehicleResponse } from '../../api/types';
 import { Button } from '../../components/ui/Button';
 import { ErrorNotice } from '../../components/ui/ErrorNotice';
 import { FormErrorSummary } from '../../components/ui/FormErrorSummary';
@@ -18,14 +18,17 @@ import type { VehicleInput, VehicleValues } from './vehicleSchema';
 const FIELDS = ['make', 'model', 'year', 'engineCapacityCc', 'plateNumber', 'vin'] as const;
 const id = (field: (typeof FIELDS)[number]) => `vehicle-${field}`;
 
-// Registers a vehicle for the signed-in client (the API takes the customer
-// from the token). Used inside the purchase wizard.
+// Registers a vehicle: for the signed-in client (the API takes the customer
+// from the token) in the purchase wizard, or, with customerId, for an agent's
+// customer when selling on their behalf.
 export function VehicleForm({
   onCreated,
   onCancel,
+  customerId,
 }: {
   onCreated: (vehicle: VehicleResponse) => void;
   onCancel?: () => void;
+  customerId?: Guid;
 }) {
   const { t } = useTranslation();
   const schema = useMemo(() => createVehicleSchema(), []);
@@ -67,7 +70,7 @@ export function VehicleForm({
     exclusive(async () => {
       setSubmitError(null);
       try {
-        onCreated(await vehiclesApi.create(values));
+        onCreated(await vehiclesApi.create({ ...values, customerId }));
       } catch (error) {
         // A taken plate is a 409, but it belongs to one field.
         if (isApiError(error) && error.status === 409) {
