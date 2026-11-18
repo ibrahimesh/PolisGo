@@ -385,7 +385,16 @@
     "currentPasswordRequired": "Cari şifrənizi daxil edin.",
     "currentPasswordIncorrect": "Bu, cari şifrəniz deyil.",
     "passwordUnchanged": "Yeni şifrə cari şifrədən fərqli olmalıdır.",
-    "phoneNotApplicable": "Əməkdaş hesablarında telefon nömrəsi saxlanılmır."
+    "phoneNotApplicable": "Əməkdaş hesablarında telefon nömrəsi saxlanılmır.",
+    "makeRequired": "Markanı daxil edin, məsələn Toyota.",
+    "makeTooLong": "Ən çox 64 simvol.",
+    "modelRequired": "Modeli daxil edin, məsələn Corolla.",
+    "modelTooLong": "Ən çox 64 simvol.",
+    "plateRequired": "Dövlət nömrə nişanını daxil edin.",
+    "plateInvalid": "Boşluq və ya defislə ayrılmış 16-ya qədər hərf və rəqəm, məsələn 10-AA-123.",
+    "vinRequired": "VIN kodunu daxil edin.",
+    "vinInvalid": "VIN 17 simvoldan ibarətdir: rəqəmlər və I, O, Q-dan başqa latın hərfləri.",
+    "vehicleYearRange": "Buraxılış ili 1950-ci ildən gələn ilə qədər olmalıdır."
   },
   "common": {
     "loading": "Yüklənir",

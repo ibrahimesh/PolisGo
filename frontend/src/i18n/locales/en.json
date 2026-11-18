@@ -385,7 +385,16 @@
     "currentPasswordRequired": "Enter your current password.",
     "currentPasswordIncorrect": "That isn’t your current password.",
     "passwordUnchanged": "Choose a password different from the current one.",
-    "phoneNotApplicable": "Staff accounts don’t keep a phone number."
+    "phoneNotApplicable": "Staff accounts don’t keep a phone number.",
+    "makeRequired": "Enter the make, like Toyota.",
+    "makeTooLong": "Use 64 characters or fewer.",
+    "modelRequired": "Enter the model, like Corolla.",
+    "modelTooLong": "Use 64 characters or fewer.",
+    "plateRequired": "Enter the plate number.",
+    "plateInvalid": "Use up to 16 letters and digits, separated by spaces or hyphens, like 10-AA-123.",
+    "vinRequired": "Enter the VIN.",
+    "vinInvalid": "A VIN has 17 characters: digits and letters except I, O and Q.",
+    "vehicleYearRange": "Model year must be between 1950 and next year."
   },
   "common": {
     "loading": "Loading",

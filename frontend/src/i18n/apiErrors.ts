@@ -32,6 +32,17 @@ const SERVER_MESSAGE_KEYS: Record<string, string> = {
   'Current password is incorrect.': 'validation.currentPasswordIncorrect',
   'New password must be different from the current one.': 'validation.passwordUnchanged',
   'Staff accounts have no phone on file.': 'validation.phoneNotApplicable',
+  // Vehicle rules — VehicleValidation.Messages (same contract test).
+  'Make is required.': 'validation.makeRequired',
+  'Make must be 64 characters or fewer.': 'validation.makeTooLong',
+  'Model is required.': 'validation.modelRequired',
+  'Model must be 64 characters or fewer.': 'validation.modelTooLong',
+  'Plate number is required.': 'validation.plateRequired',
+  'Plate number must be up to 16 letters, digits, spaces or hyphens.': 'validation.plateInvalid',
+  'VIN is required.': 'validation.vinRequired',
+  'VIN must be 17 characters: digits and letters except I, O and Q.': 'validation.vinInvalid',
+  'Model year must be between 1950 and next year.': 'validation.vehicleYearRange',
+  'Engine capacity must be 10000 cc or less.': 'validation.engineCapacityMax',
 };
 
 export function serverMessageKey(message: string | undefined): string | undefined {

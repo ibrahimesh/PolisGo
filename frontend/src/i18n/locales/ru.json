@@ -389,7 +389,16 @@
     "currentPasswordRequired": "Введите текущий пароль.",
     "currentPasswordIncorrect": "Это не ваш текущий пароль.",
     "passwordUnchanged": "Новый пароль должен отличаться от текущего.",
-    "phoneNotApplicable": "У служебных учётных записей нет номера телефона."
+    "phoneNotApplicable": "У служебных учётных записей нет номера телефона.",
+    "makeRequired": "Укажите марку, например Toyota.",
+    "makeTooLong": "Не более 64 символов.",
+    "modelRequired": "Укажите модель, например Corolla.",
+    "modelTooLong": "Не более 64 символов.",
+    "plateRequired": "Укажите госномер.",
+    "plateInvalid": "До 16 букв и цифр, через пробел или дефис, например 10-AA-123.",
+    "vinRequired": "Укажите VIN.",
+    "vinInvalid": "VIN состоит из 17 символов: цифры и латинские буквы, кроме I, O и Q.",
+    "vehicleYearRange": "Год выпуска — от 1950 до следующего года."
   },
   "common": {
     "loading": "Загрузка",
