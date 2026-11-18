@@ -36,6 +36,15 @@ const ProfilePage = lazy(() =>
 const HelpPage = lazy(() =>
   import('./features/help/HelpPage').then((m) => ({ default: m.HelpPage })),
 );
+const ClaimsHome = lazy(() =>
+  import('./features/claims/ClaimsHome').then((m) => ({ default: m.ClaimsHome })),
+);
+const NewClaimPage = lazy(() =>
+  import('./features/claims/wizard/NewClaimPage').then((m) => ({ default: m.NewClaimPage })),
+);
+const ClaimDetailPage = lazy(() =>
+  import('./features/claims/ClaimDetailPage').then((m) => ({ default: m.ClaimDetailPage })),
+);
 const WorkspaceSection = lazy(() =>
   import('./features/workspace/WorkspaceSection').then((m) => ({
     default: m.WorkspaceSection,
@@ -69,6 +78,18 @@ export function App() {
             <Route index element={<BuyPolicyPage />} />
           </Route>
 
+          {/* Clients' claims and the staff desk share the path. */}
+          <Route
+            path="claims"
+            element={<RequireAuth roles={[...rolesFor('myClaims'), ...rolesFor('claims')]} />}
+          >
+            <Route index element={<ClaimsHome />} />
+            <Route element={guard('myClaims')}>
+              <Route path="new" element={<NewClaimPage />} />
+              <Route path=":id" element={<ClaimDetailPage />} />
+            </Route>
+          </Route>
+
           <Route path="profile" element={guard('profile')}>
             <Route index element={<ProfilePage />} />
           </Route>
@@ -76,7 +97,7 @@ export function App() {
             <Route index element={<HelpPage />} />
           </Route>
 
-          {STAFF_SECTION_IDS.map((id) => (
+          {STAFF_SECTION_IDS.filter((id) => id !== 'claims').map((id) => (
             <Route key={id} path={id} element={guard(id)}>
               <Route index element={<WorkspaceSection section={id} />} />
             </Route>

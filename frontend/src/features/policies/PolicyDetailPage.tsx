@@ -107,6 +107,11 @@ function Detail({ detail, back }: { detail: PolicyDetailResponse; back: ReactNod
             {certificate && (
               <CertificateButton detail={detail} variant={payable ? 'secondary' : 'primary'} />
             )}
+            {policy.status === 'Active' && policy.startDate <= todayIso() && (
+              <ButtonLink to={`/app/claims/new?policy=${policy.id}`} variant="secondary">
+                {t('claims.file')}
+              </ButtonLink>
+            )}
           </>
         }
       />
