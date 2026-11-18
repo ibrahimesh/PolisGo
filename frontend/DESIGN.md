@@ -80,8 +80,9 @@ Ink on the data card is the same in both themes: `paper-ink #14161F`,
 
 Body text and labels never drop below 4.5:1 (most are above 6:1). Hairlines
 are decorative and never the only signal of state. The axe e2e suite checks
-Landing, Login, Register and every client cabinet page (with the error
-summary, notifications panel and user menu open) in both themes, at 1440px
+Landing, Login, Register and every client cabinet page, claims included
+(with the purchase and claim wizards' error summaries, the withdraw dialog,
+the notifications panel and the user menu open) in both themes, at 1440px
 and 390px.
 
 ## Typography
@@ -143,8 +144,9 @@ and polygon while the labels move to the breakdown table directly below (at
 `Button` · `Input` · `PhoneInput` · `PasswordField` · `Select` · `Card` ·
 `Badge` · `Tabs` · `Table` · `Modal` · `Toast` · `Skeleton` · `EmptyState` ·
 `FormErrorSummary` · `ThemeToggle` · `LanguageSwitcher` · `CommandPalette` ·
-`Label` · `PageHeader` · `PolicyStatusBadge` · `Stepper` · `QuoteResult`
-(full or compact).
+`Label` · `PageHeader` · `PolicyStatusBadge` · `ClaimStatusBadge` · `StepNav`
+(both wizards) · `QuoteResult` (full or compact) · `Textarea` (with a live
+count) · `Pagination` · `FileUploader`.
 
 - A visible 2px accent focus ring on everything focusable.
 - Every field has a visible label; errors are linked with `aria-describedby`,
@@ -173,12 +175,17 @@ and polygon while the labels move to the breakdown table directly below (at
   payment: ivory in both themes. Status badges on it switch to paper ink
   (`onPaper`), because the theme's status colours lack contrast there.
 - **Status.** Badge plus a word: Active → success, Unpaid → warning,
-  Expired → neutral, Cancelled → danger. Unread reminders get a warning dot
+  Expired → neutral, Cancelled → danger. Claims: Submitted → neutral,
+  Under review → warning, Approved and Paid out → success, Rejected →
+  danger, Withdrawn → neutral. Unread reminders and claim updates get a warning dot
   and "Unread" for screen readers. The bell's count is an accent square
   (`accent-ink` on `accent`), hidden from AT, with the count in the name.
 - **Choices** (product, vehicle) are bordered cards around real radios; the
   checked card gets an accent border and `surface-2`, focus shows on the card.
-- **Stepper.** Five numbered steps in a hairline row; done steps show a check
+- **Disabled choices** stay in the list with their reason in plain text
+  (`text`, not muted, so it passes contrast) tied to the radio by
+  `aria-describedby`: a policy that can't take a claim says why.
+- **Stepper.** Five numbered steps (`StepNav`, five at most) in a hairline row; done steps show a check
   and can be revisited, the current one is filled with the accent and
   underlined. Phones get "Step 2 of 5 · Vehicle" and a five-segment bar.
 - **Popovers** (user menu, reminders) are disclosures, not menus: bordered
@@ -186,6 +193,18 @@ and polygon while the labels move to the breakdown table directly below (at
   panel becomes a full-width sheet on phones.
 - **Live premium.** The wizard reuses the calculator's result card and factor
   diagram in a compact variant (stacked, 64px price) sized for its column.
+- **Claim timeline.** A vertical hairline with an 11px ring per step; the
+  latest step is filled with the accent. Each step: the status in words, the
+  time and who acted ("by you", "by the adjuster, Name"), and the adjuster's
+  note as a quote with a 2px `line-strong` rule. A decision sits above the
+  page in a bordered box (`success` or `danger` at 60%), never a coloured
+  fill.
+- **Uploader.** A dashed `line-strong` drop zone with a real "Choose files"
+  button (the file input itself is hidden from the tab order and from AT).
+  Dragging over turns the border accent. Each file is a row: a 48px
+  thumbnail (or a file icon), name, size, a 4px accent progress bar with
+  `role="progressbar"`, and its error in `danger` with the trace id.
+  Rejected files are named with the reason; nothing is dropped silently.
 - **Empty and loading.** Every list has a real empty state (and a separate
   "nothing matches" state); skeletons mirror the loaded layout. Nothing is
   mocked.

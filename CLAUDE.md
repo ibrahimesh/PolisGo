@@ -42,8 +42,9 @@ every change in this repo.
 | POST | `/api/auth/register` · `/api/auth/login` | Anonymous |
 | GET | `/api/auth/me` | Any signed-in user |
 | GET, PUT | `/api/me` · POST `/api/me/change-password` | Any signed-in user (always the caller's own account) |
-| GET | `/api/me/overview` · `/api/me/reminders` | Client |
+| GET | `/api/me/overview` · `/api/me/reminders` · `/api/me/claim-updates` | Client |
 | POST | `/api/me/reminders/{policyId}/read` · `/read-all` | Client; the policy goes through `PolicyAccess` |
+| POST | `/api/me/claim-updates/{claimId}/read` · `/read-all` | Client; the claim goes through `ClaimAccess` |
 | POST | `/api/users/staff` | Admin |
 | POST | `/api/quotes/calculate` | Anonymous |
 | GET | `/api/policy-types` | Anonymous (public cache 5 min) |
@@ -51,8 +52,8 @@ every change in this repo.
 | GET | `/api/policies` (status, type, search, sort, paged) · `/api/policies/{id}` (detail) | Signed in, scoped by `PolicyAccess` |
 | POST | `/api/policies/quote` · `/api/policies` · `/api/policies/{id}/pay` | Client, Agent, Admin |
 | POST | `/api/policies/{id}/cancel` | Signed in, scoped by `PolicyAccess` |
-| GET | `/api/claims` · `/{id}` · `/{id}/history` · `/{id}/documents/{docId}` | Signed in, scoped by `ClaimAccess` |
-| POST | `/api/claims` | Client, Agent, Admin |
+| GET | `/api/claims` (status, open, search, sort, paged) · `/{id}` · `/{id}/history` · `/{id}/documents/{docId}` | Signed in, scoped by `ClaimAccess` |
+| POST | `/api/claims` · `/api/claims/{id}/withdraw` | Client, Agent, Admin (withdraw scoped by `ClaimAccess`) |
 | POST | `/api/claims/{id}/documents` | Signed in, scoped by `ClaimAccess` |
 | POST | `/api/claims/{id}/review` · `/approve` · `/reject` · `/pay` | Adjuster, Admin |
 | GET | `/api/customers` (search, sort, paged) · `/api/customers/{id}` | Admin, Agent, Adjuster; nested policies/claims scoped as above |
@@ -82,8 +83,17 @@ every change in this repo.
   on the policy at issue (`Policy.Pricing`); quote and create share
   `PolicyService.PriceAsync` so the quoted premium is the charged one.
 - **Shared rule classes with stable messages** (`AuthValidation`,
-  `VehicleValidation`, `PolicyValidation`): the SPA's `apiErrors.test.ts`
+  `VehicleValidation`, `PolicyValidation`, `ClaimValidation`): the SPA's `apiErrors.test.ts`
   reads them and fails on a message without a translation.
+- **Claim status changes go through the entity** too (`StartReview`,
+  `Approve`, `Reject`, `MarkPaid`, `Withdraw`), each appending
+  `ClaimStatusHistory`. Documents can be added only while `Claim.IsOpen`.
+  Claim updates and renewal reminders are derived on read; only read marks
+  (`ClaimUpdateRead`, `PolicyReminderRead`) are stored.
+- **Check text lengths in the service, not only in the column.** SQLite
+  ignores `HasMaxLength`; SQL Server fails the insert with a 500. Every
+  user- or staff-supplied string gets an explicit limit and a 400, and
+  `e2e/claims-api.spec.ts` covers the edges against SQL Server.
 - **Index what new queries filter, group or sort on**, in the entity's
   configuration, shipped with a migration in the same commit.
 
@@ -151,8 +161,9 @@ React Router, TanStack Query, React Hook Form + Zod, react-i18next.
 - `src/features/<area>` — feature code; `src/pages` — route screens. The
   client cabinet: `cabinet` (shell, sidebar, bottom bar, user menu, private
   queries under the `['cabinet']` key prefix), `overview`, `policies`,
-  `wizard` (purchase), `reminders`, `profile`, `help`, `vehicles`,
-  `certificate` (PDF).
+  `wizard` (purchase), `claims` (list, `wizard/`, detail, `upload/`),
+  `reminders` (bell: reminders and claim updates), `profile`, `help`,
+  `vehicles`, `certificate` (PDF).
 - Every private query lives under `cabinetKeys.all`; a write invalidates
   that prefix (`useInvalidateCabinet`), and sign-out clears the cache.
 - `src/i18n` — setup, `locales/{en,ru,az}.json`, API error mapping, number
@@ -215,6 +226,12 @@ React Router, TanStack Query, React Hook Form + Zod, react-i18next.
   set `shouldFocusError: false` and focus in field order yourself.
 - The purchase wizard keeps its state in sessionStorage per user
   (`wizardState.ts`); going back to edit cancels the unpaid draft.
+- Claim wizard state: answers in sessionStorage per user (`claimWizardState.ts`),
+  picked files in IndexedDB (`upload/pendingFiles.ts`, writes serialised,
+  cleared on submit and sign-out). Files are uploaded after the claim is
+  created, one at a time over XHR for progress (`api/upload.ts`). A 400 on
+  submit sends the user to the step that owns the field.
+- Steppers use `components/ui/StepNav` (five steps at most).
 - PDF certificates: `features/certificate` (pdf-lib + fontkit, MIT; static
   Fontsource WOFF files, OFL). Fontsource splits fonts by Unicode subset, so
   text is drawn in runs per file (`textRuns.ts`); add a character range to
@@ -246,7 +263,10 @@ Run from `frontend/`:
   project reruns the cabinet specs at 390×844. Arrange data through the API
   (`registerSession`, `useSession`, `cabinetApi` in `e2e/helpers.ts`);
   test through the UI only what the test is about. Creates real users with
-  `@polisgo.test` emails. Not run in CI yet.
+  `@polisgo.test` emails. Runs in CI (the `e2e` job) against a fresh
+  `docker compose` stack. Adjuster steps use the dev seed admin
+  (`E2E_ADMIN_EMAIL`/`E2E_ADMIN_PASSWORD`, or `SEED_ADMIN_*` from `../.env`).
+  `claims-api.spec.ts` checks length limits and uploads against SQL Server.
 - `npm run e2e:screenshots` — regenerates `frontend/docs/screenshots`
   (landing full page; cabinet pages first screen, dark and light, desktop and
   mobile).
