@@ -48,7 +48,7 @@ export const profileApi = {
   update: (body: UpdateProfileRequest) =>
     request<ProfileResponse>('/api/me', { method: 'PUT', body }),
   changePassword: (body: ChangePasswordRequest) =>
-    request<void>('/api/me/change-password', { method: 'POST', body }),
+    request<undefined>('/api/me/change-password', { method: 'POST', body }),
 };
 
 // Client-only read models; staff get 403.
@@ -56,8 +56,8 @@ export const cabinetApi = {
   overview: (signal?: Signal) => request<ClientOverviewResponse>('/api/me/overview', { signal }),
   reminders: (signal?: Signal) => request<ReminderResponse[]>('/api/me/reminders', { signal }),
   markRead: (policyId: Guid) =>
-    request<void>(`/api/me/reminders/${policyId}/read`, { method: 'POST' }),
-  markAllRead: () => request<void>('/api/me/reminders/read-all', { method: 'POST' }),
+    request<undefined>(`/api/me/reminders/${policyId}/read`, { method: 'POST' }),
+  markAllRead: () => request<undefined>('/api/me/reminders/read-all', { method: 'POST' }),
 };
 
 export const quotesApi = {

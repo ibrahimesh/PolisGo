@@ -307,11 +307,25 @@
       "overview": "İcmal",
       "agent": "Agent masası",
       "claims": "Zərərlərin tənzimlənməsi",
-      "admin": "İdarəetmə"
+      "admin": "İdarəetmə",
+      "policies": "Polislərim",
+      "buy": "Polis al",
+      "profile": "Profil və ayarlar",
+      "help": "Kömək və suallar"
     },
     "comingSoonTitle": "Bu bölmə plandakı növbəti addımdır",
     "comingSoonBody": "Bu rol üçün ekranlar hazır olduqdan sonra polislər, avtomobillər və sığorta hadisələri burada görünəcək.",
-    "backToOverview": "İcmala qayıt"
+    "backToOverview": "İcmala qayıt",
+    "short": {
+      "overview": "İcmal",
+      "policies": "Polislər",
+      "buy": "Al",
+      "agent": "Agent",
+      "claims": "Zərərlər",
+      "admin": "Admin",
+      "profile": "Profil",
+      "help": "Kömək"
+    }
   },
   "roles": {
     "Client": "Müştəri",
@@ -424,7 +438,15 @@
       "navigation": "Keçid",
       "language": "Dil",
       "theme": "Mövzu",
-      "account": "Hesab"
+      "account": "Hesab",
+      "cabinet": "Şəxsi kabinet"
     }
+  },
+  "cabinet": {
+    "nav": "Şəxsi kabinet",
+    "home": "PolisGo — şəxsi kabinet",
+    "backToSite": "Saytın əsas səhifəsinə qayıt",
+    "userMenu": "{{name}} hesab menyusu",
+    "signedInAs": "Daxil olmusunuz:"
   }
 }

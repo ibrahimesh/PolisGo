@@ -307,11 +307,25 @@
       "overview": "Overview",
       "agent": "Agent desk",
       "claims": "Claims desk",
-      "admin": "Administration"
+      "admin": "Administration",
+      "policies": "My policies",
+      "buy": "Buy a policy",
+      "profile": "Profile and settings",
+      "help": "Help and questions"
     },
     "comingSoonTitle": "This area is next on the roadmap",
     "comingSoonBody": "Policies, vehicles and claims will appear here once the screens for this role are built.",
-    "backToOverview": "Back to overview"
+    "backToOverview": "Back to overview",
+    "short": {
+      "overview": "Overview",
+      "policies": "Policies",
+      "buy": "Buy",
+      "agent": "Agent",
+      "claims": "Claims",
+      "admin": "Admin",
+      "profile": "Profile",
+      "help": "Help"
+    }
   },
   "roles": {
     "Client": "Client",
@@ -424,7 +438,15 @@
       "navigation": "Go to",
       "language": "Language",
       "theme": "Theme",
-      "account": "Account"
+      "account": "Account",
+      "cabinet": "Your account"
     }
+  },
+  "cabinet": {
+    "nav": "Your account",
+    "home": "PolisGo — your account",
+    "backToSite": "Back to the main site",
+    "userMenu": "Account menu for {{name}}",
+    "signedInAs": "Signed in as"
   }
 }

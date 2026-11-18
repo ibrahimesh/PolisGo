@@ -1,29 +1,26 @@
-import { useCallback, useEffect, useId, useRef, useState } from 'react';
+import { useCallback, useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, useLocation, useNavigate } from 'react-router';
+import { Link, useLocation } from 'react-router';
 import { useAuth } from '../../auth/AuthContext';
+import { useRequestSignOut } from '../../auth/signOut';
 import { Button, ButtonLink } from '../ui/Button';
 import { cx } from '../ui/cx';
 import { CloseIcon, MenuIcon, SearchIcon } from '../ui/icons';
 import { LanguageSwitcher } from '../ui/LanguageSwitcher';
 import { ThemeToggle } from '../ui/ThemeToggle';
-import { useToast } from '../ui/ToastProvider';
 import { CommandPalette } from './CommandPalette';
 import { LANDING_SECTIONS } from './navigation';
+import { isMac, usePaletteShortcut } from './usePaletteShortcut';
 import { Wordmark } from './Wordmark';
-
-const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform);
 
 export function Header() {
   const { t } = useTranslation();
-  const { status, user, logout } = useAuth();
-  const { toast } = useToast();
-  const navigate = useNavigate();
+  const { status, user } = useAuth();
+  const signOut = useRequestSignOut();
   const { pathname, hash } = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const menuId = useId();
-  const signOutPending = useRef(false);
 
   // Any navigation closes the mobile menu.
   const [lastLocation, setLastLocation] = useState(pathname + hash);
@@ -32,42 +29,10 @@ export function Header() {
     setMenuOpen(false);
   }
 
-  // Ctrl+K / ⌘K opens the palette from anywhere.
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
-        event.preventDefault();
-        setPaletteOpen(true);
-      } else if (event.key === 'Escape') {
-        setMenuOpen(false);
-      }
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, []);
-
-  const finishSignOut = useCallback(() => {
-    signOutPending.current = false;
-    logout();
-    toast({ title: t('auth.signedOut'), tone: 'info' });
-  }, [logout, toast, t]);
-
-  // Sign-out is two steps: leave the protected route, then drop the session.
-  // Clearing first lets the route guard re-render while still mounted and
-  // bounce the user to /login. Navigation is a transition, so wait until the
-  // home route has actually committed before logging out.
-  useEffect(() => {
-    if (signOutPending.current && pathname === '/') finishSignOut();
-  }, [pathname, finishSignOut]);
-
-  function signOut() {
-    if (pathname === '/') {
-      finishSignOut();
-      return;
-    }
-    signOutPending.current = true;
-    void navigate('/');
-  }
+  usePaletteShortcut(
+    useCallback(() => setPaletteOpen(true), []),
+    useCallback(() => setMenuOpen(false), []),
+  );
 
   const authed = status === 'authenticated' && user;
   const navLinkClass =

@@ -3,6 +3,8 @@ import type { KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 import { useAuth } from '../../auth/AuthContext';
+import { useRequestSignOut } from '../../auth/signOut';
+import { sectionsFor } from '../../features/workspace/sections';
 import { LANGUAGES } from '../../i18n';
 import { useTheme } from '../../theme/ThemeProvider';
 import { THEME_PREFERENCES } from '../../theme/ThemeProvider';
@@ -12,7 +14,7 @@ import { LANDING_SECTIONS } from './navigation';
 
 interface Command {
   id: string;
-  group: 'navigation' | 'language' | 'theme' | 'account';
+  group: 'navigation' | 'cabinet' | 'language' | 'theme' | 'account';
   label: string;
   keywords?: string;
   run: () => void;
@@ -28,7 +30,8 @@ interface CommandPaletteProps {
 export function CommandPalette({ open, onClose }: CommandPaletteProps) {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
-  const { status, logout } = useAuth();
+  const { status, user } = useAuth();
+  const signOut = useRequestSignOut();
   const { setPreference } = useTheme();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -46,15 +49,15 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
         label: t(`nav.${section}`),
         run: go(`/#${section}`),
       })),
-      ...(status === 'authenticated'
-        ? [
-            {
-              id: 'workspace',
-              group: 'navigation' as const,
-              label: t('nav.workspace'),
-              run: go('/app'),
-            },
-          ]
+      // Only the sections this role may open; the route guards agree.
+      ...(status === 'authenticated' && user
+        ? sectionsFor(user.role).map((section) => ({
+            id: `cabinet-${section.id}`,
+            group: 'cabinet' as const,
+            label: t(`workspace.sections.${section.id}`),
+            keywords: t('nav.workspace'),
+            run: go(section.path),
+          }))
         : [
             {
               id: 'login',
@@ -89,14 +92,11 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
         id: 'sign-out',
         group: 'account',
         label: t('nav.signOut'),
-        run: () => {
-          logout();
-          void navigate('/');
-        },
+        run: signOut,
       });
     }
     return list;
-  }, [t, i18n, navigate, status, logout, setPreference]);
+  }, [t, i18n, navigate, status, user, signOut, setPreference]);
 
   const needle = query.trim().toLowerCase();
   const results = needle
