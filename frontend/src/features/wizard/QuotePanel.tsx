@@ -54,6 +54,7 @@ export function QuotePanel({ values }: { values: WizardValues }) {
           stale={!draft && (quote.isPlaceholderData || quote.isError)}
           label={t('wizard.quote.label')}
           note={t('wizard.quote.note')}
+          compact
         />
       )}
       {error && (
