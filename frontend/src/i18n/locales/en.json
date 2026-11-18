@@ -422,7 +422,8 @@
     "loading": "Loading",
     "close": "Close",
     "dismiss": "Dismiss notification",
-    "notifications": "Notifications"
+    "notifications": "Notifications",
+    "retry": "Try again"
   },
   "forms": {
     "errorSummary_one": "1 field needs attention",
@@ -448,5 +449,78 @@
     "backToSite": "Back to the main site",
     "userMenu": "Account menu for {{name}}",
     "signedInAs": "Signed in as"
+  },
+  "policyStatus": {
+    "Draft": "Unpaid",
+    "Active": "Active",
+    "Expired": "Expired",
+    "Cancelled": "Cancelled"
+  },
+  "overview": {
+    "titleLead": "Hello,",
+    "lead": "Here is where your cover stands today, {{date}}.",
+    "getQuote": "Get a quote",
+    "buy": "Buy a policy",
+    "error": "Your overview couldn’t be loaded.",
+    "empty": {
+      "title": "No policies yet",
+      "body": "Choose a vehicle and a type of cover, see the exact price as you go, and pay in one step.",
+      "action": "Buy your first policy"
+    },
+    "notices": {
+      "reminders_one": "{{count}} policy ends within 30 days.",
+      "reminders_other": "{{count}} policies end within 30 days.",
+      "awaiting_one": "{{count}} policy is waiting for payment.",
+      "awaiting_other": "{{count}} policies are waiting for payment.",
+      "review": "Review",
+      "pay": "Go to payment"
+    },
+    "stats": {
+      "label": "Your cover at a glance",
+      "active": "Active policies",
+      "awaiting_one": "{{count}} awaiting payment",
+      "awaiting_other": "{{count}} awaiting payment",
+      "awaitingNone": "Nothing awaiting payment",
+      "nextRenewal": "Next renewal",
+      "inDays_one": "in {{count}} day",
+      "inDays_other": "in {{count}} days",
+      "endsToday": "ends today",
+      "noRenewal": "No active cover",
+      "insured": "Insured vehicles",
+      "insuredValue": "{{insured}} of {{total}}",
+      "insuredHint": "with active cover",
+      "paid": "Paid in the last 12 months",
+      "paidHint": "completed payments"
+    },
+    "activity": {
+      "title": "Recent activity",
+      "empty": "No activity yet. Policies you buy and claims you file will show up here.",
+      "policy": {
+        "Draft": "Policy {{ref}} issued, awaiting payment",
+        "Active": "Policy {{ref}} paid — cover is active",
+        "Cancelled": "Policy {{ref}} cancelled",
+        "Expired": "Policy {{ref}} expired"
+      },
+      "claim": {
+        "Submitted": "Claim {{ref}} submitted",
+        "UnderReview": "Claim {{ref}} is under review",
+        "Approved": "Claim {{ref}} approved",
+        "Rejected": "Claim {{ref}} rejected",
+        "Paid": "Claim {{ref}} paid out"
+      }
+    }
+  },
+  "reminders": {
+    "title": "Renewal reminders",
+    "lead": "Active policies that end within 30 days.",
+    "empty": "Nothing ends in the next 30 days.",
+    "endsOn": "Ends {{date}}",
+    "daysLeft_one": "{{count}} day left",
+    "daysLeft_other": "{{count}} days left",
+    "lastDay": "last day of cover",
+    "renew": "Renew",
+    "markRead": "Mark as read",
+    "markAll": "Mark all as read",
+    "unread": "Unread"
   }
 }

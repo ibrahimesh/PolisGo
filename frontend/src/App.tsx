@@ -18,8 +18,8 @@ const RegisterPage = lazy(() =>
 const NotFoundPage = lazy(() =>
   import('./pages/NotFoundPage').then((m) => ({ default: m.NotFoundPage })),
 );
-const WorkspaceHome = lazy(() =>
-  import('./features/workspace/WorkspaceHome').then((m) => ({ default: m.WorkspaceHome })),
+const CabinetHome = lazy(() =>
+  import('./features/overview/CabinetHome').then((m) => ({ default: m.CabinetHome })),
 );
 const WorkspaceSection = lazy(() =>
   import('./features/workspace/WorkspaceSection').then((m) => ({
@@ -43,7 +43,7 @@ export function App() {
       {/* Any signed-in role; nested sections add their own role checks. */}
       <Route path="app" element={<RequireAuth />}>
         <Route element={<CabinetShell />}>
-          <Route index element={<WorkspaceHome />} />
+          <Route index element={<CabinetHome />} />
 
           {(['policies', 'buy', 'profile', 'help'] as const).map((id) => (
             <Route key={id} path={id} element={guard(id)}>

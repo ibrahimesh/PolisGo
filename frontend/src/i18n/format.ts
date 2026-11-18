@@ -34,6 +34,43 @@ export function createNumberFormatter(
       .join('');
 }
 
+// Dates are formatted without Intl month names: trimmed ICU builds lack
+// Azerbaijani (and some Russian genitive) month data and fall back to English.
+// RU and AZ conventionally write 18.11.2026; English gets "18 Nov 2026".
+const EN_MONTHS = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+] as const;
+
+function pad(value: number): string {
+  return String(value).padStart(2, '0');
+}
+
+// "YYYY-MM-DD" (C# DateOnly) is a calendar date: read it as-is, never through
+// Date, so no timezone can shift it by a day.
+export function formatIsoDate(lang: Language, isoDate: string): string {
+  const [y, m, d] = isoDate.slice(0, 10).split('-').map(Number) as [number, number, number];
+  return lang === 'en' ? `${d} ${EN_MONTHS[m - 1] ?? ''} ${y}` : `${pad(d)}.${pad(m)}.${y}`;
+}
+
+// ISO date-time (C# DateTime, UTC): shown in the viewer's local time.
+export function formatDateTime(lang: Language, iso: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return iso;
+  const day = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+  return `${formatIsoDate(lang, day)}, ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
 export function useFormatters() {
   const { i18n } = useTranslation();
   const lang: Language = isLanguage(i18n.resolvedLanguage) ? i18n.resolvedLanguage : 'en';
@@ -48,10 +85,16 @@ export function useFormatters() {
       minimumFractionDigits: 2,
       maximumFractionDigits: 4,
     });
+    const integer = createNumberFormatter(lang, { maximumFractionDigits: 0 });
     return {
       amount,
+      // Money always carries its currency; the API only speaks AZN today.
+      money: (value: number, currency = 'AZN') => `${amount(value)} ${currency}`,
+      integer,
       factor: (value: number) => `×${factor(value)}`,
       factorPlain: factor,
+      date: (isoDate: string) => formatIsoDate(lang, isoDate),
+      dateTime: (iso: string) => formatDateTime(lang, iso),
     };
   }, [lang]);
 }

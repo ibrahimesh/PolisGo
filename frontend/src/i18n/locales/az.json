@@ -422,7 +422,8 @@
     "loading": "Yüklənir",
     "close": "Bağla",
     "dismiss": "Bildirişi bağla",
-    "notifications": "Bildirişlər"
+    "notifications": "Bildirişlər",
+    "retry": "Yenidən cəhd edin"
   },
   "forms": {
     "errorSummary_one": "{{count}} sahə düzəldilməlidir",
@@ -448,5 +449,78 @@
     "backToSite": "Saytın əsas səhifəsinə qayıt",
     "userMenu": "{{name}} hesab menyusu",
     "signedInAs": "Daxil olmusunuz:"
+  },
+  "policyStatus": {
+    "Draft": "Ödənilməyib",
+    "Active": "Qüvvədədir",
+    "Expired": "Müddəti bitib",
+    "Cancelled": "Ləğv edilib"
+  },
+  "overview": {
+    "titleLead": "Salam,",
+    "lead": "Bu gün, {{date}} tarixinə sığortanızın vəziyyəti.",
+    "getQuote": "Qiyməti hesabla",
+    "buy": "Polis al",
+    "error": "İcmalı yükləmək mümkün olmadı.",
+    "empty": {
+      "title": "Hələ polisiniz yoxdur",
+      "body": "Avtomobili və sığorta növünü seçin, dəqiq qiyməti dərhal görün və bir addımda ödəyin.",
+      "action": "İlk polisi al"
+    },
+    "notices": {
+      "reminders_one": "{{count}} polisin müddəti 30 gün ərzində bitir.",
+      "reminders_other": "{{count}} polisin müddəti 30 gün ərzində bitir.",
+      "awaiting_one": "{{count}} polis ödəniş gözləyir.",
+      "awaiting_other": "{{count}} polis ödəniş gözləyir.",
+      "review": "Bax",
+      "pay": "Ödənişə keç"
+    },
+    "stats": {
+      "label": "Sığortanız qısaca",
+      "active": "Qüvvədə olan polislər",
+      "awaiting_one": "{{count}} ödəniş gözləyir",
+      "awaiting_other": "{{count}} ödəniş gözləyir",
+      "awaitingNone": "Ödəniş gözləyən yoxdur",
+      "nextRenewal": "Növbəti yeniləmə",
+      "inDays_one": "{{count}} gün sonra",
+      "inDays_other": "{{count}} gün sonra",
+      "endsToday": "bu gün bitir",
+      "noRenewal": "Qüvvədə olan sığorta yoxdur",
+      "insured": "Sığortalı avtomobillər",
+      "insuredValue": "{{total}} avtomobildən {{insured}}",
+      "insuredHint": "qüvvədə olan sığorta ilə",
+      "paid": "Son 12 ayda ödənilib",
+      "paidHint": "tamamlanmış ödənişlər"
+    },
+    "activity": {
+      "title": "Son hadisələr",
+      "empty": "Hələ hadisə yoxdur. Aldığınız polislər və bildirdiyiniz zərərlər burada görünəcək.",
+      "policy": {
+        "Draft": "{{ref}} polisi rəsmiləşdirildi, ödəniş gözləyir",
+        "Active": "{{ref}} polisi ödənildi — sığorta qüvvədədir",
+        "Cancelled": "{{ref}} polisi ləğv edildi",
+        "Expired": "{{ref}} polisinin müddəti bitdi"
+      },
+      "claim": {
+        "Submitted": "{{ref}} zərəri bildirildi",
+        "UnderReview": "{{ref}} zərəri baxılır",
+        "Approved": "{{ref}} zərəri təsdiqləndi",
+        "Rejected": "{{ref}} zərəri rədd edildi",
+        "Paid": "{{ref}} zərəri üzrə ödəniş edildi"
+      }
+    }
+  },
+  "reminders": {
+    "title": "Yeniləmə xatırlatmaları",
+    "lead": "30 gün ərzində müddəti bitən qüvvədə olan polislər.",
+    "empty": "Növbəti 30 gündə müddəti bitən polis yoxdur.",
+    "endsOn": "{{date}} tarixinədək",
+    "daysLeft_one": "{{count}} gün qalıb",
+    "daysLeft_other": "{{count}} gün qalıb",
+    "lastDay": "sığortanın son günü",
+    "renew": "Yenilə",
+    "markRead": "Oxunmuş kimi qeyd et",
+    "markAll": "Hamısını oxunmuş kimi qeyd et",
+    "unread": "Oxunmayıb"
   }
 }
