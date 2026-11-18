@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Outlet, useLocation } from 'react-router';
 import { useAuth } from '../../auth/AuthContext';
 import { useScrollOnNavigate } from '../../components/layout/useScrollOnNavigate';
+import { NotificationsButton } from '../reminders/NotificationsButton';
 import { sectionsFor } from '../workspace/sections';
 import { BottomNav } from './BottomNav';
 import { CabinetHeader } from './CabinetHeader';
@@ -34,7 +35,9 @@ export function CabinetShell() {
       <Sidebar sections={sections} />
 
       <div className="flex min-h-dvh min-w-0 flex-col">
-        <CabinetHeader />
+        <CabinetHeader
+          notifications={user.role === 'Client' ? <NotificationsButton /> : undefined}
+        />
         {/* Bottom padding clears the fixed phone bar. */}
         <main
           id="main"

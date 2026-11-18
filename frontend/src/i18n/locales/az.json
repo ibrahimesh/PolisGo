@@ -718,5 +718,11 @@
       "viewPolicy": "Polisə bax",
       "another": "Daha bir polis al"
     }
+  },
+  "notifications": {
+    "button_zero": "Bildirişlər, oxunmamış yoxdur",
+    "button_one": "Bildirişlər, {{count}} oxunmamış",
+    "button_other": "Bildirişlər, {{count}} oxunmamış",
+    "note": "Xatırlatmalar polisin bitməsinə 30 gün qalmış görünür. Onlar yalnız burada göstərilir — telefona və ya e-poçta heç nə göndərilmir."
   }
 }

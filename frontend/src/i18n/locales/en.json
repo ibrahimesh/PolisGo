@@ -718,5 +718,11 @@
       "viewPolicy": "View the policy",
       "another": "Buy another policy"
     }
+  },
+  "notifications": {
+    "button_zero": "Notifications, none unread",
+    "button_one": "Notifications, {{count}} unread",
+    "button_other": "Notifications, {{count}} unread",
+    "note": "Reminders appear 30 days before a policy ends. They are shown here only; nothing is sent to your phone or email."
   }
 }

@@ -29,7 +29,7 @@ export function ReminderList({
   return (
     <div className="space-y-3">
       {markRead.isError && <ErrorNotice error={markRead.error} />}
-      <ul className="divide-y divide-line border-y border-line">
+      <ul className={cx('divide-y divide-line', !compact && 'border-y border-line')}>
         {reminders.map((reminder) => {
           const unread = reminder.readAt === null;
           return (
