@@ -12,6 +12,7 @@ React frontend.
 | ![Landing page, dark theme](frontend/docs/screenshots/landing-dark-desktop.png) | ![Landing page, light theme](frontend/docs/screenshots/landing-light-desktop.png) |
 | ![Client overview, dark theme](frontend/docs/screenshots/cabinet-overview-dark-desktop.png) | ![Purchase wizard, light theme](frontend/docs/screenshots/cabinet-buy-light-desktop.png) |
 | ![Claim with its timeline, dark theme](frontend/docs/screenshots/cabinet-claim-dark-desktop.png) | ![Claim wizard, light theme](frontend/docs/screenshots/cabinet-claim-new-light-desktop.png) |
+| ![Claim review with the decision panel, dark theme](frontend/docs/screenshots/staff-review-dark-desktop.png) | ![Agent sales, light theme](frontend/docs/screenshots/staff-sales-light-desktop.png) |
 
 ## What it is
 
@@ -49,17 +50,24 @@ product catalogue (`/api/policy-types`); health check.
   and renewal reminders (active policies ending within 30 days) with read
   marks.
 
-**Agent** — registers vehicles, issues and takes payment for policies, and
-files claims on behalf of a customer; sees only the policies they sold and the
-claims on them; searchable, paged customer directory.
+**Agent** — works their own book: the customers an Admin assigned to them
+(`Customer.AgentId`), never another agent's (404). Registers vehicles for
+them, sells and takes payment for policies, files claims on policies they sold;
+sees only those policies and the claims on them; sales figures and a CSV
+export of their policies.
 
 **Adjuster** — claims queue (unassigned and own); start review (assigns the
-claim), approve an amount up to the claimed sum, reject with a reason, mark
-paid. Only the assigned adjuster (or an Admin) can decide. Customer directory.
+claim), approve an amount up to the claimed sum (two decimals), reject with a
+required reason, pay out. Only the assigned adjuster (or an Admin) can decide.
+Decisions carry the claim's `rowVersion`: a decision made on a version
+someone else has changed is a 409 "Concurrent update". The claim detail lists
+every action with the reason it is unavailable. Sees customers only through
+claims in reach, not the agents' books. CSV export of the queue.
 
-**Admin** — all of the above; creates Agent and Adjuster accounts; dashboard
-statistics (policies and claims by status, premium written, claims paid, 12
-months of activity, average claim resolution time).
+**Admin** — all of the above; creates Agent and Adjuster accounts; assigns
+customers to agents (`PUT /api/customers/{id}/agent`); dashboard statistics
+(policies and claims by status, premium written, claims paid, 12 months of
+activity, average claim resolution time).
 
 **Frontend** (`frontend/`) — landing page with the live calculator and an
 API-driven coverage table, validated sign-in and registration, EN / RU / AZ,
@@ -88,7 +96,27 @@ dark and light themes, Ctrl/⌘+K palette; design system in
 - **Profile and settings** (name, phone, password, language, theme) and
   **Help**.
 
-Staff desks are not built yet ([Roadmap](#roadmap)).
+**Staff desks** (`/app` for Agent, Adjuster, Admin) — the same shell, with
+only the role's own sections in the sidebar, bottom bar and palette:
+- **Overview** from `GET /api/staff/overview`: claims waiting, in review and
+  to pay, decisions in 30 days and the latest ones; premium written, policies
+  sold and the latest sales.
+- **Claims queue** (Adjuster, Admin): "waiting for review", "in my review",
+  "approved, to pay out" and "all" views with counts; search by claim, policy
+  or customer; sort (oldest first by default) and pages in the URL; age
+  flagged after a week; cards on phones; **Export CSV**.
+- **Claim review**: summary, customer and policy, documents with an in-page
+  image/PDF preview, the full timeline, and the decision panel (start review,
+  approve, reject with a reason, pay out, and why each unavailable step is
+  unavailable). A conflicting change reloads the claim and keeps the draft
+  note.
+- **Customers** (Agent, Admin): search by name, email or phone digits; detail
+  with vehicles, policies and claims; **Sell a policy** on the customer's
+  behalf with the purchase wizard's rules and live premium, a new vehicle on
+  the spot, and payment now or later.
+- **Sales** (Agent, Admin): figures, the policy list with filters and **Export
+  CSV** (UTF-8 with BOM, formula-safe text cells).
+- **Help**: how decisions work and what each claim status means.
 
 ## Architecture
 
@@ -246,10 +274,12 @@ instead of `echo` — its redirect writes UTF-16, which Vite does not read.
 dotnet test PolisGo.slnx
 ```
 
-**375 backend tests** (xUnit): domain and service tests on SQLite in-memory
+**418 backend tests** (xUnit): domain and service tests on SQLite in-memory
 and HTTP tests via `WebApplicationFactory` (401/403/404 per role, JSON contract,
 and one client reading, paying, searching, uploading to or withdrawing
-another's policy or claim → 404).
+another's policy or claim → 404; a client on every staff endpoint → 403, an
+agent deciding → 403, one agent's customers hidden from another and from
+adjusters, decision field rules, stale decisions → 409, CSV escaping).
 
 ```bash
 cd frontend
@@ -258,8 +288,8 @@ npx playwright install chromium
 npm run e2e
 ```
 
-**238 frontend unit tests** (Vitest) and **78 end-to-end tests** (Playwright +
-axe-core: 57 at 1440px, plus the 21 cabinet tests again at 390px) against the
+**261 frontend unit tests** (Vitest) and **114 end-to-end tests** (Playwright +
+axe-core: 78 at 1440px, plus the 36 cabinet and staff tests again at 390px) against the
 real API — the e2e suite needs the Docker stack on `:8080`. They cover
 sign-up and sign-in, buying a policy end to end, the certificate download,
 renewal, filing a claim with photos, withdrawing it, the claim timeline after
@@ -267,7 +297,11 @@ an adjuster's decision, a keyboard-only claim, notifications, profile and
 password changes, negative validation on the client and the server (including
 a tampered request), forbidden staff routes and another client's policy or
 claim, field-length limits against SQL Server, the live calculator, languages,
-and axe checks on every page in both themes.
+and axe checks on every page in both themes. Staff: an adjuster approving and
+paying out, a rejection that needs a reason, a decision from a second session
+on a stale claim, a tampered amount refused on its field, keyboard-only
+decisions, the 403 page for each role, an agent seeing only their own
+customers and selling through to payment, and both CSV exports.
 
 ## CI
 
@@ -298,9 +332,11 @@ Generated from the controllers; full schemas in Swagger.
 | POST | `/api/me/claim-updates/{claimId}/read`, `/api/me/claim-updates/read-all` | Client |
 | POST | `/api/quotes/calculate` | Anonymous |
 | GET | `/api/policy-types` | Anonymous |
-| GET, POST | `/api/vehicles` | Signed in (Clients: own only) |
+| GET | `/api/vehicles` | Signed in (Clients: own; staff: customers in scope) |
+| POST | `/api/vehicles` | Client, Agent, Admin (Agents: own customers) |
 | POST | `/api/policies/quote`, `/api/policies` | Client, Agent, Admin |
 | GET | `/api/policies`, `/api/policies/{id}` | Signed in, row-filtered |
+| GET | `/api/policies/export` (CSV, list filters) | Agent, Admin |
 | POST | `/api/policies/{id}/pay` | Client, Agent, Admin |
 | POST | `/api/policies/{id}/cancel` | Signed in, row-filtered |
 | POST | `/api/claims` | Client, Agent, Admin |
@@ -308,8 +344,11 @@ Generated from the controllers; full schemas in Swagger.
 | POST | `/api/claims/{id}/withdraw` | Client, Agent, Admin; row-filtered |
 | POST | `/api/claims/{id}/documents` | Signed in, row-filtered |
 | GET | `/api/claims/{id}/documents/{docId}` | Signed in, row-filtered |
-| POST | `/api/claims/{id}/review`, `/approve`, `/reject`, `/pay` | Adjuster, Admin |
-| GET | `/api/customers`, `/api/customers/{id}` | Admin, Agent, Adjuster |
+| GET | `/api/claims/export` (CSV, list filters) | Adjuster, Admin |
+| POST | `/api/claims/{id}/review`, `/approve`, `/reject`, `/pay` (with `rowVersion`) | Adjuster, Admin |
+| GET | `/api/customers`, `/api/customers/{id}` | Admin, Agent (own book), Adjuster (claims in reach) |
+| PUT | `/api/customers/{id}/agent` | Admin |
+| GET | `/api/staff/overview` | Agent, Adjuster, Admin |
 | POST | `/api/users/staff` | Admin |
 | GET | `/api/admin/stats` | Admin |
 | GET | `/health` | Anonymous |
@@ -318,8 +357,12 @@ Generated from the controllers; full schemas in Swagger.
 
 Not done yet:
 
-- The adjuster claims desk, agent desk and admin panel — those routes are
-  still placeholders (claims are decided through the API for now).
+- The admin panel (staff accounts, assigning customers to agents, stats) —
+  the route is still a placeholder; those are API calls for now.
+- "Request more information" from the customer: the claim state machine has
+  no such step yet.
+- Releasing or reassigning a claim another adjuster has taken.
+- Agents taking on a brand-new customer themselves (an Admin assigns them).
 - Email or SMS notifications; today updates and reminders live in the
   cabinet only.
 - Malware scanning and object storage for claim documents (they are checked
