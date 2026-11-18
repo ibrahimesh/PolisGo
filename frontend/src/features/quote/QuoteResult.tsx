@@ -24,6 +24,10 @@ interface QuoteResultProps {
   updating: boolean;
   // The form currently holds invalid input, so the figure on screen is stale.
   stale: boolean;
+  // The purchase wizard prices from stored data, so its figure is exact:
+  // it replaces the "indicative" label and note.
+  label?: string;
+  note?: string;
 }
 
 export function QuoteResult({
@@ -32,8 +36,11 @@ export function QuoteResult({
   termMonths,
   updating,
   stale,
+  label,
+  note,
 }: QuoteResultProps) {
   const { t } = useTranslation();
+  const resultLabel = label ?? t('calculator.resultLabel');
   const [explainOpen, setExplainOpen] = useState(false);
 
   return (
@@ -46,7 +53,7 @@ export function QuoteResult({
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
         <span id="quote-result-label">
-          <Label className="text-paper-muted">{t('calculator.resultLabel')}</Label>
+          <Label className="text-paper-muted">{resultLabel}</Label>
         </span>
         <div className="flex items-center gap-2">
           {/* visibility, not an opacity fade: a half-faded label fails contrast,
@@ -63,6 +70,8 @@ export function QuoteResult({
           breakdown={breakdown}
           termMonths={termMonths}
           stale={stale}
+          label={resultLabel}
+          note={note ?? t('calculator.estimate')}
           onExplain={() => setExplainOpen(true)}
         />
       ) : (
@@ -92,11 +101,15 @@ function ResultBody({
   breakdown,
   termMonths,
   stale,
+  label,
+  note,
   onExplain,
 }: {
   breakdown: PremiumBreakdown;
   termMonths: number;
   stale: boolean;
+  label: string;
+  note: string;
   onExplain: () => void;
 }) {
   const { t } = useTranslation();
@@ -112,7 +125,7 @@ function ResultBody({
         <div>
           {/* The animated figure is decorative; screen readers get the final value once. */}
           <p className="sr-only" aria-live="polite" aria-atomic="true">
-            {t('calculator.resultLabel')}: {format.amount(breakdown.premium)} {breakdown.currency}
+            {label}: {format.amount(breakdown.premium)} {breakdown.currency}
           </p>
           <p aria-hidden="true" className="flex items-baseline gap-3">
             <span className="font-serif text-3xl leading-none tracking-[-0.03em] tabular sm:text-4xl">
@@ -137,7 +150,7 @@ function ResultBody({
               </p>
             </div>
           )}
-          <p className="text-sm text-paper-muted">{t('calculator.estimate')}</p>
+          <p className="text-sm text-paper-muted">{note}</p>
           <button
             type="button"
             onClick={onExplain}
