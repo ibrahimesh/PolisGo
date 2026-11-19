@@ -129,7 +129,9 @@ jobs:
         run: npm run build
 
   # The full Playwright suite against the real stack: SQL Server and the API
-  # from docker compose (migrations and the dev admin seed run on start-up),
+  # from docker compose with the demo data override (migrations, the dev
+  # admin seed and the demo accounts run on start-up; the dashboard tests
+  # read the demo history),
   # the Vite dev server started by Playwright. Throwaway containers, so the
   # credentials below are CI-only values, not secrets.
   e2e:
@@ -137,6 +139,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
+      COMPOSE_FILE: docker-compose.yml:docker-compose.demo.yml
       SQL_SA_PASSWORD: Ci-Only-Sql-Passw0rd!
       JWT_SECRET_KEY: ci-only-jwt-signing-key-not-a-secret-0123456789
       SEED_ADMIN_EMAIL: admin@polisgo.test
