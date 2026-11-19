@@ -1005,7 +1005,7 @@
     },
     "incident": {
       "date": "Date of the incident",
-      "dateHint": "Between {{from}} and {{to}}.",
+      "dateHint": "Must be within the cover period: from {{from}} to {{to}}.",
       "type": "What happened",
       "typePlaceholder": "Choose…",
       "location": "Where it happened",
@@ -1446,5 +1446,51 @@
         "Withdrawn": "The customer withdrew it before a decision. Final."
       }
     }
+  },
+  "dateField": {
+    "placeholder": "DD.MM.YYYY",
+    "openCalendar": "Open calendar",
+    "calendar": "Choose a date",
+    "previousMonth": "Previous month",
+    "nextMonth": "Next month",
+    "month": "Month",
+    "year": "Year",
+    "today": "Today",
+    "todayWord": "today",
+    "anyDate": "Any date.",
+    "between": "From {{min}} to {{max}}.",
+    "from": "From {{min}} onwards.",
+    "until": "Up to {{max}}.",
+    "dayLabel": "{{weekday}}, {{day}} {{month}} {{year}}",
+    "months": [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December"
+    ],
+    "monthsOfDay": [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December"
+    ],
+    "weekdays": ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"],
+    "weekdaysLong": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
   }
 }

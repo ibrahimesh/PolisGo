@@ -1005,7 +1005,7 @@
     },
     "incident": {
       "date": "Hadisənin tarixi",
-      "dateHint": "{{from}} – {{to}} arasında.",
+      "dateHint": "Yalnız sığorta müddətində: {{from}} – {{to}} arasında.",
       "type": "Nə baş verdi",
       "typePlaceholder": "Seçin…",
       "location": "Hadisə yeri",
@@ -1446,5 +1446,59 @@
         "Withdrawn": "Müştəri qərardan əvvəl geri götürüb. Son."
       }
     }
+  },
+  "dateField": {
+    "placeholder": "GG.AA.İİİİ",
+    "openCalendar": "Təqvimi aç",
+    "calendar": "Tarix seçin",
+    "previousMonth": "Əvvəlki ay",
+    "nextMonth": "Növbəti ay",
+    "month": "Ay",
+    "year": "İl",
+    "today": "Bu gün",
+    "todayWord": "bu gün",
+    "anyDate": "İstənilən tarix.",
+    "between": "{{min}} – {{max}} arasında.",
+    "from": "{{min}} tarixindən başlayaraq.",
+    "until": "{{max}} tarixinədək.",
+    "dayLabel": "{{day}} {{month}} {{year}}, {{weekday}}",
+    "months": [
+      "Yanvar",
+      "Fevral",
+      "Mart",
+      "Aprel",
+      "May",
+      "İyun",
+      "İyul",
+      "Avqust",
+      "Sentyabr",
+      "Oktyabr",
+      "Noyabr",
+      "Dekabr"
+    ],
+    "monthsOfDay": [
+      "yanvar",
+      "fevral",
+      "mart",
+      "aprel",
+      "may",
+      "iyun",
+      "iyul",
+      "avqust",
+      "sentyabr",
+      "oktyabr",
+      "noyabr",
+      "dekabr"
+    ],
+    "weekdays": ["B.e", "Ç.a", "Ç", "C.a", "C", "Ş", "B"],
+    "weekdaysLong": [
+      "bazar ertəsi",
+      "çərşənbə axşamı",
+      "çərşənbə",
+      "cümə axşamı",
+      "cümə",
+      "şənbə",
+      "bazar"
+    ]
   }
 }

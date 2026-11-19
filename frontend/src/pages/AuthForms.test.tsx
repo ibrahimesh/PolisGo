@@ -41,8 +41,8 @@ async function fillValidRegister(user: ReturnType<typeof userEvent.setup>) {
   await user.type(screen.getByLabelText('Full name'), 'Leyla Məmmədova');
   await user.type(screen.getByLabelText('Email'), 'Leyla.M@Mail.az');
   await user.type(screen.getByLabelText('Phone'), '0501234567');
-  await user.type(screen.getByLabelText('Date of birth'), '1990-05-01');
-  await user.type(screen.getByLabelText('Driving licence issued on'), '2010-06-01');
+  await user.type(screen.getByLabelText('Date of birth'), '01.05.1990');
+  await user.type(screen.getByLabelText('Driving licence issued on'), '01.06.2010');
   await user.type(screen.getByLabelText('Password'), 'Secret123');
   await user.type(screen.getByLabelText('Repeat password'), 'Secret123');
 }
@@ -73,7 +73,7 @@ describe('Register form', () => {
     await user.type(screen.getByLabelText('Full name'), 'x');
     await user.type(screen.getByLabelText('Email'), 'abc@');
     await user.type(screen.getByLabelText('Phone'), '12');
-    await user.type(screen.getByLabelText('Date of birth'), '2015-01-01');
+    await user.type(screen.getByLabelText('Date of birth'), '01.01.2015');
     await user.type(screen.getByLabelText('Password'), 'abc');
     await user.type(screen.getByLabelText('Repeat password'), 'abd');
     await user.click(screen.getByRole('button', { name: 'Create account' }));

@@ -8,6 +8,7 @@ import { Button } from '../components/ui/Button';
 import { ErrorNotice } from '../components/ui/ErrorNotice';
 import { FormErrorSummary } from '../components/ui/FormErrorSummary';
 import type { SummaryField } from '../components/ui/FormErrorSummary';
+import { FormDateField } from '../components/ui/FormDateField';
 import { Input } from '../components/ui/Input';
 import { useToast } from '../components/ui/ToastProvider';
 import { applyServerFieldErrors } from '../features/auth/applyServerErrors';
@@ -162,23 +163,22 @@ export function RegisterPage() {
             />
           </div>
           <div className="grid gap-6 sm:grid-cols-2">
-            <Input
+            <FormDateField
               id={id('birthDate')}
+              control={control}
+              name="birthDate"
               label={labels.birthDate}
-              type="date"
-              autoComplete="bday"
               min={birthBounds.min}
               max={birthBounds.max}
               error={errors.birthDate?.message}
-              {...register('birthDate')}
             />
-            <Input
+            <FormDateField
               id={id('drivingLicenseDate')}
+              control={control}
+              name="drivingLicenseDate"
               label={labels.drivingLicenseDate}
-              type="date"
               max={todayIso()}
               error={errors.drivingLicenseDate?.message}
-              {...register('drivingLicenseDate')}
             />
           </div>
           <PasswordField

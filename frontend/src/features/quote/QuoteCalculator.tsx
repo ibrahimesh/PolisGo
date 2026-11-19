@@ -8,10 +8,13 @@ import { isApiError } from '../../api/errors';
 import { POLICY_TYPE_CODES } from '../../api/types';
 import { Button } from '../../components/ui/Button';
 import { ErrorNotice } from '../../components/ui/ErrorNotice';
+import { FormDateField } from '../../components/ui/FormDateField';
 import { Input } from '../../components/ui/Input';
+import { todayIso } from '../../lib/dates';
 import { Select } from '../../components/ui/Select';
 import { fieldMessageKey } from '../../i18n/apiErrors';
 import { useDebouncedValue } from '../../lib/hooks';
+import { useLinkedValidation } from '../auth/useLinkedValidation';
 import { QuoteResult } from './QuoteResult';
 import { createQuoteSchema, DEFAULT_QUOTE, QUOTE_FIELDS } from './quoteSchema';
 import type { QuoteFormValues } from './quoteSchema';
@@ -28,7 +31,10 @@ export function QuoteCalculator() {
     mode: 'onChange',
     defaultValues: DEFAULT_QUOTE,
   });
-  const { register, control, formState, setError } = form;
+  const { register, control, formState, setError, trigger, getFieldState } = form;
+  // The licence rule is relative to the birth date: recheck it when either
+  // changes, once the user has reached it.
+  useLinkedValidation(control, trigger, getFieldState, 'driverBirthDate', 'drivingLicenseDate');
 
   // Price whatever is on screen as soon as it is valid; no submit button.
   const values = useWatch({ control });
@@ -125,17 +131,19 @@ export function QuoteCalculator() {
           />
         </div>
 
-        <Input
+        <FormDateField
+          control={control}
+          name="driverBirthDate"
           label={t('calculator.birthDate')}
-          type="date"
+          max={todayIso()}
           error={errors.driverBirthDate?.message}
-          {...register('driverBirthDate', { deps: ['drivingLicenseDate'] })}
         />
-        <Input
+        <FormDateField
+          control={control}
+          name="drivingLicenseDate"
           label={t('calculator.licenceDate')}
-          type="date"
+          max={todayIso()}
           error={errors.drivingLicenseDate?.message}
-          {...register('drivingLicenseDate', { deps: ['driverBirthDate'] })}
         />
 
         <div className="grid grid-cols-2 gap-4">
