@@ -44,7 +44,7 @@ public class AuthService : IAuthService
             PasswordHash = _passwordHasher.Hash(request.Password),
             FullName = request.FullName.Trim(),
             // Self-registration always creates a Client. Staff accounts must
-            // be provisioned by an Admin through CreateStaffUserAsync.
+            // be provisioned by an Admin (StaffAdminService).
             Role = UserRole.Client,
             CreatedAt = now
         };
@@ -79,8 +79,9 @@ public class AuthService : IAuthService
         var email = request.Email.Trim().ToLowerInvariant();
         var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == email, cancellationToken);
 
-        // Same exception for unknown email and wrong password to avoid account enumeration.
-        if (user is null || !_passwordHasher.Verify(request.Password, user.PasswordHash))
+        // Same exception for unknown email, wrong password and a deactivated
+        // account: nothing tells a caller which one it was.
+        if (user is null || !user.IsActive || !_passwordHasher.Verify(request.Password, user.PasswordHash))
         {
             throw new UnauthorizedException();
         }
@@ -99,40 +100,6 @@ public class AuthService : IAuthService
     {
         var user = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId, cancellationToken)
             ?? throw new NotFoundException(nameof(User), userId);
-
-        return new CurrentUserResponse(user.Id, user.Email, user.FullName, user.Role);
-    }
-
-    public async Task<CurrentUserResponse> CreateStaffUserAsync(CreateStaffUserRequest request, CancellationToken cancellationToken = default)
-    {
-        // Admin is seeded, not created via API — this endpoint is strictly for
-        // operational staff provisioning.
-        if (request.Role is not (UserRole.Agent or UserRole.Adjuster))
-        {
-            throw new ValidationException(nameof(request.Role),
-                "Staff accounts may only have role Agent or Adjuster.");
-        }
-
-        ValidateStaff(request);
-
-        var email = request.Email.Trim().ToLowerInvariant();
-        if (await _db.Users.AnyAsync(u => u.Email == email, cancellationToken))
-        {
-            throw new ConflictException("A user with this email already exists.");
-        }
-
-        var user = new User
-        {
-            Id = Guid.NewGuid(),
-            Email = email,
-            PasswordHash = _passwordHasher.Hash(request.Password),
-            FullName = request.FullName.Trim(),
-            Role = request.Role,
-            CreatedAt = DateTime.UtcNow
-        };
-
-        _db.Users.Add(user);
-        await _db.SaveChangesAsync(cancellationToken);
 
         return new CurrentUserResponse(user.Id, user.Email, user.FullName, user.Role);
     }
@@ -171,23 +138,5 @@ public class AuthService : IAuthService
             throw new ValidationException(errors);
         }
         return phone!;
-    }
-
-    private static void ValidateStaff(CreateStaffUserRequest request)
-    {
-        var errors = new Dictionary<string, string[]>();
-        void Check(string field, string? error)
-        {
-            if (error is not null) errors[field] = [error];
-        }
-
-        Check(nameof(request.Email), AuthValidation.EmailError(request.Email));
-        Check(nameof(request.Password), AuthValidation.PasswordError(request.Password));
-        Check(nameof(request.FullName), AuthValidation.FullNameError(request.FullName));
-
-        if (errors.Count > 0)
-        {
-            throw new ValidationException(errors);
-        }
     }
 }

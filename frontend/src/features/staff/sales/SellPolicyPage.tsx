@@ -22,7 +22,7 @@ import { ErrorNotice } from '../../../components/ui/ErrorNotice';
 import { FormErrorSummary } from '../../../components/ui/FormErrorSummary';
 import type { SummaryField } from '../../../components/ui/FormErrorSummary';
 import { AlertIcon, ArrowLeftIcon } from '../../../components/ui/icons';
-import { Input } from '../../../components/ui/Input';
+import { FormDateField } from '../../../components/ui/FormDateField';
 import { Select } from '../../../components/ui/Select';
 import { Skeleton } from '../../../components/ui/Skeleton';
 import { useToast } from '../../../components/ui/ToastProvider';
@@ -316,15 +316,15 @@ function SellForm({
           </fieldset>
 
           <div className="grid gap-6 sm:grid-cols-2">
-            <Input
+            <FormDateField
               id={fieldId('startDate')}
+              control={control}
+              name="startDate"
               label={labels.startDate}
-              type="date"
               min={bounds.min}
               max={bounds.max}
               hint={t('wizard.fields.startDateHint')}
               error={errors.startDate?.message}
-              {...register('startDate')}
             />
             <Select
               id={fieldId('termMonths')}

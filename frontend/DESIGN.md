@@ -147,7 +147,8 @@ and polygon while the labels move to the breakdown table directly below (at
 `Label` · `PageHeader` · `PolicyStatusBadge` · `ClaimStatusBadge` · `StepNav`
 (both wizards) · `QuoteResult` (full or compact) · `Textarea` (with a live
 count) · `Pagination` · `FileUploader` · `ExportButton` · `Modal`
-(`size="wide"` for document previews).
+(`size="wide"` for document previews) · `DateField` (with `FormDateField`
+and `DateFilterField`) · `StaffPicker` · `BarChart`.
 
 - A visible 2px accent focus ring on everything focusable.
 - Every field has a visible label; errors are linked with `aria-describedby`,
@@ -219,6 +220,24 @@ count) · `Pagination` · `FileUploader` · `ExportButton` · `Modal`
   the kept note in a read-only field; nothing is lost silently.
 - **Document preview.** The wide modal shows an image (`object-contain`,
   70dvh) or a PDF in a titled iframe; the blob URL is revoked on close.
+- **DateField.** A normal text control showing DD.MM.YYYY in every language
+  with a calendar button inside its right edge. The calendar is a bordered
+  `surface` popover (not a modal): month and year selects, a Monday-first
+  grid of 36px days, today ringed with `line-strong`, the chosen day filled
+  with the accent, days outside min/max `muted` and struck through (the
+  reason is written under the grid and under the field, never colour alone).
+  It fits 390px (min(21rem, 100vw − 2rem)).
+- **Charts (admin dashboard).** One series per chart, filled with the accent,
+  2px rounded data ends, 1px `line` gridlines with `muted` 14px labels sized
+  to fit, no legend (the title names the series and its unit), no dual axes.
+  The chart is one tab stop; arrow keys and hover show a `surface` tooltip,
+  and a "Show the numbers as a table" disclosure follows each chart. Short
+  categorical breakdowns (claims by status, top agents) are text rows with a
+  3px-high accent bar and the number written out.
+- **Choice chips.** Period presets and queue views are bordered chips that
+  wrap (real radios or links); the current one gets the accent border and
+  `surface-2`. Use them instead of `SegmentedControl` when the options may
+  not fit one row at 390px.
 - **Empty and loading.** Every list has a real empty state (and a separate
   "nothing matches" state); skeletons mirror the loaded layout. Nothing is
   mocked.

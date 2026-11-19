@@ -124,7 +124,8 @@ public class PolicyService : IPolicyService
                 Response = new PolicyRow(
                     p.Id, p.PolicyNumber, p.CustomerId, p.VehicleId, p.PolicyTypeId, p.PolicyType.Code,
                     p.AgentId, p.StartDate, p.EndDate, p.Premium, p.Status, p.CreatedAt,
-                    p.Vehicle.Make, p.Vehicle.Model, p.Vehicle.Year, p.Vehicle.PlateNumber, p.Customer.FullName),
+                    p.Vehicle.Make, p.Vehicle.Model, p.Vehicle.Year, p.Vehicle.PlateNumber, p.Customer.FullName,
+                    p.Agent != null ? p.Agent.FullName : null),
                 HolderName = p.Customer.FullName,
                 p.Vehicle.Vin,
                 p.Vehicle.EngineCapacityCc,
@@ -211,6 +212,11 @@ public class PolicyService : IPolicyService
         if (query.Status is { } status)
         {
             policies = policies.WhereEffectiveStatus(status, today);
+        }
+
+        if (query.AgentId is { } agentId)
+        {
+            policies = policies.Where(p => p.AgentId == agentId);
         }
 
         if (!string.IsNullOrWhiteSpace(query.PolicyTypeCode))
@@ -426,7 +432,8 @@ public class PolicyService : IPolicyService
         query.Select(p => new PolicyRow(
             p.Id, p.PolicyNumber, p.CustomerId, p.VehicleId, p.PolicyTypeId, p.PolicyType.Code,
             p.AgentId, p.StartDate, p.EndDate, p.Premium, p.Status, p.CreatedAt,
-            p.Vehicle.Make, p.Vehicle.Model, p.Vehicle.Year, p.Vehicle.PlateNumber, p.Customer.FullName));
+            p.Vehicle.Make, p.Vehicle.Model, p.Vehicle.Year, p.Vehicle.PlateNumber, p.Customer.FullName,
+            p.Agent != null ? p.Agent.FullName : null));
 
     private async Task<PolicyResponse> LoadResponseAsync(
         Guid policyId, DateOnly today, CancellationToken cancellationToken)
@@ -500,7 +507,8 @@ internal sealed record PolicyRow(
     string Model,
     int Year,
     string PlateNumber,
-    string CustomerName)
+    string CustomerName,
+    string? AgentName)
 {
     public PolicyResponse ToResponse(DateOnly today)
     {
@@ -512,6 +520,7 @@ internal sealed record PolicyRow(
             DateOnly.FromDateTime(StartDate), DateOnly.FromDateTime(EndDate), Premium, Tariff.Currency,
             effective, CreatedAt,
             new PolicyVehicleSummary(VehicleId, Make, Model, Year, PlateNumber),
-            CustomerName);
+            CustomerName,
+            AgentName);
     }
 }

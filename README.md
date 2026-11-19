@@ -13,6 +13,7 @@ React frontend.
 | ![Client overview, dark theme](frontend/docs/screenshots/cabinet-overview-dark-desktop.png) | ![Purchase wizard, light theme](frontend/docs/screenshots/cabinet-buy-light-desktop.png) |
 | ![Claim with its timeline, dark theme](frontend/docs/screenshots/cabinet-claim-dark-desktop.png) | ![Claim wizard, light theme](frontend/docs/screenshots/cabinet-claim-new-light-desktop.png) |
 | ![Claim review with the decision panel, dark theme](frontend/docs/screenshots/staff-review-dark-desktop.png) | ![Agent sales, light theme](frontend/docs/screenshots/staff-sales-light-desktop.png) |
+| ![Admin dashboard, light theme](frontend/docs/screenshots/admin-dashboard-light-desktop.png) | ![Audit log, dark theme](frontend/docs/screenshots/admin-audit-dark-desktop.png) |
 
 ## What it is
 
@@ -64,10 +65,15 @@ someone else has changed is a 409 "Concurrent update". The claim detail lists
 every action with the reason it is unavailable. Sees customers only through
 claims in reach, not the agents' books. CSV export of the queue.
 
-**Admin** — all of the above; creates Agent and Adjuster accounts; assigns
-customers to agents (`PUT /api/customers/{id}/agent`); dashboard statistics
-(policies and claims by status, premium written, claims paid, 12 months of
-activity, average claim resolution time).
+**Admin** — all of the above; manages staff accounts (create Agent,
+Adjuster or Admin with the registration rules; deactivate, reactivate;
+change role), never their own account and never the last active admin;
+assigns customers to agents; reads the dashboard for any period up to 24
+months and the audit log. Every staff account carries a security stamp in its
+token, checked on each request: deactivation or a role change ends that
+person's open sessions at once, and a deactivated account can't sign in.
+Staff actions (creation, deactivation, reactivation, role changes, customer
+assignment) are recorded in the audit log from this release on.
 
 **Frontend** (`frontend/`) — landing page with the live calculator and an
 API-driven coverage table, validated sign-in and registration, EN / RU / AZ,
@@ -117,6 +123,22 @@ only the role's own sections in the sidebar, bottom bar and palette:
 - **Sales** (Agent, Admin): figures, the policy list with filters and **Export
   CSV** (UTF-8 with BOM, formula-safe text cells).
 - **Help**: how decisions work and what each claim status means.
+
+**Admin panel** — the Admin's `/app` is a **dashboard** for a chosen period
+(3 to 24 months or custom): totals, premium, policies and claims by month as
+accessible charts (hover and arrow-key values, a data table each), claims by
+status and top agents. **Staff**: search, role and status filters, create in a
+dialog, role change and deactivation behind a confirm that says what follows.
+**Customers** with an agent filter and assignment. **All policies** with who
+sold them, an agent filter and CSV. **Claims** with incident-date filters.
+**Audit log** filtered by person, type and dates. **Products and rates**,
+read-only. Help has an admin section.
+
+**DateField** — every date in the app is typed as DD.MM.YYYY in every
+language (pasted ISO or day-first dates work too), with its own calendar in
+EN/RU/AZ (arrow, Page and Home/End keys, month and year pickers); days
+outside min/max are crossed out and the allowed range is written under the
+field, e.g. "Must be within the cover period: from 1 Mar 2026 to today".
 
 ## Architecture
 
@@ -237,6 +259,34 @@ npm run dev
 Open http://localhost:5173. The port is fixed because the API's CORS list
 allows only `:5173` and `:3000`.
 
+### Demo data (optional)
+
+> **Demo accounts, not for production.** The demo data is fake people, cars,
+> policies and claims for trying the app out.
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.demo.yml up --build
+```
+
+On first start the API adds demo agents, adjusters and clients, their
+vehicles, policies started months ago with their payments, and claims in every
+status with their history. It runs once per database (a marker account), and
+**refuses to run when `ASPNETCORE_ENVIRONMENT` is `Production`**. The flag is
+`Demo__SeedData=true` if you set it another way.
+
+All demo accounts share one password: `DEMO_PASSWORD` from `.env`, or
+`Demo-Passw0rd` when it is not set (never the admin password). Sign in as,
+for example:
+
+| Account | Role |
+| ------- | ---- |
+| `demo.agent1@demo.polisgo.az` (Leyla Əliyeva) | Agent, four customers |
+| `demo.agent2@demo.polisgo.az` (Tural Hüseynov) | Agent, three customers |
+| `demo.adjuster1@demo.polisgo.az` (Rauf Məmmədli) | Adjuster |
+| `demo.aysel@demo.polisgo.az` (Aysel Həsənova) | Client |
+
+The admin is still the one from `SEED_ADMIN_EMAIL`.
+
 ## Local development (without Docker)
 
 Requires the .NET 10 SDK, SQL Server LocalDB (Windows; the connection string
@@ -274,7 +324,7 @@ instead of `echo` — its redirect writes UTF-16, which Vite does not read.
 dotnet test PolisGo.slnx
 ```
 
-**420 backend tests** (xUnit): domain and service tests on SQLite in-memory
+**449 backend tests** (xUnit): domain and service tests on SQLite in-memory
 and HTTP tests via `WebApplicationFactory` (401/403/404 per role, JSON contract,
 and one client reading, paying, searching, uploading to or withdrawing
 another's policy or claim → 404; a client on every staff endpoint → 403, an
@@ -288,7 +338,7 @@ npx playwright install chromium
 npm run e2e
 ```
 
-**261 frontend unit tests** (Vitest) and **114 end-to-end tests** (Playwright +
+**309 frontend unit tests** (Vitest) and **146 end-to-end tests** (Playwright +
 axe-core: 78 at 1440px, plus the 36 cabinet and staff tests again at 390px) against the
 real API — the e2e suite needs the Docker stack on `:8080`. They cover
 sign-up and sign-in, buying a policy end to end, the certificate download,
@@ -301,7 +351,14 @@ and axe checks on every page in both themes. Staff: an adjuster approving and
 paying out, a rejection that needs a reason, a decision from a second session
 on a stale claim, a tampered amount refused on its field, keyboard-only
 decisions, the 403 page for each role, an agent seeing only their own
-customers and selling through to payment, and both CSV exports.
+customers and selling through to payment, and both CSV exports. Admin: the
+dashboard on demo data, staff creation, deactivation refusing the next
+sign-in, a role change ending the old session, your own account protected,
+assignment seen by the agent and in the audit feed, the all-policies export,
+the 403 page for every other role, and DateField typing, pasting, invalid
+dates, the Azerbaijani calendar from the keyboard and the claim's allowed
+days. The backend tests also check that a deactivated user's existing token
+stops working and that the last active admin is kept.
 
 ## CI
 
@@ -349,16 +406,23 @@ Generated from the controllers; full schemas in Swagger.
 | GET | `/api/customers`, `/api/customers/{id}` | Admin, Agent (own book), Adjuster (claims in reach) |
 | PUT | `/api/customers/{id}/agent` | Admin |
 | GET | `/api/staff/overview` | Agent, Adjuster, Admin |
-| POST | `/api/users/staff` | Admin |
+| GET, POST | `/api/users/staff` (list: search, role, status, paged) | Admin |
+| POST | `/api/users/{id}/deactivate`, `/api/users/{id}/reactivate` | Admin |
+| PUT | `/api/users/{id}/role` | Admin |
 | GET | `/api/admin/stats` | Admin |
+| GET | `/api/admin/dashboard` (from, to; 24 months max) | Admin |
+| GET | `/api/admin/audit` (actor, entity type, from, to, paged) | Admin |
 | GET | `/health` | Anonymous |
 
 ## Roadmap
 
 Not done yet:
 
-- The admin panel (staff accounts, assigning customers to agents, stats) —
-  the route is still a placeholder; those are API calls for now.
+- Editing products and base rates (read-only; seeded with the database).
+- Password resets for staff (an admin can deactivate and create; there is no
+  reset email).
+- Staff actions before this release were not recorded, so the audit log
+  starts here for them (status history goes back to the start).
 - "Request more information" from the customer: the claim state machine has
   no such step yet.
 - Releasing or reassigning a claim another adjuster has taken.

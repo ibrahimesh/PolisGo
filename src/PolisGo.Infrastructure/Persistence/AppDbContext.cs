@@ -22,6 +22,7 @@ public class AppDbContext : DbContext, IApplicationDbContext
     public DbSet<PolicyStatusHistory> PolicyStatusHistory => Set<PolicyStatusHistory>();
     public DbSet<PolicyReminderRead> PolicyReminderReads => Set<PolicyReminderRead>();
     public DbSet<ClaimUpdateRead> ClaimUpdateReads => Set<ClaimUpdateRead>();
+    public DbSet<AuditEntry> AuditEntries => Set<AuditEntry>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

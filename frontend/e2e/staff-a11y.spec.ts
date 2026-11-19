@@ -128,4 +128,59 @@ for (const theme of THEMES) {
       expect(p.getByRole('heading', { name: 'Customers and sales' })).toBeVisible(),
     );
   });
+
+  test(`admin pages pass axe and fit the viewport (${theme})`, async ({ page }) => {
+    const admin = await (await adminApi(page)).createStaff('Admin');
+    const { user } = await registerSession(page);
+    const customerId = await (await adminApi(page)).customerIdFor(user.email);
+    await seedPreferences(page, { theme, lang: 'en' });
+    await openSession(page, admin.session);
+
+    await check(page, '/app?range=24m', (p) =>
+      expect(p.getByRole('heading', { name: 'Top agents by premium' })).toBeVisible(),
+    );
+    await test.step('a chart with its table open', async () => {
+      await page.getByText('Show the numbers as a table').first().click();
+      await expectAccessible(page);
+    });
+    await check(page, '/app/admin/staff', (p) =>
+      expect(p.getByText(/^\d+ accounts?$/)).toBeVisible(),
+    );
+    await test.step('create dialog with an error summary', async () => {
+      await page.getByRole('button', { name: 'Add a staff member' }).click();
+      await page.getByRole('button', { name: 'Create the account' }).click();
+      await expect(page.getByRole('dialog').getByTestId('error-summary')).toBeVisible();
+      await expectNoHorizontalScroll(page);
+      await expectAccessible(page);
+      await page.keyboard.press('Escape');
+    });
+    await check(page, '/app/customers', (p) =>
+      expect(p.getByText(/^\d+ customers?$/)).toBeVisible(),
+    );
+    await check(page, `/app/customers/${customerId}`, (p) =>
+      expect(p.getByRole('region', { name: 'Agent' })).toBeVisible(),
+    );
+    await check(page, '/app/admin/policies', (p) =>
+      expect(p.getByText(/^\d+ polic(y|ies)$/)).toBeVisible(),
+    );
+    await check(page, '/app/claims?view=all', (p) =>
+      expect(p.getByText(/^\d+ claims?$/)).toBeVisible(),
+    );
+    await check(page, '/app/admin/audit', (p) =>
+      expect(p.getByText(/^\d+ events?$/)).toBeVisible(),
+    );
+    await test.step('a calendar open in a date filter', async () => {
+      await page.getByRole('button', { name: 'Open calendar' }).first().click();
+      await expect(page.getByRole('dialog', { name: 'Choose a date' })).toBeVisible();
+      await expectNoHorizontalScroll(page);
+      await expectAccessible(page);
+      await page.keyboard.press('Escape');
+    });
+    await check(page, '/app/admin/policy-types', (p) =>
+      expect(p.getByText(/rates are illustrative/)).toBeVisible(),
+    );
+    await check(page, '/app/help', (p) =>
+      expect(p.getByRole('heading', { name: 'The admin panel' })).toBeVisible(),
+    );
+  });
 }

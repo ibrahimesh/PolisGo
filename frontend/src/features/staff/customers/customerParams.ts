@@ -19,9 +19,17 @@ export interface CustomerListState {
   search: string;
   sort: CustomerSortId;
   page: number;
+  // Admins: an agent's id, 'none' for unassigned customers, '' for everyone.
+  agent: string;
 }
 
-export const DEFAULT_CUSTOMER_LIST: CustomerListState = { search: '', sort: 'newest', page: 1 };
+export const DEFAULT_CUSTOMER_LIST: CustomerListState = {
+  search: '',
+  sort: 'newest',
+  page: 1,
+  agent: '',
+};
+const GUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export function readCustomerList(params: URLSearchParams): CustomerListState {
   const sort = params.get('sort') ?? '';
@@ -30,6 +38,9 @@ export function readCustomerList(params: URLSearchParams): CustomerListState {
     search: (params.get('q') ?? '').slice(0, CUSTOMER_SEARCH_MAX),
     sort: CUSTOMER_SORTS.some((o) => o.id === sort) ? (sort as CustomerSortId) : 'newest',
     page: Number.isFinite(page) && page > 0 ? page : 1,
+    agent: ((agent) => (agent === 'none' || GUID.test(agent) ? agent : ''))(
+      params.get('agent') ?? '',
+    ),
   };
 }
 
@@ -38,6 +49,7 @@ export function writeCustomerList(state: CustomerListState): URLSearchParams {
   if (state.search.trim()) params.set('q', state.search.trim());
   if (state.sort !== DEFAULT_CUSTOMER_LIST.sort) params.set('sort', state.sort);
   if (state.page > 1) params.set('page', String(state.page));
+  if (state.agent) params.set('agent', state.agent);
   return params;
 }
 
@@ -45,6 +57,11 @@ export function toCustomerQuery(state: CustomerListState): ListCustomersQuery {
   const sort = CUSTOMER_SORTS.find((o) => o.id === state.sort) ?? CUSTOMER_SORTS[0];
   return {
     ...(state.search.trim() ? { search: state.search.trim() } : {}),
+    ...(state.agent === 'none'
+      ? { unassigned: true }
+      : state.agent
+        ? { agentId: state.agent }
+        : {}),
     sortBy: sort.sortBy,
     sortDir: sort.sortDir,
     page: state.page,

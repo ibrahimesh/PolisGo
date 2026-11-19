@@ -24,8 +24,20 @@ describe('claims queue URL state', () => {
       search: 'Əliyev',
       sort: 'amountHigh',
       page: 3,
+      from: '2026-01-01',
+      to: '2026-03-31',
     } as const;
     expect(read(writeQueue(state).toString())).toEqual(state);
+  });
+
+  it('filters by incident dates, never a reversed or broken range', () => {
+    expect(toQueueQuery(read('from=2026-01-01&to=2026-01-31'))).toMatchObject({
+      from: '2026-01-01',
+      to: '2026-01-31',
+    });
+    expect(read('from=2026-03-01&to=2026-01-01')).toMatchObject({ from: '', to: '' });
+    expect(read('from=2026-02-31').from).toBe('');
+    expect(hasQueueFilters(read('from=2026-01-01'))).toBe(true);
   });
 
   it('drops unknown or tampered values instead of sending them to the API', () => {

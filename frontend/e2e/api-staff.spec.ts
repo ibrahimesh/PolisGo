@@ -156,7 +156,7 @@ test.describe('Staff API on SQL Server', () => {
         data: { agentId: adjuster.id },
       }),
       'agentId',
-      'No agent with this id.',
+      'No active agent with this id.',
     );
     const unknown = await page.request.put(
       `${API_URL}/api/customers/${crypto.randomUUID()}/agent`,

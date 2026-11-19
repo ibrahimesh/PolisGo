@@ -36,6 +36,17 @@ every change in this repo.
   the SPA tells apart from other 409s. The claim detail's `actions` list says
   what the caller may do and why not (`ClaimActionBlock` codes): add a code
   there and a translation in the same change.
+- **Sessions are checked on every request** (`SessionValidator`): the
+  token's `stamp` must match the user's `SecurityStamp` and the user must be
+  active. Rotate the stamp (`User.Deactivate`, `User.ChangeRole`) whenever a
+  change must end existing sessions; inactive users can't sign in.
+- **Staff actions are audited**: any admin change to an account or an
+  assignment adds an `AuditEntry` in the same SaveChanges. The audit feed
+  (`AuditLogService`) reads only recorded rows: status history and audit
+  entries. Never synthesise events.
+- **Staff management rules** live in `StaffAdminService`: nobody acts on
+  their own account, the last active admin is kept (checked first), a former
+  agent's customers are released. Messages in `AdminValidation` (contract-tested).
 - **CSV exports** reuse the list's filter (`Filter(...)` in the service), are
   capped at 5000 rows, and build cells only through `Csv.Text` /
   `Csv.Number` / `Csv.Date` (formula-safe, UTF-8 with BOM).
@@ -56,7 +67,8 @@ every change in this repo.
 | GET | `/api/me/overview` · `/api/me/reminders` · `/api/me/claim-updates` | Client |
 | POST | `/api/me/reminders/{policyId}/read` · `/read-all` | Client; the policy goes through `PolicyAccess` |
 | POST | `/api/me/claim-updates/{claimId}/read` · `/read-all` | Client; the claim goes through `ClaimAccess` |
-| POST | `/api/users/staff` | Admin |
+| GET, POST | `/api/users/staff` (search, role, status, paged) | Admin |
+| POST | `/api/users/{id}/deactivate` · `/reactivate` · PUT `/api/users/{id}/role` | Admin; staff accounts only (a client id is a 404) |
 | POST | `/api/quotes/calculate` | Anonymous |
 | GET | `/api/policy-types` | Anonymous (public cache 5 min) |
 | GET | `/api/vehicles` | Signed in; Clients see only their own, staff those of customers in `CustomerAccess` |
@@ -74,6 +86,8 @@ every change in this repo.
 | PUT | `/api/customers/{id}/agent` | Admin |
 | GET | `/api/staff/overview` | Agent, Adjuster, Admin (a block per desk) |
 | GET | `/api/admin/stats` | Admin (cached 60 s) |
+| GET | `/api/admin/dashboard` (from, to; 24 months max) | Admin (cached 60 s per range) |
+| GET | `/api/admin/audit` (actor, entity type, from, to, paged) | Admin |
 | GET | `/health` | Anonymous |
 
 ## Persistence
@@ -126,6 +140,15 @@ every change in this repo.
 - Imperative mood, lower-case type prefix: `feat:`, `fix:`, `refactor:`,
   `chore:`, `test:`, `docs:`.
 - Keep subject under 72 characters. Body (optional) explains the why.
+
+## Demo data
+
+- `DemoDataSeeder` (Infrastructure) runs when `Demo:SeedData=true`
+  (`docker-compose.demo.yml`), never in Production, once per database (the
+  `demo.agent1@demo.polisgo.az` marker). Demo accounts share `Demo:Password`
+  (default `Demo-Passw0rd`), never the admin secret. Keep its history
+  consistent with the entities' rules (dates inside cover, a row per
+  transition) and extend `DemoDataSeederTests` with it.
 
 ## Migrations
 
@@ -183,7 +206,12 @@ React Router, TanStack Query, React Hook Form + Zod, react-i18next.
   `queue/`, `review/` with the decision panel, `customers/`, `sales/`
   with selling on a customer's behalf, CSV `ExportButton`); queries under
   `staffKeys.all`, inside the same `['cabinet']` prefix. `/app`,
-  `/app/claims` and `/app/claims/:id` pick the client or staff page by role.
+  `/app/claims` and `/app/claims/:id` pick the client or staff page by role
+  (an Admin's `/app` is the dashboard). Admin panel: `admin` (`dashboard/`
+  with `BarChart`, `staff/`, `audit/`, `customers/AssignAgent`,
+  `PolicyTypesPage`, `StaffPicker`), queries under `adminKeys.all`.
+- Choosing a staff member: `StaffPicker` (server search + select), never a
+  plain list of the first page of accounts.
 - Every private query lives under `cabinetKeys.all`; a write invalidates
   that prefix (`useInvalidateCabinet`), and sign-out clears the cache.
 - `src/i18n` — setup, `locales/{en,ru,az}.json`, API error mapping, number
@@ -252,6 +280,14 @@ React Router, TanStack Query, React Hook Form + Zod, react-i18next.
   created, one at a time over XHR for progress (`api/upload.ts`). A 400 on
   submit sends the user to the step that owns the field.
 - Steppers use `components/ui/StepNav` (five steps at most).
+- **Dates: never `<input type="date">`.** Use `DateField` (`FormDateField`
+  in RHF forms, `DateFilterField` for list filters): DD.MM.YYYY in every
+  language, the form value stays ISO. Controlled fields register after the
+  others, so forms with one set `shouldFocusError: false` and focus the first
+  invalid field in order themselves. Give min/max and a hint that says why.
+- Charts: one series per chart in the accent, no dual axes; each chart has a
+  data table and keyboard values (`admin/dashboard/BarChart`). Few
+  categories with numbers are labelled bars, not a chart.
 - PDF certificates: `features/certificate` (pdf-lib + fontkit, MIT; static
   Fontsource WOFF files, OFL). Fontsource splits fonts by Unicode subset, so
   text is drawn in runs per file (`textRuns.ts`); add a character range to
@@ -292,8 +328,12 @@ Run from `frontend/`:
   `docker compose` stack. Adjuster steps use the dev seed admin
   (`E2E_ADMIN_EMAIL`/`E2E_ADMIN_PASSWORD`, or `SEED_ADMIN_*` from `../.env`).
   `claims-api.spec.ts` and `api-staff.spec.ts` check length limits, uploads,
-  decisions, concurrency and scoping against SQL Server.
+  decisions, concurrency and scoping against SQL Server. `staff-admin.spec.ts`
+  covers the admin panel and reads the demo data; `cabinet-datefield.spec.ts`
+  the date field. CI starts the stack with `docker-compose.demo.yml`
+  (`COMPOSE_FILE`); locally use `docker compose -f docker-compose.yml -f
+  docker-compose.demo.yml up --build` before `npm run e2e`.
 - `npm run e2e:screenshots` — regenerates `frontend/docs/screenshots`
-  (landing full page; cabinet and staff pages first screen, dark and light,
-  desktop and mobile).
+  (landing full page; cabinet, staff and admin pages first screen, dark and
+  light, desktop and mobile; admin pages need the demo data).
 - First-time e2e setup: `npx playwright install chromium`.

@@ -24,10 +24,19 @@ describe('workspace sections', () => {
       'overview',
       'claims',
       'customers',
-      'sales',
-      'admin',
+      'allPolicies',
+      'staff',
+      'audit',
+      'policyTypes',
       'profile',
       'help',
+    ]);
+    expect(mobileSectionsFor('Admin').map((section) => section.id)).toEqual([
+      'overview',
+      'claims',
+      'customers',
+      'staff',
+      'profile',
     ]);
   });
 

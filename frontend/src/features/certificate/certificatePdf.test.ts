@@ -60,6 +60,7 @@ const detail: PolicyDetailResponse = {
       plateNumber: '10-AA-123',
     },
     customerName: 'Leyla Məmmədova',
+    agentName: null,
   },
   holderName: 'Leyla Məmmədova',
   vehicle: {

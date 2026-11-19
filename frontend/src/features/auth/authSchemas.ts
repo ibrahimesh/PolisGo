@@ -18,7 +18,7 @@ import {
 // Strict enough for real use: one @, a dotted domain with a 2+ letter TLD.
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@.]+(\.[^\s@.]+)*\.[A-Za-z]{2,}$/;
 
-const email = z
+export const emailField = z
   .string()
   .trim()
   .min(1, 'validation.emailRequired')
@@ -27,8 +27,24 @@ const email = z
   .pipe(z.email('validation.email'))
   .transform((value) => value.toLowerCase());
 
+// The account rules every form shares (registration, staff accounts).
+export const fullNameField = z
+  .string()
+  .trim()
+  .min(1, 'validation.fullNameRequired')
+  .min(FULL_NAME_MIN, 'validation.fullName')
+  .max(FULL_NAME_MAX, 'validation.fullName')
+  .regex(FULL_NAME_PATTERN, 'validation.fullName');
+
+export const newPasswordField = z
+  .string()
+  .min(1, 'validation.passwordRequired')
+  .min(PASSWORD_MIN, 'validation.password')
+  .max(PASSWORD_MAX, 'validation.password')
+  .refine(meetsPasswordPolicy, 'validation.password');
+
 export const loginSchema = z.object({
-  email,
+  email: emailField,
   // No strength rules here: accounts created under older rules must still sign in.
   password: z.string().min(1, 'validation.passwordRequired'),
 });
@@ -42,14 +58,8 @@ export function createRegisterSchema(today: string = todayIso()) {
   return (
     z
       .object({
-        fullName: z
-          .string()
-          .trim()
-          .min(1, 'validation.fullNameRequired')
-          .min(FULL_NAME_MIN, 'validation.fullName')
-          .max(FULL_NAME_MAX, 'validation.fullName')
-          .regex(FULL_NAME_PATTERN, 'validation.fullName'),
-        email,
+        fullName: fullNameField,
+        email: emailField,
         // The field holds the masked display value; submit sends E.164.
         phone: z
           .string()
@@ -77,12 +87,7 @@ export function createRegisterSchema(today: string = todayIso()) {
           (value) => value <= today,
           'validation.licenceFuture',
         ),
-        password: z
-          .string()
-          .min(1, 'validation.passwordRequired')
-          .min(PASSWORD_MIN, 'validation.password')
-          .max(PASSWORD_MAX, 'validation.password')
-          .refine(meetsPasswordPolicy, 'validation.password'),
+        password: newPasswordField,
         confirmPassword: z.string().min(1, 'validation.confirmPasswordRequired'),
       })
       // Cross-field rules with `when`: they run as soon as the fields they read

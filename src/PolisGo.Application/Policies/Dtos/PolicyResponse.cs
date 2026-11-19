@@ -19,7 +19,9 @@ public record PolicyResponse(
     DateTime CreatedAt,
     PolicyVehicleSummary Vehicle,
     // The policyholder as recorded on the customer.
-    string CustomerName
+    string CustomerName,
+    // Who sold it; null for self-service sales.
+    string? AgentName
 );
 
 // Enough to recognise the car in a list without a second request.

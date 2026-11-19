@@ -8,6 +8,7 @@ import { Button } from '../components/ui/Button';
 import { ErrorNotice } from '../components/ui/ErrorNotice';
 import { FormErrorSummary } from '../components/ui/FormErrorSummary';
 import type { SummaryField } from '../components/ui/FormErrorSummary';
+import { FormDateField } from '../components/ui/FormDateField';
 import { Input } from '../components/ui/Input';
 import { useToast } from '../components/ui/ToastProvider';
 import { applyServerFieldErrors } from '../features/auth/applyServerErrors';
@@ -46,6 +47,9 @@ export function RegisterPage() {
     useForm<RegisterInput, unknown, RegisterValues>({
       resolver: zodResolver(schema),
       mode: 'onTouched',
+      // The dates are controlled fields, registered after the others: RHF's
+      // own "first error" would skip them, so focus goes in field order below.
+      shouldFocusError: false,
       defaultValues: {
         fullName: '',
         email: '',
@@ -75,28 +79,34 @@ export function RegisterPage() {
     label: labels[name],
   }));
 
-  const onSubmit = handleSubmit(async (values) => {
-    setSubmitError(null);
-    setRegistering(true);
-    try {
-      // Explicit payload: the confirmation never leaves the browser.
-      const user = await registerAccount({
-        fullName: values.fullName,
-        email: values.email,
-        phone: values.phone,
-        birthDate: values.birthDate,
-        drivingLicenseDate: values.drivingLicenseDate,
-        password: values.password,
-      });
-      toast({ title: t('auth.register.success', { name: user.fullName }), tone: 'success' });
-      await navigate('/app', { replace: true });
-    } catch (error) {
-      setRegistering(false);
-      const matched = applyServerFieldErrors(error, FIELD_ORDER, setError);
-      if (matched[0]) setFocus(matched[0]);
-      else setSubmitError(error);
-    }
-  });
+  const onSubmit = handleSubmit(
+    async (values) => {
+      setSubmitError(null);
+      setRegistering(true);
+      try {
+        // Explicit payload: the confirmation never leaves the browser.
+        const user = await registerAccount({
+          fullName: values.fullName,
+          email: values.email,
+          phone: values.phone,
+          birthDate: values.birthDate,
+          drivingLicenseDate: values.drivingLicenseDate,
+          password: values.password,
+        });
+        toast({ title: t('auth.register.success', { name: user.fullName }), tone: 'success' });
+        await navigate('/app', { replace: true });
+      } catch (error) {
+        setRegistering(false);
+        const matched = applyServerFieldErrors(error, FIELD_ORDER, setError);
+        if (matched[0]) setFocus(matched[0]);
+        else setSubmitError(error);
+      }
+    },
+    (invalid) => {
+      const first = FIELD_ORDER.find((field) => invalid[field]);
+      if (first) document.getElementById(id(first))?.focus();
+    },
+  );
 
   const { errors, isSubmitting, submitCount } = formState;
   const showForm = registering || status === 'anonymous' || status === 'error';
@@ -162,23 +172,22 @@ export function RegisterPage() {
             />
           </div>
           <div className="grid gap-6 sm:grid-cols-2">
-            <Input
+            <FormDateField
               id={id('birthDate')}
+              control={control}
+              name="birthDate"
               label={labels.birthDate}
-              type="date"
-              autoComplete="bday"
               min={birthBounds.min}
               max={birthBounds.max}
               error={errors.birthDate?.message}
-              {...register('birthDate')}
             />
-            <Input
+            <FormDateField
               id={id('drivingLicenseDate')}
+              control={control}
+              name="drivingLicenseDate"
               label={labels.drivingLicenseDate}
-              type="date"
               max={todayIso()}
               error={errors.drivingLicenseDate?.message}
-              {...register('drivingLicenseDate')}
             />
           </div>
           <PasswordField

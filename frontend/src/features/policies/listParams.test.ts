@@ -15,6 +15,7 @@ describe('policy list URL state', () => {
       search: '10-AA',
       sort: 'endSoonest',
       page: 3,
+      agent: '3f2b8c1e-1a2b-4c3d-8e9f-0a1b2c3d4e5f',
     } as const;
     expect(readListState(writeListState(state))).toEqual(state);
   });

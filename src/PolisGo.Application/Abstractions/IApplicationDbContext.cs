@@ -20,6 +20,7 @@ public interface IApplicationDbContext
     DbSet<PolicyStatusHistory> PolicyStatusHistory { get; }
     DbSet<PolicyReminderRead> PolicyReminderReads { get; }
     DbSet<ClaimUpdateRead> ClaimUpdateReads { get; }
+    DbSet<AuditEntry> AuditEntries { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

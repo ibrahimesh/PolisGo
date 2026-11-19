@@ -5,6 +5,8 @@ import { useTranslation } from 'react-i18next';
 import { INCIDENT_TYPES } from '../../../api/types';
 import { FormErrorSummary } from '../../../components/ui/FormErrorSummary';
 import type { SummaryField } from '../../../components/ui/FormErrorSummary';
+import { todayIso } from '../../../lib/dates';
+import { FormDateField } from '../../../components/ui/FormDateField';
 import { Input } from '../../../components/ui/Input';
 import { Select } from '../../../components/ui/Select';
 import { Textarea } from '../../../components/ui/Textarea';
@@ -38,6 +40,9 @@ export function IncidentStep() {
   >({
     resolver: zodResolver(schema),
     mode: 'onTouched',
+    // The date is a controlled field, registered after the others: RHF's
+    // own "first error" would skip it, so focus goes in field order below.
+    shouldFocusError: false,
     defaultValues: {
       incidentDate: state.values.incidentDate,
       incidentType: state.values.incidentType as IncidentInput['incidentType'],
@@ -78,7 +83,13 @@ export function IncidentStep() {
     label: labels[name],
   }));
   const { errors, submitCount } = formState;
-  const onSubmit = handleSubmit(() => goTo('damage'));
+  const onSubmit = handleSubmit(
+    () => goTo('damage'),
+    (invalid) => {
+      const first = FIELDS.find((field) => invalid[field]);
+      if (first) document.getElementById(id(first))?.focus();
+    },
+  );
 
   return (
     <form
@@ -89,22 +100,24 @@ export function IncidentStep() {
     >
       <FormErrorSummary errors={errors} fields={summary} show={submitCount > 0} />
       <div className="grid gap-6 sm:grid-cols-2">
-        <Input
+        <FormDateField
           id={id('incidentDate')}
+          control={control}
+          name="incidentDate"
           label={labels.incidentDate}
-          type="date"
           min={bounds.min}
           max={bounds.max}
+          // Why only these days: the cover period, and nothing in the future.
           hint={
             selectedPolicy
               ? t('claimWizard.incident.dateHint', {
                   from: format.date(bounds.min),
-                  to: format.date(bounds.max),
+                  to:
+                    bounds.max === todayIso() ? t('dateField.todayWord') : format.date(bounds.max),
                 })
               : undefined
           }
           error={errors.incidentDate?.message}
-          {...register('incidentDate')}
         />
         <Select
           id={id('incidentType')}

@@ -1,6 +1,13 @@
 import { request } from './http';
 import type {
+  AdminDashboardResponse,
   ApproveClaimRequest,
+  AuditEventResponse,
+  AuditLogQuery,
+  ChangeRoleRequest,
+  IsoDate,
+  ListStaffQuery,
+  StaffMemberResponse,
   AuthResponse,
   CalculateQuoteRequest,
   ChangePasswordRequest,
@@ -145,15 +152,35 @@ export const customersApi = {
     request<PagedResult<CustomerListItem>>('/api/customers', { query: { ...query }, signal }),
   get: (id: Guid, signal?: Signal) =>
     request<CustomerDetailResponse>(`/api/customers/${id}`, { signal }),
+  // Admin only; null releases the customer.
+  assignAgent: (id: Guid, agentId: Guid | null) =>
+    request<undefined>(`/api/customers/${id}/agent`, { method: 'PUT', body: { agentId } }),
 };
 
 export const staffApi = {
   overview: (signal?: Signal) => request<StaffOverviewResponse>('/api/staff/overview', { signal }),
 };
 
+// Admin only.
 export const usersApi = {
+  listStaff: (query: ListStaffQuery = {}, signal?: Signal) =>
+    request<PagedResult<StaffMemberResponse>>('/api/users/staff', { query: { ...query }, signal }),
   createStaff: (body: CreateStaffUserRequest) =>
-    request<CurrentUserResponse>('/api/users/staff', { method: 'POST', body }),
+    request<StaffMemberResponse>('/api/users/staff', { method: 'POST', body }),
+  deactivate: (id: Guid) =>
+    request<StaffMemberResponse>(`/api/users/${id}/deactivate`, { method: 'POST' }),
+  reactivate: (id: Guid) =>
+    request<StaffMemberResponse>(`/api/users/${id}/reactivate`, { method: 'POST' }),
+  changeRole: (id: Guid, body: ChangeRoleRequest) =>
+    request<StaffMemberResponse>(`/api/users/${id}/role`, { method: 'PUT', body }),
+};
+
+// Admin only.
+export const adminApi = {
+  dashboard: (range: { from?: IsoDate; to?: IsoDate }, signal?: Signal) =>
+    request<AdminDashboardResponse>('/api/admin/dashboard', { query: { ...range }, signal }),
+  audit: (query: AuditLogQuery = {}, signal?: Signal) =>
+    request<PagedResult<AuditEventResponse>>('/api/admin/audit', { query: { ...query }, signal }),
 };
 
 export const healthApi = {

@@ -306,30 +306,34 @@
     "sections": {
       "overview": "İcmal",
       "claims": "Zərər növbəsi",
-      "admin": "İdarəetmə",
       "policies": "Polislərim",
       "buy": "Polis al",
       "profile": "Profil və ayarlar",
       "help": "Kömək və suallar",
       "myClaims": "Zərərlərim",
       "customers": "Müştərilər",
-      "sales": "Satışlar"
+      "sales": "Satışlar",
+      "allPolicies": "Bütün polislər",
+      "staff": "Əməkdaşlar",
+      "audit": "Fəaliyyət jurnalı",
+      "policyTypes": "Məhsullar və tariflər"
     },
-    "comingSoonTitle": "Bu bölmə plandakı növbəti addımdır",
-    "comingSoonBody": "Bu rol üçün ekranlar hazır olduqdan sonra polislər, avtomobillər və sığorta hadisələri burada görünəcək.",
-    "backToOverview": "İcmala qayıt",
     "short": {
       "overview": "İcmal",
       "policies": "Polislər",
       "buy": "Al",
       "claims": "Növbə",
-      "admin": "Admin",
       "profile": "Profil",
       "help": "Kömək",
       "myClaims": "Zərərlər",
       "customers": "Müştərilər",
-      "sales": "Satışlar"
-    }
+      "sales": "Satışlar",
+      "allPolicies": "Polislər",
+      "staff": "Əməkdaşlar",
+      "audit": "Jurnal",
+      "policyTypes": "Məhsullar"
+    },
+    "backToOverview": "İcmala qayıt"
   },
   "roles": {
     "Client": "Müştəri",
@@ -382,7 +386,12 @@
     "fileContent": "Faylın məzmunu onun növünə uyğun deyil.",
     "concurrentUpdate": "Siz baxarkən bu qeydi başqası dəyişdi.",
     "tooManyRows": "Bu, 5 000 sətirdən çoxdur. Filtrləri daraldıb yenidən ixrac edin.",
-    "agentNotFound": "Bu hesab agent deyil."
+    "agentNotFound": "Aktiv agent seçin.",
+    "notYourself": "Öz hesabınızı deaktiv edə və ya öz rolunuzu dəyişə bilməzsiniz.",
+    "lastAdmin": "Ən azı bir aktiv administrator qalmalıdır.",
+    "alreadyInactive": "Bu hesab artıq deaktivdir.",
+    "alreadyActive": "Bu hesab artıq aktivdir.",
+    "sameRole": "Hesabın artıq bu rolu var."
   },
   "validation": {
     "required": "Mütləq doldurulmalıdır.",
@@ -455,14 +464,19 @@
     "approvedAmountPositive": "Təsdiq edilən məbləğ sıfırdan böyük olmalıdır.",
     "approvedAmountPrecision": "Vergüldən sonra ən çox iki rəqəm.",
     "approvedAmountAboveClaimed": "Təsdiq edilən məbləğ tələb ediləndən çox ola bilməz.",
-    "rejectionReasonRequired": "Rədd səbəbini yazın — müştəri onu görəcək."
+    "rejectionReasonRequired": "Rədd səbəbini yazın — müştəri onu görəcək.",
+    "staffRoleRequired": "Agent, tənzimləyici və ya administrator seçin.",
+    "rangeOrder": "Başlanğıc sondan gec ola bilməz.",
+    "rangeTooLong": "Ən çox 24 ay seçin.",
+    "dateOutsideRange": "Bu tarix icazə verilən müddətdən kənardadır."
   },
   "common": {
     "loading": "Yüklənir",
     "close": "Bağla",
     "dismiss": "Bildirişi bağla",
     "notifications": "Bildirişlər",
-    "retry": "Yenidən cəhd edin"
+    "retry": "Yenidən cəhd edin",
+    "cancel": "Ləğv et"
   },
   "forms": {
     "errorSummary_one": "{{count}} sahə düzəldilməlidir",
@@ -1005,7 +1019,7 @@
     },
     "incident": {
       "date": "Hadisənin tarixi",
-      "dateHint": "{{from}} – {{to}} arasında.",
+      "dateHint": "Yalnız sığorta müddətində: {{from}} – {{to}} arasında.",
       "type": "Nə baş verdi",
       "typePlaceholder": "Seçin…",
       "location": "Hadisə yeri",
@@ -1204,7 +1218,9 @@
           "title": "Hələ zərər yoxdur",
           "body": "Müştərilər zərər bildirdikcə burada görünür."
         }
-      }
+      },
+      "incidentFrom": "Hadisə tarixi (başlanğıc)",
+      "incidentTo": "Hadisə tarixi (son)"
     },
     "review": {
       "back": "Növbəyə qayıt",
@@ -1385,7 +1401,8 @@
         "decisions": "Zərərlər və qərarlar",
         "book": "Müştərilər və satışlar",
         "exports": "İxrac",
-        "statuses": "Zərər statuslarının mənası"
+        "statuses": "Zərər statuslarının mənası",
+        "adminPanel": "Administrator paneli"
       },
       "items": {
         "queue": {
@@ -1435,6 +1452,38 @@
         "exportExcel": {
           "q": "Excel Azərbaycan və rus hərflərini göstərəcəkmi?",
           "a": "Bəli: fayl bayt sırası işarəsi ilə UTF-8-dədir. Dəyərlər vergüllə ayrılıb; Excel-iniz nöqtəli vergül gözləyirsə, faylı “Məlumat → Mətn/CSV-dən” ilə açın."
+        },
+        "dashboard": {
+          "q": "Panel nəyi hesablayır?",
+          "a": "Seçdiyiniz müddət üçün: rəsmiləşdirilmiş polislər və ödənilmiş haqq, bildirilmiş zərərlər (indiki statusa görə), qərar verilmiş zərərlər və bunun orta müddəti, həmçinin ödənişlər. Agentlər satdıqları polislərdən yığılan haqqa görə sıralanır."
+        },
+        "staffAccounts": {
+          "q": "Əməkdaşı necə əlavə edim?",
+          "a": "“Əməkdaşlar” bölməsində “Əməkdaş əlavə et”i seçin: ad, e-poçt, ilk parol (qeydiyyatdakı qaydalarla) və rol. Parolu şəxsən çatdırın; onu profildə dəyişmək olar."
+        },
+        "deactivate": {
+          "q": "Deaktiv etdikdə nə olur?",
+          "a": "Əməkdaş artıq daxil ola bilmir, açıq sessiyaları növbəti hərəkətdə bitir. Etdikləri ləğv olunmur. Aktivləşdirdikdən sonra parolu ilə yenidən daxil olur."
+        },
+        "roleChange": {
+          "q": "Rolu dəyişdikdə nə olur?",
+          "a": "Sessiyalar bitir və əməkdaş yeni rolla yenidən daxil olur. Keçmiş agentin müştəriləri təhkimsiz qalır ki, onları başqa agentə verəsiniz; keçmiş tənzimləyicinin zərərləri onda qalır, qərarı administrator verə bilər."
+        },
+        "lastAdmin": {
+          "q": "Niyə administratoru deaktiv edə və ya rolunu endirə bilmirəm?",
+          "a": "Heç kim özünü deaktiv edə və ya öz rolunu dəyişə bilməz, həmişə ən azı bir aktiv administrator qalmalıdır."
+        },
+        "assign": {
+          "q": "Müştəri agentə necə təhkim olunur?",
+          "a": "Müştərini açın və “Agent” bölməsində agenti seçin. Agent müştərini görəcək və ona polis rəsmiləşdirə biləcək; satılmış polislər satan şəxsdə qalır."
+        },
+        "audit": {
+          "q": "Fəaliyyət jurnalında nə var?",
+          "a": "Zərər və polis statuslarının bütün dəyişiklikləri müəllifi ilə, həmçinin administrator paneli yarandıqdan bəri əməkdaşlarla bağlı əməliyyatlar: hesabların yaradılması, deaktiv və aktiv edilməsi, rol dəyişiklikləri və müştərilərin təhkim olunması. Daha əvvəlki əməliyyatlar qeydə alınmayıb və göstərilmir."
+        },
+        "rates": {
+          "q": "Baza tarifləri dəyişə bilərəmmi?",
+          "a": "Burada yox. Tariflər şərtidir və verilənlər bazasında təyin olunur; məhsullar səhifəsi onları yalnız göstərir."
         }
       },
       "statuses": {
@@ -1445,6 +1494,247 @@
         "Paid": "Təsdiq edilən məbləğ ödənilib. Son.",
         "Withdrawn": "Müştəri qərardan əvvəl geri götürüb. Son."
       }
+    }
+  },
+  "dateField": {
+    "placeholder": "GG.AA.İİİİ",
+    "openCalendar": "Təqvimi aç",
+    "calendar": "Tarix seçin",
+    "previousMonth": "Əvvəlki ay",
+    "nextMonth": "Növbəti ay",
+    "month": "Ay",
+    "year": "İl",
+    "today": "Bu gün",
+    "todayWord": "bu gün",
+    "anyDate": "İstənilən tarix.",
+    "between": "{{min}} – {{max}} arasında.",
+    "from": "{{min}} tarixindən başlayaraq.",
+    "until": "{{max}} tarixinədək.",
+    "dayLabel": "{{day}} {{month}} {{year}}, {{weekday}}",
+    "months": [
+      "Yanvar",
+      "Fevral",
+      "Mart",
+      "Aprel",
+      "May",
+      "İyun",
+      "İyul",
+      "Avqust",
+      "Sentyabr",
+      "Oktyabr",
+      "Noyabr",
+      "Dekabr"
+    ],
+    "monthsOfDay": [
+      "yanvar",
+      "fevral",
+      "mart",
+      "aprel",
+      "may",
+      "iyun",
+      "iyul",
+      "avqust",
+      "sentyabr",
+      "oktyabr",
+      "noyabr",
+      "dekabr"
+    ],
+    "weekdays": ["B.e", "Ç.a", "Ç", "C.a", "C", "Ş", "B"],
+    "weekdaysLong": [
+      "bazar ertəsi",
+      "çərşənbə axşamı",
+      "çərşənbə",
+      "cümə axşamı",
+      "cümə",
+      "şənbə",
+      "bazar"
+    ]
+  },
+  "admin": {
+    "dashboard": {
+      "title": "Panel",
+      "lead": "PolisGo: {{from}} – {{to}}.",
+      "rangeLabel": "Müddət",
+      "presets": {
+        "3m": "3 ay",
+        "6m": "6 ay",
+        "12m": "12 ay",
+        "24m": "24 ay",
+        "custom": "Seçilmiş"
+      },
+      "customLabel": "Seçilmiş müddət",
+      "from": "Başlanğıc",
+      "to": "Son",
+      "rangeHint": "Ən çox {{months}} ay.",
+      "apply": "Göstər",
+      "totals": "Müddət üzrə yekunlar",
+      "tiles": {
+        "policies": "Rəsmiləşdirilmiş polislər",
+        "premium": "Yığılmış haqq",
+        "claims": "Bildirilmiş zərərlər",
+        "decided": "Qərar verilmiş zərərlər",
+        "resolution": "Qərarın orta müddəti",
+        "paid": "Zərərlər üzrə ödənilib"
+      },
+      "hours": "{{value}} saat",
+      "days": "{{value}} gün",
+      "trends": "Aylar üzrə",
+      "charts": {
+        "premium": "Aylar üzrə yığılmış haqq, AZN",
+        "policies": "Aylar üzrə rəsmiləşdirilmiş polislər",
+        "claims": "Aylar üzrə bildirilmiş zərərlər",
+        "byStatus": "Müddətdə bildirilmiş zərərlər, cari statusa görə"
+      },
+      "chartHelp": "Hər ayı oxumaq üçün sol və sağ ox düymələrindən istifadə edin.",
+      "showTable": "Rəqəmləri cədvəl kimi göstər",
+      "period": "Ay",
+      "value": "Dəyər",
+      "topAgents": "Haqqa görə ən yaxşı agentlər",
+      "noAgents": "Bu müddətdə agent satışı yoxdur.",
+      "agentFigures_one": "{{premium}} · {{count}} polis",
+      "agentFigures_other": "{{premium}} · {{count}} polis"
+    },
+    "staff": {
+      "title": "Əməkdaşlar",
+      "lead": "Agentlərin, tənzimləyicilərin və administratorların hesabları.",
+      "add": "Əməkdaş əlavə et",
+      "filters": "Əməkdaşlarda axtarış və filtr",
+      "search": "Axtarış",
+      "searchPlaceholder": "Ad və ya e-poçt",
+      "role": "Rol",
+      "allRoles": "Bütün rollar",
+      "status": "Status",
+      "statuses": {
+        "All": "Hamısı",
+        "Active": "Aktiv",
+        "Inactive": "Deaktiv"
+      },
+      "results": "Əməkdaş hesabları",
+      "count_one": "{{count}} hesab",
+      "count_other": "{{count}} hesab",
+      "caption": "Əməkdaş hesabları: rol, status və iş yükü",
+      "columns": {
+        "name": "Ad",
+        "workload": "İş yükü",
+        "actions": "Əməliyyatlar"
+      },
+      "active": "Aktiv",
+      "inactive": "Deaktiv",
+      "customers_one": "{{count}} müştəri",
+      "customers_other": "{{count}} müştəri",
+      "openClaims_one": "{{count}} açıq zərər",
+      "openClaims_other": "{{count}} açıq zərər",
+      "you": "Sizin hesabınız",
+      "changeRole": "Rolu dəyiş",
+      "deactivate": "Deaktiv et",
+      "reactivate": "Aktivləşdir",
+      "pagination": "Əməkdaş səhifələri",
+      "noMatchTitle": "Heç nə tapılmadı",
+      "noMatchBody": "Başqa ad yazın və ya filtrləri sıfırlayın.",
+      "emptyTitle": "Hələ əməkdaş yoxdur",
+      "emptyBody": "İlk agenti və ya tənzimləyicini əlavə edin.",
+      "createTitle": "Əməkdaş əlavə et",
+      "create": "Hesabı yarat",
+      "initialPassword": "İlk parol",
+      "passwordHint": "Onu şəxsən çatdırın; profildə dəyişmək olar.",
+      "createdToast": "{{name}} artıq daxil ola bilər",
+      "toast": {
+        "deactivate": "{{name}} deaktiv edildi",
+        "reactivate": "{{name}} yenidən aktivdir",
+        "role": "{{name}}: yeni rol — {{role}}"
+      },
+      "confirm": {
+        "deactivateTitle": "{{name}} deaktiv edilsin?",
+        "deactivateBody": "{{email}} artıq daxil ola bilməyəcək, açıq sessiyalar dərhal bitəcək. Hesabı sonra yenidən aktivləşdirmək olar.",
+        "deactivateButton": "Deaktiv et",
+        "reactivateTitle": "{{name}} aktivləşdirilsin?",
+        "reactivateBody": "{{email}} cari parolu ilə yenidən daxil ola biləcək.",
+        "reactivateButton": "Aktivləşdir",
+        "roleTitle": "{{name}} üçün rol dəyişdirilsin?",
+        "roleBody": "Açıq sessiyalar bitəcək; yeni rolla yenidən daxil olmaq lazım olacaq.",
+        "roleButton": "Rolu dəyiş",
+        "newRole": "Yeni rol (indi: {{role}})",
+        "releasesCustomers_one": "Onun {{count}} müştərisi təhkimsiz qalacaq.",
+        "releasesCustomers_other": "Onun {{count}} müştərisi təhkimsiz qalacaq.",
+        "keepsClaims_one": "Baxdığı zərər onda qalır; qərarı administrator verə bilər.",
+        "keepsClaims_other": "Baxdığı {{count}} zərər onda qalır; qərarı administrator verə bilər."
+      }
+    },
+    "customers": {
+      "agent": "Agent",
+      "anyAgent": "İstənilən agent",
+      "unassigned": "Təhkim olunmayıb",
+      "inactiveAgent": "{{name}} (deaktiv)",
+      "agentLine": "Agent: {{name}}",
+      "assignTitle": "Agent",
+      "assignHelp": "Agent bu müştərini öz siyahısında görəcək və ona polis rəsmiləşdirə biləcək. Artıq satılmış polislər satan şəxsdə qalır.",
+      "save": "Yadda saxla",
+      "assignedToast": "{{customer}} artıq {{agent}} agentinə təhkim olunub",
+      "releasedToast": "{{customer}} heç kimə təhkim olunmayıb"
+    },
+    "policies": {
+      "title": "Bütün polislər",
+      "lead": "Bütün polislər və onları kimin satdığı.",
+      "agent": "Satan",
+      "anyAgent": "Hər kəs",
+      "selfService": "Onlayn alınıb"
+    },
+    "audit": {
+      "title": "Fəaliyyət jurnalı",
+      "lead": "Kim, nəyi, nə vaxt dəyişib: zərər və polis statusları, əməkdaş əməliyyatları.",
+      "filters": "Jurnal filtrləri",
+      "actor": "Kim",
+      "anyone": "Hər kəs",
+      "entity": "Nə",
+      "anything": "Hamısı",
+      "entities": {
+        "Claim": "Zərər",
+        "Policy": "Polis",
+        "User": "Əməkdaş hesabı",
+        "Customer": "Müştəri"
+      },
+      "from": "Başlanğıc",
+      "to": "Son",
+      "results": "Hadisələr",
+      "count_one": "{{count}} hadisə",
+      "count_other": "{{count}} hadisə",
+      "pagination": "Jurnal səhifələri",
+      "noMatchTitle": "Heç nə tapılmadı",
+      "noMatchBody": "Başqa şəxs, növ və ya tarix seçin.",
+      "emptyTitle": "Hələ heç nə qeydə alınmayıb",
+      "emptyBody": "Status dəyişiklikləri və əməkdaş əməliyyatları baş verdikcə burada görünür.",
+      "by": "{{name}}, {{role}}",
+      "unknownActor": "sistemin əvvəlki versiyası (qeydə alınmayıb)",
+      "actions": {
+        "created": "«{{status}}» statusu ilə yaradılıb",
+        "statusChanged": "{{from}} → {{to}}",
+        "StaffCreated": "hesab yaradılıb, rol — {{role}}",
+        "StaffDeactivated": "deaktiv edilib",
+        "StaffReactivated": "yenidən aktivləşdirilib",
+        "RoleChanged": "rol: {{from}} → {{to}}",
+        "assigned": "{{agent}} agentinə təhkim olunub",
+        "released": "{{agent}} agentindən ayrılıb"
+      }
+    },
+    "policyTypes": {
+      "title": "Məhsullar və tariflər",
+      "lead": "PolisGo-nun sığorta məhsulları və onların baza tarifləri.",
+      "illustrative": "Bu tariflər şərtidir, tədris layihəsi üçündür: real sığorta şirkətinin tarifi deyil.",
+      "caption": "Kodları və baza tarifləri ilə məhsullar",
+      "columns": {
+        "product": "Məhsul",
+        "code": "Kod",
+        "cover": "Təminat",
+        "baseRate": "Baza tarif"
+      },
+      "howPriced": "Haqq baza tarifin mühərrik, sürücünün yaşı və stajı, avtomobilin yaşı, son zərərlər və müddət əmsallarına vurulmasıdır. Tariflər verilənlər bazasında təyin olunur; burada yalnız göstərilir."
+    },
+    "picker": {
+      "search": "Axtarış: {{label}}",
+      "placeholder": "Ad və ya e-poçt",
+      "selected": "Cari seçim",
+      "more_one": "{{count}} nəticə; hamısını görmək üçün axtarışı dəqiqləşdirin.",
+      "more_other": "{{count}} nəticə; hamısını görmək üçün axtarışı dəqiqləşdirin."
     }
   }
 }

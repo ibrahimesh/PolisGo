@@ -119,7 +119,7 @@ public class AdminStatsService : IAdminStatsService
 
     // Minutes since 0001-01-01 (proleptic Gregorian), computed in SQL. Exact
     // to the minute; int arithmetic stays well below overflow until year ~4000.
-    private static readonly Expression<Func<DateTime, double>> MinuteNumber = d =>
+    internal static readonly Expression<Func<DateTime, double>> MinuteNumber = d =>
         (double)((((d.Year - 1) * 365 + (d.Year - 1) / 4 - (d.Year - 1) / 100 + (d.Year - 1) / 400
                    + d.DayOfYear) * 1440)
                  + d.Hour * 60 + d.Minute);

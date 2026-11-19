@@ -229,3 +229,10 @@ export const ChartIcon = () => (
     <path d="M2 2v12h12M5 11V8M8 11V5M11 11V7" />
   </Icon>
 );
+
+export const CalendarIcon = () => (
+  <Icon>
+    <rect x="2.5" y="3.5" width="11" height="10" rx="0.5" />
+    <path d="M2.5 6.5h11M5.5 2v3M10.5 2v3" />
+  </Icon>
+);

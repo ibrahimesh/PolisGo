@@ -19,6 +19,16 @@ const CLIENT_GROUPS = {
 // Keys under staff.help: the decision desk for Adjusters, the customer book
 // for Agents; Admins work both.
 const STAFF_GROUPS = {
+  adminPanel: [
+    'dashboard',
+    'staffAccounts',
+    'deactivate',
+    'roleChange',
+    'lastAdmin',
+    'assign',
+    'audit',
+    'rates',
+  ],
   decisions: ['queue', 'takeReview', 'decide', 'reason', 'unavailable', 'conflict', 'pay'],
   book: ['book', 'sell', 'agentClaims'],
   exports: ['export', 'exportExcel'],
@@ -28,7 +38,7 @@ type StaffGroup = keyof typeof STAFF_GROUPS;
 const STAFF_GROUPS_BY_ROLE: Record<Exclude<UserRole, 'Client'>, readonly StaffGroup[]> = {
   Adjuster: ['decisions', 'exports'],
   Agent: ['book', 'exports'],
-  Admin: ['decisions', 'book', 'exports'],
+  Admin: ['adminPanel', 'decisions', 'book', 'exports'],
 };
 
 export function HelpPage() {

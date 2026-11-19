@@ -19,5 +19,10 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
 
         // Email is the login handle; must be globally unique.
         builder.HasIndex(u => u.Email).IsUnique();
+
+        // Existing rows become active with a fresh stamp (see the migration).
+        builder.Property(u => u.IsActive).HasDefaultValue(true);
+        // The staff list filters by role and status.
+        builder.HasIndex(u => new { u.Role, u.IsActive });
     }
 }

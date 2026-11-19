@@ -306,30 +306,34 @@
     "sections": {
       "overview": "Overview",
       "claims": "Claims queue",
-      "admin": "Administration",
       "policies": "My policies",
       "buy": "Buy a policy",
       "profile": "Profile and settings",
       "help": "Help and questions",
       "myClaims": "My claims",
       "customers": "Customers",
-      "sales": "Sales"
+      "sales": "Sales",
+      "allPolicies": "All policies",
+      "staff": "Staff",
+      "audit": "Audit log",
+      "policyTypes": "Products and rates"
     },
-    "comingSoonTitle": "This area is next on the roadmap",
-    "comingSoonBody": "Policies, vehicles and claims will appear here once the screens for this role are built.",
-    "backToOverview": "Back to overview",
     "short": {
       "overview": "Overview",
       "policies": "Policies",
       "buy": "Buy",
       "claims": "Queue",
-      "admin": "Admin",
       "profile": "Profile",
       "help": "Help",
       "myClaims": "Claims",
       "customers": "Customers",
-      "sales": "Sales"
-    }
+      "sales": "Sales",
+      "allPolicies": "Policies",
+      "staff": "Staff",
+      "audit": "Audit",
+      "policyTypes": "Products"
+    },
+    "backToOverview": "Back to overview"
   },
   "roles": {
     "Client": "Client",
@@ -382,7 +386,12 @@
     "fileContent": "The file's content doesn't match its type.",
     "concurrentUpdate": "Someone else changed this record while you had it open.",
     "tooManyRows": "That is more than 5,000 rows. Narrow the filters and export again.",
-    "agentNotFound": "That account is not an agent."
+    "agentNotFound": "Choose an active agent.",
+    "notYourself": "You can’t deactivate your own account or change your own role.",
+    "lastAdmin": "At least one active administrator must remain.",
+    "alreadyInactive": "This account is already deactivated.",
+    "alreadyActive": "This account is already active.",
+    "sameRole": "The account already has this role."
   },
   "validation": {
     "required": "Required.",
@@ -455,14 +464,19 @@
     "approvedAmountPositive": "The approved amount must be greater than zero.",
     "approvedAmountPrecision": "Use at most two decimal places.",
     "approvedAmountAboveClaimed": "The approved amount can’t be more than the claimed amount.",
-    "rejectionReasonRequired": "Give the reason for the rejection; the customer will read it."
+    "rejectionReasonRequired": "Give the reason for the rejection; the customer will read it.",
+    "staffRoleRequired": "Choose Agent, Adjuster or Admin.",
+    "rangeOrder": "The start must be on or before the end.",
+    "rangeTooLong": "Choose at most 24 months.",
+    "dateOutsideRange": "This date is outside the allowed range."
   },
   "common": {
     "loading": "Loading",
     "close": "Close",
     "dismiss": "Dismiss notification",
     "notifications": "Notifications",
-    "retry": "Try again"
+    "retry": "Try again",
+    "cancel": "Cancel"
   },
   "forms": {
     "errorSummary_one": "1 field needs attention",
@@ -1005,7 +1019,7 @@
     },
     "incident": {
       "date": "Date of the incident",
-      "dateHint": "Between {{from}} and {{to}}.",
+      "dateHint": "Must be within the cover period: from {{from}} to {{to}}.",
       "type": "What happened",
       "typePlaceholder": "Choose…",
       "location": "Where it happened",
@@ -1204,7 +1218,9 @@
           "title": "No claims yet",
           "body": "Claims appear here as customers file them."
         }
-      }
+      },
+      "incidentFrom": "Incident from",
+      "incidentTo": "Incident to"
     },
     "review": {
       "back": "Back to the queue",
@@ -1385,7 +1401,8 @@
         "decisions": "Claims and decisions",
         "book": "Customers and sales",
         "exports": "Exports",
-        "statuses": "What the claim statuses mean"
+        "statuses": "What the claim statuses mean",
+        "adminPanel": "The admin panel"
       },
       "items": {
         "queue": {
@@ -1435,6 +1452,38 @@
         "exportExcel": {
           "q": "Will Excel show Azerbaijani and Russian letters?",
           "a": "Yes: the file is UTF-8 with a byte-order mark. Values are comma-separated; if your Excel uses semicolons, open the file through Data → From Text/CSV."
+        },
+        "dashboard": {
+          "q": "What does the dashboard count?",
+          "a": "For the period you choose: policies issued and premium paid in, claims filed (by their status today), claims decided and how long that took on average, and what was paid out. Agents are ranked by premium collected on policies they sold."
+        },
+        "staffAccounts": {
+          "q": "How do I add a staff member?",
+          "a": "In Staff, choose Add a staff member: a name, an email, a first password (same rules as registration) and a role. Give them the password privately; they can change it in their profile."
+        },
+        "deactivate": {
+          "q": "What happens when I deactivate someone?",
+          "a": "They can no longer sign in, and any session they have open ends at their next click. Nothing they did is undone. Reactivating lets them sign in again with their password."
+        },
+        "roleChange": {
+          "q": "What happens when I change a role?",
+          "a": "Their sessions end and they sign in again with the new role. A former agent’s customers become unassigned so you can hand them to another agent; claims a former adjuster holds stay with them, and an administrator can decide them."
+        },
+        "lastAdmin": {
+          "q": "Why can’t I deactivate or demote an administrator?",
+          "a": "Nobody can deactivate their own account or change their own role, and at least one active administrator must always remain."
+        },
+        "assign": {
+          "q": "How do customers get an agent?",
+          "a": "Open the customer and choose their agent under Agent. The agent then sees them and can sell to them; policies already sold stay with whoever sold them."
+        },
+        "audit": {
+          "q": "What is in the audit log?",
+          "a": "Every claim and policy status change with who made it, and the staff actions recorded since the admin panel was added: accounts created, deactivated and reactivated, role changes and customer assignments. Earlier staff actions were not recorded, so they don’t appear."
+        },
+        "rates": {
+          "q": "Can I change the base rates?",
+          "a": "Not here. The rates are illustrative and set with the database; the products page shows them read-only."
         }
       },
       "statuses": {
@@ -1445,6 +1494,239 @@
         "Paid": "The approved amount has been paid out. Final.",
         "Withdrawn": "The customer withdrew it before a decision. Final."
       }
+    }
+  },
+  "dateField": {
+    "placeholder": "DD.MM.YYYY",
+    "openCalendar": "Open calendar",
+    "calendar": "Choose a date",
+    "previousMonth": "Previous month",
+    "nextMonth": "Next month",
+    "month": "Month",
+    "year": "Year",
+    "today": "Today",
+    "todayWord": "today",
+    "anyDate": "Any date.",
+    "between": "From {{min}} to {{max}}.",
+    "from": "From {{min}} onwards.",
+    "until": "Up to {{max}}.",
+    "dayLabel": "{{weekday}}, {{day}} {{month}} {{year}}",
+    "months": [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December"
+    ],
+    "monthsOfDay": [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December"
+    ],
+    "weekdays": ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"],
+    "weekdaysLong": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+  },
+  "admin": {
+    "dashboard": {
+      "title": "Dashboard",
+      "lead": "PolisGo from {{from}} to {{to}}.",
+      "rangeLabel": "Period",
+      "presets": {
+        "3m": "3 months",
+        "6m": "6 months",
+        "12m": "12 months",
+        "24m": "24 months",
+        "custom": "Custom"
+      },
+      "customLabel": "Custom period",
+      "from": "From",
+      "to": "To",
+      "rangeHint": "Up to {{months}} months.",
+      "apply": "Show",
+      "totals": "Totals for the period",
+      "tiles": {
+        "policies": "Policies issued",
+        "premium": "Premium written",
+        "claims": "Claims filed",
+        "decided": "Claims decided",
+        "resolution": "Average time to decide",
+        "paid": "Paid out on claims"
+      },
+      "hours": "{{value}} hours",
+      "days": "{{value}} days",
+      "trends": "Month by month",
+      "charts": {
+        "premium": "Premium written by month, AZN",
+        "policies": "Policies issued by month",
+        "claims": "Claims filed by month",
+        "byStatus": "Claims filed in the period, by status today"
+      },
+      "chartHelp": "Use the left and right arrow keys to read each month.",
+      "showTable": "Show the numbers as a table",
+      "period": "Month",
+      "value": "Value",
+      "topAgents": "Top agents by premium",
+      "noAgents": "No agent sales in this period.",
+      "agentFigures_one": "{{premium}} · {{count}} policy",
+      "agentFigures_other": "{{premium}} · {{count}} policies"
+    },
+    "staff": {
+      "title": "Staff",
+      "lead": "Accounts for agents, adjusters and administrators.",
+      "add": "Add a staff member",
+      "filters": "Search and filter staff",
+      "search": "Search",
+      "searchPlaceholder": "Name or email",
+      "role": "Role",
+      "allRoles": "All roles",
+      "status": "Status",
+      "statuses": {
+        "All": "Everyone",
+        "Active": "Active",
+        "Inactive": "Deactivated"
+      },
+      "results": "Staff accounts",
+      "count_one": "{{count}} account",
+      "count_other": "{{count}} accounts",
+      "caption": "Staff accounts with role, status and workload",
+      "columns": {
+        "name": "Name",
+        "workload": "Workload",
+        "actions": "Actions"
+      },
+      "active": "Active",
+      "inactive": "Deactivated",
+      "customers_one": "{{count}} customer",
+      "customers_other": "{{count}} customers",
+      "openClaims_one": "{{count}} open claim",
+      "openClaims_other": "{{count}} open claims",
+      "you": "Your account",
+      "changeRole": "Change role",
+      "deactivate": "Deactivate",
+      "reactivate": "Reactivate",
+      "pagination": "Staff pages",
+      "noMatchTitle": "No accounts match",
+      "noMatchBody": "Try another name, or clear the filters.",
+      "emptyTitle": "No staff accounts yet",
+      "emptyBody": "Add the first agent or adjuster.",
+      "createTitle": "Add a staff member",
+      "create": "Create the account",
+      "initialPassword": "First password",
+      "passwordHint": "Share it with them privately; they can change it in their profile.",
+      "createdToast": "{{name}} can now sign in",
+      "toast": {
+        "deactivate": "{{name}} is deactivated",
+        "reactivate": "{{name}} is active again",
+        "role": "{{name}} is now {{role}}"
+      },
+      "confirm": {
+        "deactivateTitle": "Deactivate {{name}}?",
+        "deactivateBody": "{{email}} can no longer sign in, and any open session ends at once. You can reactivate the account later.",
+        "deactivateButton": "Deactivate",
+        "reactivateTitle": "Reactivate {{name}}?",
+        "reactivateBody": "{{email}} can sign in again with their current password.",
+        "reactivateButton": "Reactivate",
+        "roleTitle": "Change the role of {{name}}?",
+        "roleBody": "Their open sessions end; they sign in again with the new role.",
+        "roleButton": "Change role",
+        "newRole": "New role (now {{role}})",
+        "releasesCustomers_one": "Their {{count}} customer goes back to unassigned.",
+        "releasesCustomers_other": "Their {{count}} customers go back to unassigned.",
+        "keepsClaims_one": "The claim they hold stays with them; an administrator can decide it.",
+        "keepsClaims_other": "The {{count}} claims they hold stay with them; an administrator can decide them."
+      }
+    },
+    "customers": {
+      "agent": "Agent",
+      "anyAgent": "Any agent",
+      "unassigned": "Unassigned",
+      "inactiveAgent": "{{name}} (deactivated)",
+      "agentLine": "Agent: {{name}}",
+      "assignTitle": "Agent",
+      "assignHelp": "The agent sees this customer in their book and can sell to them. Policies already sold stay with whoever sold them.",
+      "save": "Save",
+      "assignedToast": "{{customer}} is now with {{agent}}",
+      "releasedToast": "{{customer}} is unassigned"
+    },
+    "policies": {
+      "title": "All policies",
+      "lead": "Every policy, with who sold it.",
+      "agent": "Sold by",
+      "anyAgent": "Anyone",
+      "selfService": "Bought online"
+    },
+    "audit": {
+      "title": "Audit log",
+      "lead": "Who changed what, and when: claim and policy status changes and staff actions.",
+      "filters": "Filter the audit log",
+      "actor": "Who",
+      "anyone": "Anyone",
+      "entity": "What",
+      "anything": "Anything",
+      "entities": {
+        "Claim": "Claim",
+        "Policy": "Policy",
+        "User": "Staff account",
+        "Customer": "Customer"
+      },
+      "from": "From",
+      "to": "To",
+      "results": "Events",
+      "count_one": "{{count}} event",
+      "count_other": "{{count}} events",
+      "pagination": "Audit log pages",
+      "noMatchTitle": "Nothing matches",
+      "noMatchBody": "Try another person, type or dates.",
+      "emptyTitle": "Nothing recorded yet",
+      "emptyBody": "Status changes and staff actions appear here as they happen.",
+      "by": "by {{name}}, {{role}}",
+      "unknownActor": "by an earlier version of the system (not recorded)",
+      "actions": {
+        "created": "created as {{status}}",
+        "statusChanged": "{{from}} → {{to}}",
+        "StaffCreated": "account created as {{role}}",
+        "StaffDeactivated": "deactivated",
+        "StaffReactivated": "reactivated",
+        "RoleChanged": "role {{from}} → {{to}}",
+        "assigned": "assigned to {{agent}}",
+        "released": "released from {{agent}}"
+      }
+    },
+    "policyTypes": {
+      "title": "Products and rates",
+      "lead": "The insurance products PolisGo sells and their base rates.",
+      "illustrative": "These rates are illustrative, for a portfolio project: they are not a real insurer’s tariff.",
+      "caption": "Products with their codes and base rates",
+      "columns": {
+        "product": "Product",
+        "code": "Code",
+        "cover": "Cover",
+        "baseRate": "Base rate"
+      },
+      "howPriced": "A premium is the base rate multiplied by factors for the engine, the driver’s age and experience, the vehicle’s age, recent claims and the term. Rates are set with the database and are read-only here."
+    },
+    "picker": {
+      "search": "Search for: {{label}}",
+      "placeholder": "Find by name or email",
+      "selected": "Current choice",
+      "more_one": "{{count}} match; narrow the search to see more.",
+      "more_other": "{{count}} matches; narrow the search to see them all."
     }
   }
 }

@@ -30,6 +30,8 @@ public class CustomersController : ControllerBase
     /// <param name="sortDir">Asc or Desc (default).</param>
     /// <param name="page">1-based page number.</param>
     /// <param name="pageSize">Items per page; capped at 50.</param>
+    /// <param name="agentId">Only the customers assigned to this agent (within the caller's scope).</param>
+    /// <param name="unassigned">True: only customers no agent looks after; wins over agentId.</param>
     /// <param name="cancellationToken">Request cancellation.</param>
     /// <remarks>
     /// Rows: Agents get their own customers, Adjusters the customers with a
@@ -52,10 +54,12 @@ public class CustomersController : ControllerBase
         [FromQuery] SortDirection sortDir = SortDirection.Desc,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
+        [FromQuery] Guid? agentId = null,
+        [FromQuery] bool unassigned = false,
         CancellationToken cancellationToken = default)
     {
         var result = await _customers.ListAsync(
-            new ListCustomersQuery(search, sortBy, sortDir, page, pageSize), cancellationToken);
+            new ListCustomersQuery(search, sortBy, sortDir, page, pageSize, agentId, unassigned), cancellationToken);
         return Ok(result);
     }
 
@@ -84,10 +88,11 @@ public class CustomersController : ControllerBase
     /// <summary>Assigns a customer to an agent, or releases them with a null agentId.</summary>
     /// <remarks>
     /// The agent then sees the customer in their directory and can sell to
-    /// them; policies already sold stay with the agent who sold them.
+    /// them; policies already sold stay with the agent who sold them. The
+    /// change is recorded in the audit log.
     /// </remarks>
-    /// <response code="204">Assigned.</response>
-    /// <response code="400">agentId is not an Agent account.</response>
+    /// <response code="204">Assigned (or already assigned so).</response>
+    /// <response code="400">agentId is not an active Agent account.</response>
     /// <response code="401">No or invalid bearer token.</response>
     /// <response code="403">The caller is not an Admin.</response>
     /// <response code="404">No customer with this id.</response>

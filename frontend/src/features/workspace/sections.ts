@@ -10,6 +10,7 @@ import type { UserRole } from '../../api/types';
 // most per role); the rest stay reachable from the user menu and the palette.
 const STAFF = ['Agent', 'Adjuster', 'Admin'] as const satisfies readonly UserRole[];
 
+// For an Admin, the overview is the admin dashboard.
 export const WORKSPACE_SECTIONS = [
   { id: 'overview', path: '/app', roles: USER_ROLES, mobile: USER_ROLES },
   { id: 'policies', path: '/app/policies', roles: ['Client'], mobile: ['Client'] },
@@ -29,8 +30,12 @@ export const WORKSPACE_SECTIONS = [
     roles: ['Agent', 'Admin'],
     mobile: ['Agent', 'Admin'],
   },
-  { id: 'sales', path: '/app/sales', roles: ['Agent', 'Admin'], mobile: ['Agent'] },
-  { id: 'admin', path: '/app/admin', roles: ['Admin'], mobile: ['Admin'] },
+  { id: 'sales', path: '/app/sales', roles: ['Agent'], mobile: ['Agent'] },
+  // The admin panel.
+  { id: 'allPolicies', path: '/app/admin/policies', roles: ['Admin'], mobile: [] },
+  { id: 'staff', path: '/app/admin/staff', roles: ['Admin'], mobile: ['Admin'] },
+  { id: 'audit', path: '/app/admin/audit', roles: ['Admin'], mobile: [] },
+  { id: 'policyTypes', path: '/app/admin/policy-types', roles: ['Admin'], mobile: [] },
   { id: 'profile', path: '/app/profile', roles: USER_ROLES, mobile: USER_ROLES },
   { id: 'help', path: '/app/help', roles: USER_ROLES, mobile: [] },
 ] as const satisfies readonly {
@@ -44,7 +49,15 @@ export type WorkspaceSection = (typeof WORKSPACE_SECTIONS)[number];
 export type WorkspaceSectionId = WorkspaceSection['id'];
 
 // Sections only staff ever see; a Client is never offered one.
-export const STAFF_SECTION_IDS = ['claims', 'customers', 'sales', 'admin'] as const;
+export const STAFF_SECTION_IDS = [
+  'claims',
+  'customers',
+  'sales',
+  'allPolicies',
+  'staff',
+  'audit',
+  'policyTypes',
+] as const;
 export type StaffSectionId = (typeof STAFF_SECTION_IDS)[number];
 
 export const isStaff = (role: UserRole) => (STAFF as readonly UserRole[]).includes(role);

@@ -61,6 +61,8 @@ public class Program
                     // Tight clock skew so expired tokens are rejected promptly.
                     ClockSkew = TimeSpan.FromSeconds(30)
                 };
+                // Deactivated users and rotated stamps end sessions at once.
+                options.Events = new JwtBearerEvents { OnTokenValidated = SessionValidator.ValidateAsync };
             });
 
         builder.Services.AddAuthorization();
@@ -88,6 +90,8 @@ public class Program
             await DatabaseSeeder.SeedDevelopmentAsync(db, builder.Configuration, hasher);
         }
 
+        await SeedDemoDataIfEnabledAsync(app);
+
         // HTTPS redirection would 307 every /health call to :443 inside the
         // container where no HTTPS listener exists — enable only when at least
         // one configured URL actually speaks HTTPS.
@@ -111,6 +115,33 @@ public class Program
         app.MapControllers();
 
         await app.RunAsync();
+    }
+
+    // Demo:SeedData=true fills an empty system with demo accounts and
+    // history (docker-compose.demo.yml). Refused in Production.
+    private static async Task SeedDemoDataIfEnabledAsync(WebApplication app)
+    {
+        if (!app.Configuration.GetValue<bool>("Demo:SeedData")) return;
+
+        await using var scope = app.Services.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var logger = services.GetRequiredService<ILoggerFactory>().CreateLogger("Startup.DemoData");
+        var result = await DemoDataSeeder.SeedIfEnabledAsync(
+            services.GetRequiredService<AppDbContext>(),
+            app.Configuration,
+            app.Environment.EnvironmentName,
+            services.GetRequiredService<IPasswordHasher>(),
+            services.GetRequiredService<PolisGo.Application.Pricing.IPremiumCalculator>(),
+            services.GetRequiredService<TimeProvider>());
+
+        if (result == DemoSeedResult.RefusedInProduction)
+        {
+            logger.LogCritical("Demo:SeedData is set in Production; demo data was NOT seeded.");
+        }
+        else
+        {
+            logger.LogInformation("Demo data: {Result}.", result);
+        }
     }
 
     private const string FrontendCorsPolicy = "Frontend";

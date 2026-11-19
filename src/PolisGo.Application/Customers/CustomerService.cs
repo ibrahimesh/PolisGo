@@ -40,6 +40,10 @@ public class CustomerService : ICustomerService
 
         var customers = ApplySearch(
             CustomerAccess.VisibleTo(_db.Customers.AsNoTracking(), _currentUser), query.Search);
+        // Within the caller's scope, so an agent filtering by another agent
+        // still sees only their own book (here: nothing).
+        if (query.Unassigned) customers = customers.Where(c => c.AgentId == null);
+        else if (query.AgentId is { } agentId) customers = customers.Where(c => c.AgentId == agentId);
         var totalCount = await customers.CountAsync(cancellationToken);
 
         // Counts are correlated subqueries in the same statement (no N+1),
@@ -63,7 +67,9 @@ public class CustomerService : ICustomerService
                 visiblePolicies.Count(p => p.CustomerId == c.Id),
                 visiblePolicies.Count(p => p.CustomerId == c.Id
                     && p.Status == PolicyStatus.Active && p.EndDate >= startOfToday),
-                visibleClaims.Count(cl => cl.Policy.CustomerId == c.Id)))
+                visibleClaims.Count(cl => cl.Policy.CustomerId == c.Id),
+                c.AgentId,
+                c.Agent != null ? c.Agent.FullName : null))
             .ToListAsync(cancellationToken);
 
         return new PagedResult<CustomerListItem>(items, page, pageSize, totalCount);
@@ -141,20 +147,39 @@ public class CustomerService : ICustomerService
     public async Task AssignAgentAsync(
         Guid customerId, AssignAgentRequest request, CancellationToken cancellationToken = default)
     {
-        var customer = await _db.Customers.FirstOrDefaultAsync(c => c.Id == customerId, cancellationToken)
+        var customer = await _db.Customers.Include(c => c.Agent)
+                .FirstOrDefaultAsync(c => c.Id == customerId, cancellationToken)
             ?? throw new NotFoundException(nameof(Customer), customerId);
 
-        if (request.AgentId is { } agentId
-            && !await _db.Users.AnyAsync(u => u.Id == agentId && u.Role == UserRole.Agent, cancellationToken))
+        // Only an active agent can take on a book.
+        string? agentName = null;
+        if (request.AgentId is { } agentId)
         {
-            throw new ValidationException("agentId", AgentNotFound);
+            agentName = await _db.Users
+                .Where(u => u.Id == agentId && u.Role == UserRole.Agent && u.IsActive)
+                .Select(u => u.FullName)
+                .FirstOrDefaultAsync(cancellationToken)
+                ?? throw new ValidationException("agentId", AgentNotFound);
         }
 
+        if (customer.AgentId == request.AgentId) return;
+
+        _db.AuditEntries.Add(new AuditEntry
+        {
+            Id = Guid.NewGuid(),
+            OccurredAt = _clock.GetUtcNow().UtcDateTime,
+            ActorUserId = _currentUser.UserId,
+            Action = AuditAction.CustomerAssigned,
+            SubjectId = customer.Id,
+            SubjectLabel = customer.FullName,
+            FromValue = customer.Agent?.FullName,
+            ToValue = agentName
+        });
         customer.AgentId = request.AgentId;
         await _db.SaveChangesAsync(cancellationToken);
     }
 
-    public const string AgentNotFound = "No agent with this id.";
+    public const string AgentNotFound = "No active agent with this id.";
 
     private static IQueryable<Customer> ApplySearch(IQueryable<Customer> customers, string? search)
     {

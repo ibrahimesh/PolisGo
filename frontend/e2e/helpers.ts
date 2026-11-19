@@ -127,6 +127,11 @@ export function isoToday(offsetDays = 0): string {
   return date.toISOString().slice(0, 10);
 }
 
+// What a DateField shows for an ISO date: DD.MM.YYYY in every language.
+export function displayDate(iso: string): string {
+  return `${iso.slice(8, 10)}.${iso.slice(5, 7)}.${iso.slice(0, 4)}`;
+}
+
 // Thin API client for arranging data a test is not about.
 export function cabinetApi(page: Page, session: Session) {
   const headers = { Authorization: `Bearer ${session.token}` };
@@ -269,6 +274,7 @@ export async function adminApi(page: Page) {
         id,
         fullName,
         email: user.email,
+        password: user.password,
         session: { token: body.token, expiresAt: body.expiresAt },
       };
     },
@@ -284,6 +290,17 @@ export async function adminApi(page: Page) {
       expect(items).toHaveLength(1);
       return items[0]?.id ?? '';
     },
+    // A staff account's id by its email (e.g. the demo agent).
+    async staffId(email: string) {
+      const response = await page.request.get(`${API_URL}/api/users/staff`, {
+        headers,
+        params: { search: email },
+      });
+      expect(response.status(), await response.text()).toBe(200);
+      const { items } = (await response.json()) as { items: { id: string }[] };
+      expect(items, `no staff account ${email}`).toHaveLength(1);
+      return items[0]?.id ?? '';
+    },
     async assignAgent(customerId: string, agentId: string | null) {
       const response = await page.request.put(`${API_URL}/api/customers/${customerId}/agent`, {
         headers,
@@ -296,7 +313,7 @@ export async function adminApi(page: Page) {
 
 /* ---------- Staff ---------- */
 
-export type StaffRole = 'Agent' | 'Adjuster';
+export type StaffRole = 'Agent' | 'Adjuster' | 'Admin';
 
 // Letters only (the API's name rule), unique enough to search for.
 function staffName(role: StaffRole) {
@@ -304,7 +321,8 @@ function staffName(role: StaffRole) {
     .toString(36)
     .slice(2, 8)
     .replace(/\d/g, (d) => 'abcdefghij'.charAt(Number(d)));
-  return `${role === 'Agent' ? 'Leyla Agent' : 'Rauf Adjuster'} ${id.charAt(0).toUpperCase()}${id.slice(1)}`;
+  const first = { Agent: 'Leyla Agent', Adjuster: 'Rauf Adjuster', Admin: 'Nərmin Admin' }[role];
+  return `${first} ${id.charAt(0).toUpperCase()}${id.slice(1)}`;
 }
 
 // A client with an active policy and a Submitted claim (the claim's location

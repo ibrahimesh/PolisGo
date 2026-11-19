@@ -1,7 +1,9 @@
 import type { ComponentType } from 'react';
 import {
+  BriefcaseIcon,
   ChartIcon,
   ClipboardIcon,
+  FileIcon,
   GaugeIcon,
   HelpIcon,
   HomeIcon,
@@ -19,8 +21,11 @@ export const SECTION_ICONS: Record<WorkspaceSectionId, ComponentType> = {
   claims: ClipboardIcon,
   customers: UsersIcon,
   sales: ChartIcon,
+  allPolicies: PolicyIcon,
+  staff: BriefcaseIcon,
+  audit: FileIcon,
+  policyTypes: GaugeIcon,
   myClaims: ClipboardIcon,
-  admin: GaugeIcon,
   profile: UserIcon,
   help: HelpIcon,
 };
