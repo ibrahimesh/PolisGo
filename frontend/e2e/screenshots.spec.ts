@@ -340,3 +340,62 @@ for (const size of SIZES) {
     }
   });
 }
+
+/* ---------- Admin panel: first screen only, on the demo data ---------- */
+
+const ADMIN_PAGES = ['dashboard', 'staff', 'customers', 'policies', 'audit', 'products'] as const;
+
+for (const size of SIZES) {
+  test.describe(`admin ${size.label} @screenshots`, () => {
+    test.use({ viewport: size.viewport, deviceScaleFactor: 2 });
+
+    for (const theme of THEMES) {
+      test(`admin-${theme}-${size.label}`, async ({ page }) => {
+        await page.emulateMedia({ reducedMotion: 'reduce' });
+        const admin = await (await adminApi(page)).createStaff('Admin', 'Nərmin Əhmədova');
+        await seedPreferences(page, { theme, lang: 'en' });
+        await openSession(page, admin.session);
+
+        const steps: Record<
+          (typeof ADMIN_PAGES)[number],
+          { path: string; ready: () => Promise<unknown> }
+        > = {
+          dashboard: {
+            path: '/app?range=12m',
+            ready: () => page.getByRole('heading', { name: 'Top agents by premium' }).waitFor(),
+          },
+          staff: {
+            path: '/app/admin/staff?q=demo.polisgo.az',
+            ready: () => page.getByText('4 accounts', { exact: true }).waitFor(),
+          },
+          customers: {
+            path: '/app/customers?q=demo.polisgo.az&sort=nameAsc',
+            ready: () => page.getByText('8 customers', { exact: true }).waitFor(),
+          },
+          policies: {
+            path: '/app/admin/policies?q=DEMO',
+            ready: () => page.getByText(/^\d+ policies$/).waitFor(),
+          },
+          audit: {
+            path: '/app/admin/audit?type=Claim',
+            ready: () => page.getByText(/^\d+ events$/).waitFor(),
+          },
+          products: {
+            path: '/app/admin/policy-types',
+            ready: () => page.getByText(/rates are illustrative/).waitFor(),
+          },
+        };
+        for (const name of ADMIN_PAGES) {
+          await page.goto(steps[name].path);
+          await steps[name].ready();
+          await page.evaluate(() => document.fonts.ready);
+          await page.waitForTimeout(400);
+          await page.screenshot({
+            path: `docs/screenshots/admin-${name}-${theme}-${size.label}.png`,
+            animations: 'disabled',
+          });
+        }
+      });
+    }
+  });
+}
