@@ -12,7 +12,8 @@ import { Select } from '../../../components/ui/Select';
 import { useFormatters } from '../../../i18n/format';
 import { todayIso } from '../../../lib/dates';
 import { ListSkeleton } from '../../staff/ListSkeleton';
-import { useAudit, useStaffOptions } from '../queries';
+import { useAudit } from '../queries';
+import { StaffPicker } from '../StaffPicker';
 import {
   AUDIT_PAGE_SIZE,
   DEFAULT_AUDIT,
@@ -30,7 +31,6 @@ export function AuditPage() {
   const [params, setParams] = useSearchParams();
   const state = readAudit(params);
   const audit = useAudit(toAuditQuery(state));
-  const staff = useStaffOptions({ status: 'All' });
   const data = audit.data;
   const pages = data
     ? Math.max(1, Math.ceil(Math.min(data.totalCount, 200 * AUDIT_PAGE_SIZE) / AUDIT_PAGE_SIZE))
@@ -49,17 +49,11 @@ export function AuditPage() {
         onSubmit={(event) => event.preventDefault()}
         className="grid gap-4 md:grid-cols-2 xl:grid-cols-4"
       >
-        <Select
+        <StaffPicker
           label={t('admin.audit.actor')}
           value={state.actor}
-          onChange={(event) => update({ actor: event.target.value })}
-          options={[
-            { value: '', label: t('admin.audit.anyone') },
-            ...(staff.data?.items ?? []).map((member) => ({
-              value: member.id,
-              label: `${member.fullName} (${t(`roles.${member.role}`)})`,
-            })),
-          ]}
+          onChange={(actor) => update({ actor })}
+          emptyOption={{ value: '', label: t('admin.audit.anyone') }}
         />
         <Select
           label={t('admin.audit.entity')}

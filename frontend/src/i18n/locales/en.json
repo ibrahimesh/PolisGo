@@ -1720,6 +1720,13 @@
         "baseRate": "Base rate"
       },
       "howPriced": "A premium is the base rate multiplied by factors for the engine, the driver’s age and experience, the vehicle’s age, recent claims and the term. Rates are set with the database and are read-only here."
+    },
+    "picker": {
+      "search": "Search for: {{label}}",
+      "placeholder": "Find by name or email",
+      "selected": "Current choice",
+      "more_one": "{{count}} match; narrow the search to see more.",
+      "more_other": "{{count}} matches; narrow the search to see them all."
     }
   }
 }

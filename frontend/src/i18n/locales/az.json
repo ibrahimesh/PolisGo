@@ -1728,6 +1728,13 @@
         "baseRate": "Baza tarif"
       },
       "howPriced": "Haqq baza tarifin mühərrik, sürücünün yaşı və stajı, avtomobilin yaşı, son zərərlər və müddət əmsallarına vurulmasıdır. Tariflər verilənlər bazasında təyin olunur; burada yalnız göstərilir."
+    },
+    "picker": {
+      "search": "Axtarış: {{label}}",
+      "placeholder": "Ad və ya e-poçt",
+      "selected": "Cari seçim",
+      "more_one": "{{count}} nəticə; hamısını görmək üçün axtarışı dəqiqləşdirin.",
+      "more_other": "{{count}} nəticə; hamısını görmək üçün axtarışı dəqiqləşdirin."
     }
   }
 }

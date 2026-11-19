@@ -14,7 +14,7 @@ import { Caption, Table, TBody, Td, Th, THead, Tr } from '../../../components/ui
 import { useFormatters } from '../../../i18n/format';
 import { useDebouncedValue } from '../../../lib/hooks';
 import { useAuth } from '../../../auth/AuthContext';
-import { useStaffOptions } from '../../admin/queries';
+import { StaffPicker } from '../../admin/StaffPicker';
 import { ListSkeleton } from '../ListSkeleton';
 import { useCustomers } from '../queries';
 import {
@@ -162,22 +162,14 @@ export function CustomersPage() {
 
 function AgentFilter({ value, onChange }: { value: string; onChange: (value: string) => void }) {
   const { t } = useTranslation();
-  const agents = useStaffOptions({ role: 'Agent', status: 'All' });
   return (
-    <Select
+    <StaffPicker
       label={t('admin.customers.agent')}
+      staffRole="Agent"
       value={value}
-      onChange={(event) => onChange(event.target.value)}
-      options={[
-        { value: '', label: t('admin.customers.anyAgent') },
-        { value: 'none', label: t('admin.customers.unassigned') },
-        ...(agents.data?.items ?? []).map((agent) => ({
-          value: agent.id,
-          label: agent.isActive
-            ? agent.fullName
-            : t('admin.customers.inactiveAgent', { name: agent.fullName }),
-        })),
-      ]}
+      onChange={onChange}
+      emptyOption={{ value: '', label: t('admin.customers.anyAgent') }}
+      extraOptions={[{ value: 'none', label: t('admin.customers.unassigned') }]}
     />
   );
 }

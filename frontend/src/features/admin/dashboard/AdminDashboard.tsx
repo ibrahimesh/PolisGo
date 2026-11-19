@@ -6,7 +6,7 @@ import { PageHeader } from '../../../components/layout/PageHeader';
 import { Button } from '../../../components/ui/Button';
 import { DateField } from '../../../components/ui/DateField';
 import { ErrorNotice } from '../../../components/ui/ErrorNotice';
-import { SegmentedControl } from '../../../components/ui/SegmentedControl';
+import { cx } from '../../../components/ui/cx';
 import { Skeleton } from '../../../components/ui/Skeleton';
 import { useFormatters } from '../../../i18n/format';
 import { isoToDisplay } from '../../../lib/dateInput';
@@ -48,26 +48,43 @@ export function AdminDashboard() {
       />
 
       <section aria-label={t('admin.dashboard.rangeLabel')} className="space-y-4">
-        <SegmentedControl<RangeChoice>
-          legend={t('admin.dashboard.rangeLabel')}
-          value={customOpen ? 'custom' : choice}
-          onChange={(value) => {
-            if (value === 'custom') {
-              setCustomOpen(true);
-              return;
-            }
-            setCustomOpen(false);
-            setParams(writeRange({ kind: 'preset', preset: value }), { replace: true });
-          }}
-          segments={[
-            ...RANGE_PRESETS.map((preset) => ({
-              value: preset,
-              label: t(`admin.dashboard.presets.${preset}`),
-            })),
-            { value: 'custom' as const, label: t('admin.dashboard.presets.custom') },
-          ]}
-          className="flex-wrap"
-        />
+        {/* Real radios as wrapping chips: five choices don't fit one row at 390px. */}
+        <fieldset>
+          <legend className="sr-only">{t('admin.dashboard.rangeLabel')}</legend>
+          <div className="flex flex-wrap gap-2">
+            {[...RANGE_PRESETS, 'custom' as const].map((option) => {
+              const checked = (customOpen ? 'custom' : choice) === option;
+              return (
+                <label
+                  key={option}
+                  className={cx(
+                    'inline-flex min-h-10 cursor-pointer items-center rounded-sm border px-3 text-sm font-medium transition-colors duration-150 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent',
+                    checked
+                      ? 'border-accent bg-surface-2 text-text'
+                      : 'border-line-strong text-muted hover:bg-surface-2 hover:text-text',
+                  )}
+                >
+                  <input
+                    type="radio"
+                    name="dashboard-range"
+                    value={option}
+                    checked={checked}
+                    onChange={() => {
+                      if (option === 'custom') {
+                        setCustomOpen(true);
+                        return;
+                      }
+                      setCustomOpen(false);
+                      setParams(writeRange({ kind: 'preset', preset: option }), { replace: true });
+                    }}
+                    className="sr-only"
+                  />
+                  {t(`admin.dashboard.presets.${option}`)}
+                </label>
+              );
+            })}
+          </div>
+        </fieldset>
         {customOpen && (
           <CustomRange
             initial={dates}

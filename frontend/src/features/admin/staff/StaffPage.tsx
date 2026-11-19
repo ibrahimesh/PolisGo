@@ -208,17 +208,23 @@ function Actions({
     return <span className="text-sm text-muted">{t('admin.staff.you')}</span>;
   return (
     <div className="flex flex-wrap gap-2">
-      <Button variant="secondary" size="sm" onClick={() => onAction({ kind: 'role', member })}>
+      {/* The name tells rows apart for screen readers; it starts with the
+          visible label, so speech input still matches it. */}
+      <Button
+        variant="secondary"
+        size="sm"
+        aria-label={`${t('admin.staff.changeRole')}, ${member.fullName}`}
+        onClick={() => onAction({ kind: 'role', member })}
+      >
         {t('admin.staff.changeRole')}
-        <span className="sr-only">, {member.fullName}</span>
       </Button>
       <Button
         variant="ghost"
         size="sm"
+        aria-label={`${member.isActive ? t('admin.staff.deactivate') : t('admin.staff.reactivate')}, ${member.fullName}`}
         onClick={() => onAction({ kind: member.isActive ? 'deactivate' : 'reactivate', member })}
       >
         {member.isActive ? t('admin.staff.deactivate') : t('admin.staff.reactivate')}
-        <span className="sr-only">, {member.fullName}</span>
       </Button>
     </div>
   );

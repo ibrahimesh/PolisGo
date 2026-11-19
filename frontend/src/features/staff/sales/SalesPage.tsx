@@ -32,7 +32,7 @@ import { useProductName } from '../../policies/useProductName';
 import { ExportButton } from '../ExportButton';
 import { ListSkeleton } from '../ListSkeleton';
 import { useSales } from '../queries';
-import { useStaffOptions } from '../../admin/queries';
+import { StaffPicker } from '../../admin/StaffPicker';
 import { exportFileName } from '../saveBlob';
 import { SalesSummaryTiles } from './SalesSummaryTiles';
 
@@ -209,16 +209,13 @@ export function SalesPage({ mode = 'agent' }: { mode?: 'agent' | 'admin' }) {
 
 function AgentSelect({ value, onChange }: { value: string; onChange: (value: string) => void }) {
   const { t } = useTranslation();
-  const agents = useStaffOptions({ role: 'Agent', status: 'All' });
   return (
-    <Select
+    <StaffPicker
       label={t('admin.policies.agent')}
+      staffRole="Agent"
       value={value}
-      onChange={(event) => onChange(event.target.value)}
-      options={[
-        { value: '', label: t('admin.policies.anyAgent') },
-        ...(agents.data?.items ?? []).map((agent) => ({ value: agent.id, label: agent.fullName })),
-      ]}
+      onChange={onChange}
+      emptyOption={{ value: '', label: t('admin.policies.anyAgent') }}
     />
   );
 }
