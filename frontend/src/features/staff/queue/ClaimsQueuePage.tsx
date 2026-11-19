@@ -12,7 +12,9 @@ import { cx } from '../../../components/ui/cx';
 import { EmptyState } from '../../../components/ui/EmptyState';
 import { ErrorNotice } from '../../../components/ui/ErrorNotice';
 import { SearchIcon } from '../../../components/ui/icons';
+import { DateFilterField } from '../../../components/ui/DateFilterField';
 import { Input } from '../../../components/ui/Input';
+import { todayIso } from '../../../lib/dates';
 import { Pagination } from '../../../components/ui/Pagination';
 import { Select } from '../../../components/ui/Select';
 import { Caption, Table, TBody, Td, Th, THead, Tr } from '../../../components/ui/Table';
@@ -88,7 +90,9 @@ export function ClaimsQueuePage() {
         }}
         className={cx(
           'grid gap-4 md:grid-cols-2',
-          state.view === 'all' && 'xl:grid-cols-[minmax(0,2fr)_repeat(2,minmax(0,1fr))]',
+          state.view === 'all'
+            ? 'xl:grid-cols-[minmax(0,2fr)_repeat(4,minmax(0,1fr))]'
+            : 'xl:grid-cols-[minmax(0,2fr)_repeat(3,minmax(0,1fr))]',
         )}
       >
         <Input
@@ -126,6 +130,21 @@ export function ClaimsQueuePage() {
             value: option.id,
             label: t(`staff.queue.sort.${option.id}`),
           }))}
+        />
+        <DateFilterField
+          id="queue-from"
+          label={t('staff.queue.incidentFrom')}
+          value={state.from}
+          max={state.to || todayIso()}
+          onCommit={(from) => update({ from })}
+        />
+        <DateFilterField
+          id="queue-to"
+          label={t('staff.queue.incidentTo')}
+          value={state.to}
+          min={state.from || undefined}
+          max={todayIso()}
+          onCommit={(to) => update({ to })}
         />
       </form>
 

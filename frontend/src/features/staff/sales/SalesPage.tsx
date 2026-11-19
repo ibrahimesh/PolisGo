@@ -32,12 +32,16 @@ import { useProductName } from '../../policies/useProductName';
 import { ExportButton } from '../ExportButton';
 import { ListSkeleton } from '../ListSkeleton';
 import { useSales } from '../queries';
+import { useStaffOptions } from '../../admin/queries';
 import { exportFileName } from '../saveBlob';
 import { SalesSummaryTiles } from './SalesSummaryTiles';
 
 // The agent's own sales (an Admin's: everyone's): the figures at the top and
 // the list below come from the same visibility rule on the server.
-export function SalesPage() {
+// mode 'agent': the agent's own sales with their figures. mode 'admin':
+// every policy, with who sold it and a filter by agent.
+export function SalesPage({ mode = 'agent' }: { mode?: 'agent' | 'admin' }) {
+  const admin = mode === 'admin';
   const { t } = useTranslation();
   const [params, setParams] = useSearchParams();
   const state = readListState(params);
@@ -67,8 +71,8 @@ export function SalesPage() {
   return (
     <div className="space-y-10">
       <PageHeader
-        title={t('staff.sales.title')}
-        description={t('staff.sales.lead')}
+        title={admin ? t('admin.policies.title') : t('staff.sales.title')}
+        description={admin ? t('admin.policies.lead') : t('staff.sales.lead')}
         actions={
           <ExportButton
             fileName={exportFileName('policies')}
@@ -78,7 +82,7 @@ export function SalesPage() {
         }
       />
 
-      <SalesSummaryTiles />
+      {!admin && <SalesSummaryTiles />}
 
       <div className="space-y-8">
         <form
@@ -137,6 +141,7 @@ export function SalesPage() {
               label: t(`policies.sortOptions.${option.id}`),
             }))}
           />
+          {admin && <AgentSelect value={state.agent} onChange={(agent) => update({ agent })} />}
         </form>
 
         <section id={resultsId} aria-labelledby={`${resultsId}-title`} className="space-y-4">
@@ -183,8 +188,8 @@ export function SalesPage() {
               aria-busy={sales.isFetching}
               className={sales.isFetching ? 'opacity-60 transition-opacity' : undefined}
             >
-              <SalesCards items={sales.data.items} />
-              <SalesTable items={sales.data.items} />
+              <SalesCards items={sales.data.items} showAgent={admin} />
+              <SalesTable items={sales.data.items} showAgent={admin} />
             </div>
           )}
 
@@ -202,7 +207,29 @@ export function SalesPage() {
   );
 }
 
-function SalesTable({ items }: { items: readonly PolicyResponse[] }) {
+function AgentSelect({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+  const { t } = useTranslation();
+  const agents = useStaffOptions({ role: 'Agent', status: 'All' });
+  return (
+    <Select
+      label={t('admin.policies.agent')}
+      value={value}
+      onChange={(event) => onChange(event.target.value)}
+      options={[
+        { value: '', label: t('admin.policies.anyAgent') },
+        ...(agents.data?.items ?? []).map((agent) => ({ value: agent.id, label: agent.fullName })),
+      ]}
+    />
+  );
+}
+
+function SalesTable({
+  items,
+  showAgent,
+}: {
+  items: readonly PolicyResponse[];
+  showAgent: boolean;
+}) {
   const { t } = useTranslation();
   const format = useFormatters();
   const product = useProductName();
@@ -235,6 +262,11 @@ function SalesTable({ items }: { items: readonly PolicyResponse[] }) {
                 >
                   {policy.customerName}
                 </Link>
+                {showAgent && (
+                  <span className="block text-sm text-muted">
+                    {policy.agentName ?? t('admin.policies.selfService')}
+                  </span>
+                )}
               </Td>
               <Td className="text-sm whitespace-nowrap">
                 {format.date(policy.startDate)} – {format.date(policy.endDate)}
@@ -251,7 +283,14 @@ function SalesTable({ items }: { items: readonly PolicyResponse[] }) {
   );
 }
 
-function SalesCards({ items }: { items: readonly PolicyResponse[] }) {
+function SalesCards({
+  items,
+  showAgent,
+}: {
+  items: readonly PolicyResponse[];
+  showAgent: boolean;
+}) {
+  const { t } = useTranslation();
   const format = useFormatters();
   const product = useProductName();
   return (
@@ -268,6 +307,11 @@ function SalesCards({ items }: { items: readonly PolicyResponse[] }) {
           >
             {policy.customerName}
           </Link>
+          {showAgent && (
+            <p className="text-sm text-muted">
+              {policy.agentName ?? t('admin.policies.selfService')}
+            </p>
+          )}
           <p className="text-sm text-muted">
             {product.name(policy.policyTypeCode)} · {policy.vehicle.plateNumber}
           </p>

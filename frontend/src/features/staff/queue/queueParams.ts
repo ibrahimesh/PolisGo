@@ -1,5 +1,6 @@
 import { CLAIM_STATUSES } from '../../../api/types';
 import type { ClaimSortBy, ClaimStatus, ListClaimsQuery, SortDirection } from '../../../api/types';
+import { isCompleteIso } from '../../../lib/dateInput';
 import { CLAIM_RULES } from '../../claims/claimRules';
 
 // The adjuster's queue: everything in the URL (view, filters, sort, page), so
@@ -30,6 +31,9 @@ export interface QueueState {
   search: string;
   sort: QueueSortId;
   page: number;
+  // Incident date range, inclusive ISO days; '' when open.
+  from: string;
+  to: string;
 }
 
 // Oldest first: the claim that has waited longest is the one to pick up.
@@ -39,6 +43,8 @@ export const DEFAULT_QUEUE: QueueState = {
   search: '',
   sort: 'oldest',
   page: 1,
+  from: '',
+  to: '',
 };
 
 export function readQueue(params: URLSearchParams): QueueState {
@@ -58,7 +64,15 @@ export function readQueue(params: URLSearchParams): QueueState {
     search: (params.get('q') ?? '').slice(0, CLAIM_RULES.maxSearch),
     sort: QUEUE_SORTS.some((o) => o.id === sort) ? (sort as QueueSortId) : DEFAULT_QUEUE.sort,
     page: Number.isFinite(page) && page > 0 ? page : 1,
+    ...readIncidentRange(params),
   };
+}
+
+// Whole dates only, and never reversed: the API would refuse either.
+function readIncidentRange(params: URLSearchParams): { from: string; to: string } {
+  const from = isCompleteIso(params.get('from') ?? '') ? (params.get('from') ?? '') : '';
+  const to = isCompleteIso(params.get('to') ?? '') ? (params.get('to') ?? '') : '';
+  return from && to && from > to ? { from: '', to: '' } : { from, to };
 }
 
 // Only non-default values go in the URL.
@@ -69,6 +83,8 @@ export function writeQueue(state: QueueState): URLSearchParams {
   if (state.search.trim()) params.set('q', state.search.trim());
   if (state.sort !== DEFAULT_QUEUE.sort) params.set('sort', state.sort);
   if (state.page > 1) params.set('page', String(state.page));
+  if (state.from) params.set('from', state.from);
+  if (state.to) params.set('to', state.to);
   return params;
 }
 
@@ -91,6 +107,8 @@ export function toQueueFilter(state: QueueState): ListClaimsQuery {
   return {
     ...viewFilter(state),
     ...(state.search.trim() ? { search: state.search.trim() } : {}),
+    ...(state.from ? { from: state.from } : {}),
+    ...(state.to ? { to: state.to } : {}),
     sortBy: sort.sortBy,
     sortDir: sort.sortDir,
   };
@@ -101,7 +119,9 @@ export function toQueueQuery(state: QueueState): ListClaimsQuery {
 }
 
 export function hasQueueFilters(state: QueueState): boolean {
-  return Boolean(state.search.trim() || (state.view === 'all' && state.status));
+  return Boolean(
+    state.search.trim() || (state.view === 'all' && state.status) || state.from || state.to,
+  );
 }
 
 // Age drives priority: an open claim waiting this long is flagged.

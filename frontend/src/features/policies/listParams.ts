@@ -28,7 +28,11 @@ export interface ListState {
   search: string;
   sort: SortOptionId;
   page: number;
+  // Admins: one agent's sales (an id), '' for all.
+  agent: string;
 }
+
+const GUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export const DEFAULT_STATE: ListState = {
   status: '',
@@ -36,6 +40,7 @@ export const DEFAULT_STATE: ListState = {
   search: '',
   sort: 'newest',
   page: 1,
+  agent: '',
 };
 
 export function readListState(params: URLSearchParams): ListState {
@@ -48,6 +53,7 @@ export function readListState(params: URLSearchParams): ListState {
     search: (params.get('q') ?? '').slice(0, SEARCH_MAX),
     sort: SORT_OPTIONS.some((o) => o.id === sort) ? (sort as SortOptionId) : 'newest',
     page: Number.isFinite(page) && page > 0 ? page : 1,
+    agent: GUID.test(params.get('agent') ?? '') ? (params.get('agent') ?? '') : '',
   };
 }
 
@@ -59,6 +65,7 @@ export function writeListState(state: ListState): URLSearchParams {
   if (state.search.trim()) params.set('q', state.search.trim());
   if (state.sort !== DEFAULT_STATE.sort) params.set('sort', state.sort);
   if (state.page > 1) params.set('page', String(state.page));
+  if (state.agent) params.set('agent', state.agent);
   return params;
 }
 
@@ -68,6 +75,7 @@ export function toQuery(state: ListState): ListPoliciesQuery {
     ...(state.status ? { status: state.status } : {}),
     ...(state.type ? { type: state.type } : {}),
     ...(state.search.trim() ? { search: state.search.trim() } : {}),
+    ...(state.agent ? { agentId: state.agent } : {}),
     sortBy: sort.sortBy,
     sortDir: sort.sortDir,
     page: state.page,
@@ -76,7 +84,7 @@ export function toQuery(state: ListState): ListPoliciesQuery {
 }
 
 export function hasFilters(state: ListState): boolean {
-  return Boolean(state.status || state.type || state.search.trim());
+  return Boolean(state.status || state.type || state.search.trim() || state.agent);
 }
 
 export function pageCount(totalCount: number, pageSize = PAGE_SIZE): number {
