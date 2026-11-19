@@ -18,6 +18,7 @@ import { PolicyStatusBadge } from '../../policies/PolicyStatusBadge';
 import { useProductName } from '../../policies/useProductName';
 import { rolesFor } from '../../workspace/sections';
 import { useCustomer } from '../queries';
+import { AssignAgent } from '../../admin/customers/AssignAgent';
 
 export function CustomerDetailPage() {
   const { id = '' } = useParams();
@@ -89,7 +90,7 @@ function Detail({ customer, back }: { customer: CustomerDetailResponse; back: Re
   const format = useFormatters();
   const { user } = useAuth();
   // Selling is for an agent's own customer; an Admin sells as the house.
-  const canSell = user !== null && rolesFor('sales').includes(user.role);
+  const canSell = user !== null && rolesFor('customers').includes(user.role);
 
   return (
     <div className="space-y-10">
@@ -109,46 +110,49 @@ function Detail({ customer, back }: { customer: CustomerDetailResponse; back: Re
       />
 
       <div className="grid gap-10 xl:grid-cols-12">
-        <Card
-          variant="paper"
-          as="section"
-          aria-labelledby="customer-facts-title"
-          className="h-fit p-6 sm:p-8 xl:col-span-5"
-        >
-          <h2 id="customer-facts-title" className="font-sans text-base font-medium">
-            {t('staff.customers.profile')}
-          </h2>
-          <dl className="mt-2 divide-y divide-paper-line">
-            <Fact label={t('workspace.email')}>
-              <a
-                href={`mailto:${customer.email}`}
-                className="break-all underline decoration-paper-line underline-offset-4 hover:decoration-current"
-              >
-                {customer.email}
-              </a>
-            </Fact>
-            <Fact label={t('staff.customers.phone')}>
-              <a
-                href={`tel:${customer.phone.replace(/\s+/g, '')}`}
-                className="tabular underline decoration-paper-line underline-offset-4 hover:decoration-current"
-              >
-                {customer.phone}
-              </a>
-            </Fact>
-            <Fact label={t('staff.customers.birthDate')}>{format.date(customer.birthDate)}</Fact>
-            <Fact label={t('staff.customers.licenceDate')}>
-              {format.date(customer.drivingLicenseDate)}
-            </Fact>
-            <Fact label={t('staff.customers.account')}>
-              {customer.hasAccount
-                ? t('staff.customers.hasAccount')
-                : t('staff.customers.noAccount')}
-            </Fact>
-            <Fact label={t('staff.customers.agent')}>
-              {customer.agentName ?? t('staff.customers.noAgent')}
-            </Fact>
-          </dl>
-        </Card>
+        <div className="h-fit space-y-8 xl:col-span-5">
+          <Card
+            variant="paper"
+            as="section"
+            aria-labelledby="customer-facts-title"
+            className="p-6 sm:p-8"
+          >
+            <h2 id="customer-facts-title" className="font-sans text-base font-medium">
+              {t('staff.customers.profile')}
+            </h2>
+            <dl className="mt-2 divide-y divide-paper-line">
+              <Fact label={t('workspace.email')}>
+                <a
+                  href={`mailto:${customer.email}`}
+                  className="break-all underline decoration-paper-line underline-offset-4 hover:decoration-current"
+                >
+                  {customer.email}
+                </a>
+              </Fact>
+              <Fact label={t('staff.customers.phone')}>
+                <a
+                  href={`tel:${customer.phone.replace(/\s+/g, '')}`}
+                  className="tabular underline decoration-paper-line underline-offset-4 hover:decoration-current"
+                >
+                  {customer.phone}
+                </a>
+              </Fact>
+              <Fact label={t('staff.customers.birthDate')}>{format.date(customer.birthDate)}</Fact>
+              <Fact label={t('staff.customers.licenceDate')}>
+                {format.date(customer.drivingLicenseDate)}
+              </Fact>
+              <Fact label={t('staff.customers.account')}>
+                {customer.hasAccount
+                  ? t('staff.customers.hasAccount')
+                  : t('staff.customers.noAccount')}
+              </Fact>
+              <Fact label={t('staff.customers.agent')}>
+                {customer.agentName ?? t('staff.customers.noAgent')}
+              </Fact>
+            </dl>
+          </Card>
+          {user?.role === 'Admin' && <AssignAgent customer={customer} />}
+        </div>
 
         <div className="min-w-0 space-y-10 xl:col-span-7">
           <Vehicles customer={customer} />

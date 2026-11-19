@@ -13,6 +13,8 @@ import { Select } from '../../../components/ui/Select';
 import { Caption, Table, TBody, Td, Th, THead, Tr } from '../../../components/ui/Table';
 import { useFormatters } from '../../../i18n/format';
 import { useDebouncedValue } from '../../../lib/hooks';
+import { useAuth } from '../../../auth/AuthContext';
+import { useStaffOptions } from '../../admin/queries';
 import { ListSkeleton } from '../ListSkeleton';
 import { useCustomers } from '../queries';
 import {
@@ -48,7 +50,10 @@ export function CustomersPage() {
   const customers = useCustomers(toCustomerQuery(state));
   const data = customers.data;
   const pages = data ? Math.max(1, Math.ceil(data.totalCount / CUSTOMER_PAGE_SIZE)) : 1;
-  const filtered = Boolean(state.search.trim());
+  const filtered = Boolean(state.search.trim() || state.agent);
+  const { user } = useAuth();
+  // Admins see every book, so they filter by agent and see who has whom.
+  const isAdmin = user?.role === 'Admin';
 
   return (
     <div className="space-y-8">
@@ -62,7 +67,11 @@ export function CustomersPage() {
           event.preventDefault();
           update({ search: searchText });
         }}
-        className="grid gap-4 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]"
+        className={
+          isAdmin
+            ? 'grid gap-4 md:grid-cols-2 xl:grid-cols-[minmax(0,2fr)_repeat(2,minmax(0,1fr))]'
+            : 'grid gap-4 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]'
+        }
       >
         <Input
           label={t('staff.customers.search')}
@@ -86,6 +95,7 @@ export function CustomersPage() {
             label: t(`staff.customers.sort.${option.id}`),
           }))}
         />
+        {isAdmin && <AgentFilter value={state.agent} onChange={(agent) => update({ agent })} />}
       </form>
 
       <section id={resultsId} aria-labelledby={`${resultsId}-title`} className="space-y-4">
@@ -132,8 +142,8 @@ export function CustomersPage() {
             aria-busy={customers.isFetching}
             className={customers.isFetching ? 'opacity-60 transition-opacity' : undefined}
           >
-            <CustomerCards items={customers.data.items} />
-            <CustomerTable items={customers.data.items} />
+            <CustomerCards items={customers.data.items} showAgent={isAdmin} />
+            <CustomerTable items={customers.data.items} showAgent={isAdmin} />
           </div>
         )}
 
@@ -150,7 +160,35 @@ export function CustomersPage() {
   );
 }
 
-function CustomerTable({ items }: { items: readonly CustomerListItem[] }) {
+function AgentFilter({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+  const { t } = useTranslation();
+  const agents = useStaffOptions({ role: 'Agent', status: 'All' });
+  return (
+    <Select
+      label={t('admin.customers.agent')}
+      value={value}
+      onChange={(event) => onChange(event.target.value)}
+      options={[
+        { value: '', label: t('admin.customers.anyAgent') },
+        { value: 'none', label: t('admin.customers.unassigned') },
+        ...(agents.data?.items ?? []).map((agent) => ({
+          value: agent.id,
+          label: agent.isActive
+            ? agent.fullName
+            : t('admin.customers.inactiveAgent', { name: agent.fullName }),
+        })),
+      ]}
+    />
+  );
+}
+
+function CustomerTable({
+  items,
+  showAgent,
+}: {
+  items: readonly CustomerListItem[];
+  showAgent: boolean;
+}) {
   const { t } = useTranslation();
   const format = useFormatters();
   return (
@@ -163,7 +201,11 @@ function CustomerTable({ items }: { items: readonly CustomerListItem[] }) {
             <Th>{t('staff.customers.columns.contact')}</Th>
             <Th className="text-right">{t('staff.customers.columns.policies')}</Th>
             <Th className="text-right">{t('staff.customers.columns.claims')}</Th>
-            <Th>{t('staff.customers.columns.since')}</Th>
+            {showAgent ? (
+              <Th>{t('admin.customers.agent')}</Th>
+            ) : (
+              <Th>{t('staff.customers.columns.since')}</Th>
+            )}
           </Tr>
         </THead>
         <TBody>
@@ -190,9 +232,13 @@ function CustomerTable({ items }: { items: readonly CustomerListItem[] }) {
                 })}
               </Td>
               <Td className="text-right">{format.integer(customer.claimCount)}</Td>
-              <Td className="text-sm whitespace-nowrap">
-                {format.date(customer.createdAt.slice(0, 10))}
-              </Td>
+              {showAgent ? (
+                <Td className="text-sm">{customer.agentName ?? t('admin.customers.unassigned')}</Td>
+              ) : (
+                <Td className="text-sm whitespace-nowrap">
+                  {format.date(customer.createdAt.slice(0, 10))}
+                </Td>
+              )}
             </Tr>
           ))}
         </TBody>
@@ -201,7 +247,13 @@ function CustomerTable({ items }: { items: readonly CustomerListItem[] }) {
   );
 }
 
-function CustomerCards({ items }: { items: readonly CustomerListItem[] }) {
+function CustomerCards({
+  items,
+  showAgent,
+}: {
+  items: readonly CustomerListItem[];
+  showAgent: boolean;
+}) {
   const { t } = useTranslation();
   const format = useFormatters();
   return (
@@ -223,6 +275,13 @@ function CustomerCards({ items }: { items: readonly CustomerListItem[] }) {
               claims: format.integer(customer.claimCount),
             })}
           </p>
+          {showAgent && (
+            <p className="text-sm text-muted">
+              {t('admin.customers.agentLine', {
+                name: customer.agentName ?? t('admin.customers.unassigned'),
+              })}
+            </p>
+          )}
         </li>
       ))}
     </ul>
