@@ -1,0 +1,13 @@
+# Demo data on top of the normal stack: demo agents, adjusters, clients,
+# policies and claims, so the dashboards have something to show.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.demo.yml up --build
+#
+# DEMO ACCOUNTS, NOT FOR PRODUCTION. They all share one password
+# (DEMO_PASSWORD, default "Demo-Passw0rd"); the API refuses to seed when
+# ASPNETCORE_ENVIRONMENT is Production, and seeds only once per database.
+services:
+  api:
+    environment:
+      Demo__SeedData: "true"
+      Demo__Password: ${DEMO_PASSWORD:-Demo-Passw0rd}
