@@ -36,7 +36,7 @@ public static class CsvExports
     public static byte[] Policies(IEnumerable<PolicyResponse> policies) => Csv.Write(
         [
             "Policy number", "Status", "Customer", "Product", "Vehicle", "Plate",
-            "Start date", "End date", "Premium", "Currency", "Created at (UTC)"
+            "Start date", "End date", "Premium", "Currency", "Created at (UTC)", "Agent"
         ],
         policies.Select(p => (IReadOnlyList<string>)
         [
@@ -50,6 +50,7 @@ public static class CsvExports
             Csv.Date(p.EndDate),
             Csv.Number(p.Premium),
             Csv.Text(p.Currency),
-            Csv.Timestamp(p.CreatedAt)
+            Csv.Timestamp(p.CreatedAt),
+            Csv.Text(p.AgentName)
         ]));
 }

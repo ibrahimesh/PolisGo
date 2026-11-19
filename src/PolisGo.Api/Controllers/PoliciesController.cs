@@ -88,6 +88,7 @@ public class PoliciesController : ControllerBase
     /// <param name="sortDir">Asc or Desc (default).</param>
     /// <param name="page">1-based page number.</param>
     /// <param name="pageSize">Items per page; capped at 50.</param>
+    /// <param name="agentId">Only policies this agent sold (within the caller's scope).</param>
     /// <param name="cancellationToken">Request cancellation.</param>
     /// <response code="200">A page of policies.</response>
     /// <response code="400">Invalid filter or sort value, or search too long.</response>
@@ -104,10 +105,11 @@ public class PoliciesController : ControllerBase
         [FromQuery] SortDirection sortDir = SortDirection.Desc,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
+        [FromQuery] Guid? agentId = null,
         CancellationToken cancellationToken = default)
     {
         var result = await _policies.ListAsync(
-            new ListPoliciesQuery(status, type, search, sortBy, sortDir, page, pageSize), cancellationToken);
+            new ListPoliciesQuery(status, type, search, sortBy, sortDir, page, pageSize, agentId), cancellationToken);
         return Ok(result);
     }
 
@@ -136,10 +138,11 @@ public class PoliciesController : ControllerBase
         [FromQuery] string? search,
         [FromQuery] PolicySortBy sortBy = PolicySortBy.CreatedAt,
         [FromQuery] SortDirection sortDir = SortDirection.Desc,
+        [FromQuery] Guid? agentId = null,
         CancellationToken cancellationToken = default)
     {
         var policies = await _policies.ExportAsync(
-            new ListPoliciesQuery(status, type, search, sortBy, sortDir), cancellationToken);
+            new ListPoliciesQuery(status, type, search, sortBy, sortDir, AgentId: agentId), cancellationToken);
         return File(CsvExports.Policies(policies), "text/csv; charset=utf-8",
             $"policies-{DateTime.UtcNow:yyyy-MM-dd}.csv");
     }

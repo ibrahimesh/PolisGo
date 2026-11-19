@@ -22,6 +22,10 @@ public class JwtTokenGenerator : IJwtTokenGenerator
     // outside the JWT reserved set so it stays obviously application-specific.
     public const string CustomerIdClaimType = "customerId";
 
+    // The user's SecurityStamp when the token was issued; a deactivation or a
+    // role change rotates it and every older token stops validating.
+    public const string SecurityStampClaimType = "stamp";
+
     public (string Token, DateTime ExpiresAt) GenerateToken(User user, Guid? customerId = null)
     {
         var expiresAt = DateTime.UtcNow.AddMinutes(_settings.ExpiryMinutes);
@@ -34,7 +38,8 @@ public class JwtTokenGenerator : IJwtTokenGenerator
             // "jti" gives every token a unique id — essential for future revocation.
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             // ClaimTypes.Role is what ASP.NET Core authorization looks at by default.
-            new(ClaimTypes.Role, user.Role.ToString())
+            new(ClaimTypes.Role, user.Role.ToString()),
+            new(SecurityStampClaimType, user.SecurityStamp.ToString())
         };
 
         if (customerId.HasValue)

@@ -19,7 +19,10 @@ public record ListCustomersQuery(
     CustomerSortBy SortBy = CustomerSortBy.CreatedAt,
     SortDirection SortDirection = SortDirection.Desc,
     int Page = 1,
-    int PageSize = 20
+    int PageSize = 20,
+    // Admins: one agent's book, or (Unassigned) customers nobody looks after.
+    Guid? AgentId = null,
+    bool Unassigned = false
 );
 
 // Policy and claim counts follow the caller's usual visibility: an Agent
@@ -34,7 +37,9 @@ public record CustomerListItem(
     int VehicleCount,
     int PolicyCount,
     int ActivePolicyCount,
-    int ClaimCount
+    int ClaimCount,
+    Guid? AgentId,
+    string? AgentName
 );
 
 public record CustomerDetailResponse(

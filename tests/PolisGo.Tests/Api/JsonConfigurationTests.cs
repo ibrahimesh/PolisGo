@@ -36,7 +36,8 @@ public class JsonConfigurationTests
             Status: PolicyStatus.Draft,
             CreatedAt: DateTime.UtcNow,
             Vehicle: new PolicyVehicleSummary(Guid.NewGuid(), "Kia", "Rio", 2021, "10-AA-123"),
-            CustomerName: "Aysel Hasanova");
+            CustomerName: "Aysel Hasanova",
+            AgentName: null);
 
         var json = JsonSerializer.Serialize(policy, Options());
 

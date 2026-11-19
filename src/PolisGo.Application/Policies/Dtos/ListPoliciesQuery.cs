@@ -22,5 +22,7 @@ public record ListPoliciesQuery(
     PolicySortBy SortBy = PolicySortBy.CreatedAt,
     SortDirection SortDir = SortDirection.Desc,
     int Page = 1,
-    int PageSize = 20
+    int PageSize = 20,
+    // Policies sold by this agent (within the caller's scope).
+    Guid? AgentId = null
 );

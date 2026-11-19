@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using PolisGo.Application.Abstractions;
+using PolisGo.Application.Admin;
 using PolisGo.Application.Auth;
 using PolisGo.Application.Cabinet;
 using PolisGo.Application.Claims;
@@ -41,6 +42,9 @@ public static class DependencyInjection
         services.AddScoped<IAdminStatsService, AdminStatsService>();
         services.AddScoped<ICustomerService, CustomerService>();
         services.AddScoped<IStaffOverviewService, StaffOverviewService>();
+        services.AddScoped<IStaffAdminService, StaffAdminService>();
+        services.AddScoped<IAuditLogService, AuditLogService>();
+        services.AddScoped<IAdminDashboardService, AdminDashboardService>();
         services.AddScoped<IPolicyTypeService, PolicyTypeService>();
 
         return services;

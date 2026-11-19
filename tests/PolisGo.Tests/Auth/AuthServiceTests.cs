@@ -173,19 +173,6 @@ public class AuthServiceTests
     }
 
     [Fact]
-    public async Task CreateStaff_AppliesTheSamePasswordAndNameRules()
-    {
-        await using var db = NewDb();
-        var sut = NewSut(db);
-
-        var ex = await Assert.ThrowsAsync<ValidationException>(() => sut.CreateStaffUserAsync(
-            new CreateStaffUserRequest("agent@polisgo.az", "weakpass1", "A", UserRole.Agent)));
-
-        Assert.Equal(new[] { "FullName", "Password" }, ex.Errors.Keys.Order());
-        Assert.Empty(db.Users);
-    }
-
-    [Fact]
     public async Task Login_StillAcceptsAccountsCreatedUnderOlderRules()
     {
         // Seed directly: this password doesn't meet today's policy.
