@@ -40,6 +40,9 @@ export function IncidentStep() {
   >({
     resolver: zodResolver(schema),
     mode: 'onTouched',
+    // The date is a controlled field, registered after the others: RHF's
+    // own "first error" would skip it, so focus goes in field order below.
+    shouldFocusError: false,
     defaultValues: {
       incidentDate: state.values.incidentDate,
       incidentType: state.values.incidentType as IncidentInput['incidentType'],
@@ -80,7 +83,13 @@ export function IncidentStep() {
     label: labels[name],
   }));
   const { errors, submitCount } = formState;
-  const onSubmit = handleSubmit(() => goTo('damage'));
+  const onSubmit = handleSubmit(
+    () => goTo('damage'),
+    (invalid) => {
+      const first = FIELDS.find((field) => invalid[field]);
+      if (first) document.getElementById(id(first))?.focus();
+    },
+  );
 
   return (
     <form

@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 import {
+  displayDate,
   cabinetApi,
   expectNoHorizontalScroll,
   isoToday,
@@ -202,7 +203,7 @@ test.describe('Purchase wizard', () => {
     const nextDay = new Date(`${policy.endDate}T00:00:00Z`);
     nextDay.setUTCDate(nextDay.getUTCDate() + 1);
     await expect(page.getByLabel('Cover starts on')).toHaveValue(
-      nextDay.toISOString().slice(0, 10),
+      displayDate(nextDay.toISOString().slice(0, 10)),
     );
     // The renewal does not overlap the current policy, so it prices.
     await expect(yourPremium(page)).toBeAttached({ timeout: 15_000 });

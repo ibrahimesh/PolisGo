@@ -127,6 +127,11 @@ export function isoToday(offsetDays = 0): string {
   return date.toISOString().slice(0, 10);
 }
 
+// What a DateField shows for an ISO date: DD.MM.YYYY in every language.
+export function displayDate(iso: string): string {
+  return `${iso.slice(8, 10)}.${iso.slice(5, 7)}.${iso.slice(0, 4)}`;
+}
+
 // Thin API client for arranging data a test is not about.
 export function cabinetApi(page: Page, session: Session) {
   const headers = { Authorization: `Bearer ${session.token}` };

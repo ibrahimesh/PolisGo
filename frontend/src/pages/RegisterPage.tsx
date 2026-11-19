@@ -47,6 +47,9 @@ export function RegisterPage() {
     useForm<RegisterInput, unknown, RegisterValues>({
       resolver: zodResolver(schema),
       mode: 'onTouched',
+      // The dates are controlled fields, registered after the others: RHF's
+      // own "first error" would skip them, so focus goes in field order below.
+      shouldFocusError: false,
       defaultValues: {
         fullName: '',
         email: '',
@@ -76,28 +79,34 @@ export function RegisterPage() {
     label: labels[name],
   }));
 
-  const onSubmit = handleSubmit(async (values) => {
-    setSubmitError(null);
-    setRegistering(true);
-    try {
-      // Explicit payload: the confirmation never leaves the browser.
-      const user = await registerAccount({
-        fullName: values.fullName,
-        email: values.email,
-        phone: values.phone,
-        birthDate: values.birthDate,
-        drivingLicenseDate: values.drivingLicenseDate,
-        password: values.password,
-      });
-      toast({ title: t('auth.register.success', { name: user.fullName }), tone: 'success' });
-      await navigate('/app', { replace: true });
-    } catch (error) {
-      setRegistering(false);
-      const matched = applyServerFieldErrors(error, FIELD_ORDER, setError);
-      if (matched[0]) setFocus(matched[0]);
-      else setSubmitError(error);
-    }
-  });
+  const onSubmit = handleSubmit(
+    async (values) => {
+      setSubmitError(null);
+      setRegistering(true);
+      try {
+        // Explicit payload: the confirmation never leaves the browser.
+        const user = await registerAccount({
+          fullName: values.fullName,
+          email: values.email,
+          phone: values.phone,
+          birthDate: values.birthDate,
+          drivingLicenseDate: values.drivingLicenseDate,
+          password: values.password,
+        });
+        toast({ title: t('auth.register.success', { name: user.fullName }), tone: 'success' });
+        await navigate('/app', { replace: true });
+      } catch (error) {
+        setRegistering(false);
+        const matched = applyServerFieldErrors(error, FIELD_ORDER, setError);
+        if (matched[0]) setFocus(matched[0]);
+        else setSubmitError(error);
+      }
+    },
+    (invalid) => {
+      const first = FIELD_ORDER.find((field) => invalid[field]);
+      if (first) document.getElementById(id(first))?.focus();
+    },
+  );
 
   const { errors, isSubmitting, submitCount } = formState;
   const showForm = registering || status === 'anonymous' || status === 'error';
