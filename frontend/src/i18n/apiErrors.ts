@@ -82,7 +82,16 @@ const SERVER_MESSAGE_KEYS: Record<string, string> = {
   // (ExportLimits) and agent assignment (CustomerService).
   'The record was modified by someone else — reload and retry.': 'errors.concurrentUpdate',
   'Too many rows to export; narrow the filters to at most 5000.': 'errors.tooManyRows',
-  'No agent with this id.': 'errors.agentNotFound',
+  'No active agent with this id.': 'errors.agentNotFound',
+  // Admin panel — AdminValidation.Messages (same contract test).
+  'Role must be Agent, Adjuster or Admin.': 'validation.staffRoleRequired',
+  "You can't deactivate your own account or change your own role.": 'errors.notYourself',
+  'At least one active administrator must remain.': 'errors.lastAdmin',
+  'This account is already deactivated.': 'errors.alreadyInactive',
+  'This account is already active.': 'errors.alreadyActive',
+  'The account already has this role.': 'errors.sameRole',
+  'The start of the range must be on or before its end.': 'validation.rangeOrder',
+  'The range can be at most 24 months.': 'validation.rangeTooLong',
 };
 
 export function serverMessageKey(message: string | undefined): string | undefined {

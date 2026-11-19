@@ -1,5 +1,5 @@
 import { lazy } from 'react';
-import { Route, Routes } from 'react-router';
+import { Navigate, Route, Routes } from 'react-router';
 import { RequireAuth } from './auth/RequireAuth';
 import { AppShell } from './components/layout/AppShell';
 import { CabinetShell } from './features/cabinet/CabinetShell';
@@ -59,10 +59,14 @@ const SalesPage = lazy(() =>
 const NewClaimPage = lazy(() =>
   import('./features/claims/wizard/NewClaimPage').then((m) => ({ default: m.NewClaimPage })),
 );
-const WorkspaceSection = lazy(() =>
-  import('./features/workspace/WorkspaceSection').then((m) => ({
-    default: m.WorkspaceSection,
-  })),
+const StaffPage = lazy(() =>
+  import('./features/admin/staff/StaffPage').then((m) => ({ default: m.StaffPage })),
+);
+const AuditPage = lazy(() =>
+  import('./features/admin/audit/AuditPage').then((m) => ({ default: m.AuditPage })),
+);
+const PolicyTypesPage = lazy(() =>
+  import('./features/admin/PolicyTypesPage').then((m) => ({ default: m.PolicyTypesPage })),
 );
 
 // Same roles as the sidebar and the API's [Authorize(Roles = ...)].
@@ -108,10 +112,8 @@ export function App() {
           <Route path="customers" element={guard('customers')}>
             <Route index element={<CustomersPage />} />
             <Route path=":id" element={<CustomerDetailPage />} />
-            {/* Selling uses the sales section's roles, as the API does. */}
-            <Route element={guard('sales')}>
-              <Route path=":id/sell" element={<SellPolicyPage />} />
-            </Route>
+            {/* Agents sell to their own customers; Admins to anyone. */}
+            <Route path=":id/sell" element={<SellPolicyPage />} />
           </Route>
 
           <Route path="sales" element={guard('sales')}>
@@ -125,9 +127,13 @@ export function App() {
             <Route index element={<HelpPage />} />
           </Route>
 
-          {/* The admin panel is the next step; its guard is already real. */}
-          <Route path="admin" element={guard('admin')}>
-            <Route index element={<WorkspaceSection section="admin" />} />
+          {/* The admin panel; its dashboard is the Admin's overview at /app. */}
+          <Route path="admin" element={guard('staff')}>
+            <Route index element={<Navigate to="/app" replace />} />
+            <Route path="policies" element={<SalesPage mode="admin" />} />
+            <Route path="staff" element={<StaffPage />} />
+            <Route path="audit" element={<AuditPage />} />
+            <Route path="policy-types" element={<PolicyTypesPage />} />
           </Route>
 
           <Route path="*" element={<NotFoundPage />} />

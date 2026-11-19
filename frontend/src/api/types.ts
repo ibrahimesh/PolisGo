@@ -189,6 +189,8 @@ export interface PolicyResponse {
   vehicle: PolicyVehicleSummary;
   // The policyholder as recorded on the customer.
   customerName: string;
+  // Who sold it; null for self-service sales.
+  agentName: string | null;
 }
 
 export type PaymentMethod = 'Cash' | 'Card' | 'BankTransfer' | 'Online';
@@ -234,6 +236,7 @@ export type PolicySortBy = (typeof POLICY_SORT_FIELDS)[number];
 export type SortDirection = 'Asc' | 'Desc';
 
 export interface ListPoliciesQuery {
+  agentId?: Guid;
   status?: PolicyStatus;
   type?: string;
   search?: string;
@@ -407,6 +410,9 @@ export interface ListCustomersQuery {
   sortDir?: SortDirection;
   page?: number;
   pageSize?: number;
+  // Admins: one agent's book, or customers nobody looks after.
+  agentId?: Guid;
+  unassigned?: boolean;
 }
 
 export interface CustomerListItem {
@@ -421,6 +427,8 @@ export interface CustomerListItem {
   policyCount: number;
   activePolicyCount: number;
   claimCount: number;
+  agentId: Guid | null;
+  agentName: string | null;
 }
 
 export interface StatusCount<T extends string> {
@@ -580,4 +588,100 @@ export interface LatestClaimUpdate {
   fromStatus: ClaimStatus | null;
   toStatus: ClaimStatus;
   at: IsoDateTime;
+}
+
+/* ---- Admin panel ---- */
+
+export const STAFF_ROLES = ['Agent', 'Adjuster', 'Admin'] as const;
+export type StaffRole = (typeof STAFF_ROLES)[number];
+export type StaffStatusFilter = 'All' | 'Active' | 'Inactive';
+
+export interface ListStaffQuery {
+  search?: string;
+  role?: StaffRole;
+  status?: StaffStatusFilter;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface StaffMemberResponse {
+  id: Guid;
+  email: string;
+  fullName: string;
+  role: StaffRole;
+  isActive: boolean;
+  createdAt: IsoDateTime;
+  deactivatedAt: IsoDateTime | null;
+  // Customers assigned (agents) and claims held open (adjusters).
+  customerCount: number;
+  openClaimCount: number;
+}
+
+export interface ChangeRoleRequest {
+  role: StaffRole;
+}
+
+export const AUDIT_ENTITY_TYPES = ['Claim', 'Policy', 'User', 'Customer'] as const;
+export type AuditEntityType = (typeof AUDIT_ENTITY_TYPES)[number];
+
+export interface AuditLogQuery {
+  actorId?: Guid;
+  entityType?: AuditEntityType;
+  from?: IsoDate;
+  to?: IsoDate;
+  page?: number;
+  pageSize?: number;
+}
+
+// A recorded event: a claim or policy status change, or a staff action.
+export interface AuditEventResponse {
+  id: Guid;
+  occurredAt: IsoDateTime;
+  actorId: Guid | null;
+  actorName: string | null;
+  actorRole: UserRole | null;
+  entityType: AuditEntityType;
+  entityId: Guid;
+  entityLabel: string;
+  // 'StatusChanged' or an AuditAction name.
+  action: string;
+  fromValue: string | null;
+  toValue: string | null;
+}
+
+export interface DashboardTotals {
+  policiesIssued: number;
+  premiumWritten: number;
+  claimsFiled: number;
+  claimsDecided: number;
+  averageResolutionHours: number | null;
+  claimsPaidAmount: number;
+}
+
+export interface DashboardMonth {
+  year: number;
+  month: number;
+  policiesIssued: number;
+  premiumWritten: number;
+  claimsFiled: number;
+}
+
+export interface TopAgent {
+  agentId: Guid;
+  fullName: string;
+  isActive: boolean;
+  policiesSold: number;
+  premiumWritten: number;
+}
+
+// GET /api/admin/dashboard
+export interface AdminDashboardResponse {
+  from: IsoDate;
+  to: IsoDate;
+  generatedAt: IsoDateTime;
+  currency: string;
+  totals: DashboardTotals;
+  monthly: DashboardMonth[];
+  claimsByStatus: StatusCount<ClaimStatus>[];
+  topAgents: TopAgent[];
 }
