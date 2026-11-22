@@ -39,9 +39,10 @@ public class AuditLogService : IAuditLogService
         {
             throw new ValidationException("from", M.RangeOrder);
         }
-        var from = query.From?.ToDateTime(TimeOnly.MinValue);
-        // Inclusive end day: everything before the next midnight.
-        var before = query.To?.AddDays(1).ToDateTime(TimeOnly.MinValue);
+        // Baku days, as the SPA's "today": from that day's midnight in Baku,
+        // and the end day inclusive (everything before the next midnight).
+        DateTime? from = query.From is { } fromDay ? BusinessCalendar.StartOfDayUtc(fromDay) : null;
+        DateTime? before = query.To is { } toDay ? BusinessCalendar.StartOfDayUtc(toDay.AddDays(1)) : null;
         var take = page * pageSize;
         var wants = (AuditEntityType type) => query.EntityType is null || query.EntityType == type;
 

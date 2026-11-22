@@ -16,7 +16,7 @@ public interface IAdminDashboardService
     Task<AdminDashboardResponse> GetAsync(DateOnly? from, DateOnly? to, CancellationToken cancellationToken = default);
 }
 
-// The admin dashboard for a date range (inclusive days, UTC). Every figure is
+// The admin dashboard for a date range (inclusive Baku days). Every figure is
 // a database aggregate; months are grouped by Year/Month parts, which both
 // providers translate. One snapshot per range is cached briefly and shared by
 // all admins, like /api/admin/stats.
@@ -67,8 +67,10 @@ public class AdminDashboardService : IAdminDashboardService
     private async Task<AdminDashboardResponse> ComputeAsync(
         DateOnly start, DateOnly end, DateTime now, CancellationToken ct)
     {
-        var from = start.ToDateTime(TimeOnly.MinValue);
-        var before = end.AddDays(1).ToDateTime(TimeOnly.MinValue);
+        // The range is in Baku days; the monthly buckets below still group by
+        // the timestamps' UTC month (a 4-hour difference at month ends).
+        var from = BusinessCalendar.StartOfDayUtc(start);
+        var before = BusinessCalendar.StartOfDayUtc(end.AddDays(1));
 
         var policies = _db.Policies.AsNoTracking().Where(p => p.CreatedAt >= from && p.CreatedAt < before);
         var payments = _db.Payments.AsNoTracking()

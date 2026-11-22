@@ -132,8 +132,10 @@ every change in this repo.
 - **Business dates are Baku dates.** "Today", start/end, incident, birth and
   licence dates come from `BusinessCalendar.Today(clock)` (`Asia/Baku`, with
   the injected `TimeProvider`), never `DateTime.UtcNow.Date`; the SPA's
-  `todayIso()` matches. Timestamps (`CreatedAt`, `PaidAt`, history) and the
-  admin dashboard / audit day filters stay UTC. The API logs the zone at
+  `todayIso()` matches. Timestamps (`CreatedAt`, `PaidAt`, history) stay UTC;
+  the admin dashboard and audit day filters are Baku days
+  (`BusinessCalendar.StartOfDayUtc`), and the dashboard's monthly buckets
+  group by the timestamps' UTC month. The API logs the zone at
   startup and refuses to start without time zone data (the aspnet image
   ships `tzdata`).
 - **Cover starts tomorrow at the earliest** (`StartDateTooEarly`), and a

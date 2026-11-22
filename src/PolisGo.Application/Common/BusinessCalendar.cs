@@ -16,4 +16,9 @@ public static class BusinessCalendar
 
     public static DateOnly DateOf(DateTimeOffset instant) =>
         DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(instant, Zone).DateTime);
+
+    // The UTC instant a Baku day starts at: day filters over timestamps (the
+    // audit log, the dashboard) compare against these.
+    public static DateTime StartOfDayUtc(DateOnly date) =>
+        TimeZoneInfo.ConvertTimeToUtc(date.ToDateTime(TimeOnly.MinValue), Zone);
 }
