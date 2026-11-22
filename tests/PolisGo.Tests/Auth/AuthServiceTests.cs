@@ -146,6 +146,7 @@ public class AuthServiceTests
         private readonly BcryptPasswordHasher _inner = new();
         public int Verifications { get; private set; }
         public string Hash(string password) => _inner.Hash(password);
+        public bool NeedsRehash(string hash) => _inner.NeedsRehash(hash);
         public bool Verify(string password, string hash)
         {
             Verifications++;

@@ -95,6 +95,14 @@ public class AuthService : IAuthService
         }
 
         // Clients always have a linked Customer; staff accounts usually don't.
+        // An older hash (plain bcrypt, which reads only 72 bytes) moves to the
+        // current scheme while the password is at hand.
+        if (_passwordHasher.NeedsRehash(user.PasswordHash))
+        {
+            user.PasswordHash = _passwordHasher.Hash(request.Password);
+            await _db.SaveChangesAsync(cancellationToken);
+        }
+
         var customerId = await _db.Customers
             .Where(c => c.UserId == user.Id)
             .Select(c => (Guid?)c.Id)
