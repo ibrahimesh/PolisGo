@@ -48,6 +48,7 @@ jobs:
         run: >
           dotnet test PolisGo.slnx --no-build -c Release
           --collect:"XPlat Code Coverage"
+          --settings coverage.runsettings
           --logger "trx;LogFileName=test-results.trx"
           --results-directory TestResults
 
