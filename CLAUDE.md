@@ -235,7 +235,10 @@ React Router, TanStack Query, React Hook Form + Zod, react-i18next.
 - Choosing a staff member: `StaffPicker` (server search + select), never a
   plain list of the first page of accounts.
 - Every private query lives under `cabinetKeys.all`; a write invalidates
-  that prefix (`useInvalidateCabinet`), and sign-out clears the cache.
+  that prefix (`useInvalidateCabinet`). Any end of a session — sign-out, the
+  token's expiry timer, a 401 — clears the whole cache and the pending claim
+  photos (`AuthProvider` watches `tokenStore`), so the next person on the tab
+  starts empty.
 - `src/i18n` — setup, `locales/{en,ru,az}.json`, API error mapping, number
   formatting. `src/lib` — dates and hooks. `e2e/` — Playwright suite.
 - Routes are lazy-loaded (`React.lazy` in `App.tsx`); add new pages the same way.

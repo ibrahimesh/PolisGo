@@ -28,6 +28,47 @@ test.describe('Cabinet account', () => {
     await expect(page.getByRole('heading', { name: 'Recent activity' })).toBeVisible();
   });
 
+  // A session can end without "Sign out": the token runs out in an open tab,
+  // or the API ends it (deactivation, role change). The next person to sign
+  // in on that tab must not see the previous person's data.
+  test('a session that ends without signing out leaves nothing for the next person', async ({
+    page,
+  }) => {
+    const first = await registerSession(page);
+    const { policy } = await cabinetApi(page, first.session).activePolicy(1);
+    const next = randomUser();
+    await registerSession(page, next);
+    const theirPolicy = () => page.getByText(policy.policyNumber).filter({ visible: true });
+
+    await page.clock.install({ time: new Date() });
+    await openSession(page, first.session);
+    await page.goto('/app/policies');
+    await expect(theirPolicy().first()).toBeVisible();
+
+    // The 60-minute token runs out while the tab is open.
+    await page.clock.fastForward('01:01:00');
+    await page.waitForURL('**/login');
+    await page.clock.setSystemTime(new Date());
+
+    // The next person's list loads slowly, so whatever shows meanwhile can
+    // only come from what the tab kept.
+    await page.route('**/api/policies?**', async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      await route.continue();
+    });
+    await page.getByLabel('Email').fill(next.email);
+    await page.getByLabel('Password', { exact: true }).fill(next.password);
+    await page.getByRole('button', { name: 'Sign in' }).click();
+    await page.waitForURL('**/app/policies');
+    // The list area is busy either way: a skeleton when nothing is kept, a
+    // refetching table when something is.
+    await expect(page.locator('[aria-busy="true"]').first()).toBeVisible();
+
+    // Checked at once, inside the delay: not a retrying assertion, which
+    // would pass as soon as the fresh list replaced the kept one.
+    expect(await theirPolicy().count()).toBe(0);
+  });
+
   test('edit name and phone, with client and server validation', async ({ page }) => {
     const { user, session } = await registerSession(page);
     await openSession(page, session);
