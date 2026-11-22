@@ -175,7 +175,7 @@ every change in this repo.
 ## Demo data
 
 - `DemoDataSeeder` (Infrastructure) runs when `Demo:SeedData=true`
-  (`docker-compose.demo.yml`), never in Production, once per database (the
+  (`docker-compose.demo.yml`), only in Development, once per database (the
   `demo.agent1@demo.polisgo.az` marker). Demo accounts share `Demo:Password`
   (required, no built-in value: `MissingPassword` otherwise), never the admin
   secret. Keep its history

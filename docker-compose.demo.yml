@@ -5,7 +5,7 @@
 #
 # DEMO ACCOUNTS, NOT FOR PRODUCTION. They all share one password,
 # DEMO_PASSWORD from .env (required: there is no built-in one); the API
-# refuses to seed when ASPNETCORE_ENVIRONMENT is Production, and seeds only
+# seeds only when ASPNETCORE_ENVIRONMENT is Development, and only
 # once per database.
 services:
   api:

@@ -129,7 +129,7 @@ public class Program
     }
 
     // Demo:SeedData=true fills an empty system with demo accounts and
-    // history (docker-compose.demo.yml). Refused in Production.
+    // history (docker-compose.demo.yml). Only in Development.
     private static async Task SeedDemoDataIfEnabledAsync(WebApplication app)
     {
         if (!app.Configuration.GetValue<bool>("Demo:SeedData")) return;
@@ -145,9 +145,10 @@ public class Program
             services.GetRequiredService<PolisGo.Application.Pricing.IPremiumCalculator>(),
             services.GetRequiredService<TimeProvider>());
 
-        if (result == DemoSeedResult.RefusedInProduction)
+        if (result == DemoSeedResult.RefusedOutsideDevelopment)
         {
-            logger.LogCritical("Demo:SeedData is set in Production; demo data was NOT seeded.");
+            logger.LogCritical("Demo:SeedData is set outside Development ({Environment}); demo data was NOT seeded.",
+                app.Environment.EnvironmentName);
         }
         else if (result == DemoSeedResult.MissingPassword)
         {

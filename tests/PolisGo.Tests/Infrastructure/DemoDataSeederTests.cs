@@ -26,8 +26,26 @@ public class DemoDataSeederTests
         using var fixture = new SqliteTestDb();
 
         Assert.Equal(DemoSeedResult.Disabled, await Seed(fixture, Config()));
-        Assert.Equal(DemoSeedResult.RefusedInProduction,
+        Assert.Equal(DemoSeedResult.RefusedOutsideDevelopment,
             await Seed(fixture, Config(("Demo:SeedData", "true")), "Production"));
+        Assert.False(await fixture.Db.Users.AnyAsync(u => u.Email.EndsWith(DemoDataSeeder.Domain)));
+    }
+
+    // An allow-list, not a deny-list: any environment but Development (a
+    // "Staging", a misspelt "prod") would get staff accounts sharing a
+    // documented password.
+    [Theory]
+    [InlineData("Production")]
+    [InlineData("Staging")]
+    [InlineData("prod")]
+    public async Task Refused_outside_development(string environment)
+    {
+        using var fixture = new SqliteTestDb();
+        var config = Config(("Demo:SeedData", "true"), ("Demo:Password", "Configured-Passw0rd"));
+
+        var result = await Seed(fixture, config, environment);
+
+        Assert.NotEqual(DemoSeedResult.Seeded, result);
         Assert.False(await fixture.Db.Users.AnyAsync(u => u.Email.EndsWith(DemoDataSeeder.Domain)));
     }
 

@@ -290,7 +290,8 @@ docker compose -f docker-compose.yml -f docker-compose.demo.yml up --build
 On first start the API adds demo agents, adjusters and clients, their
 vehicles, policies started months ago with their payments, and claims in every
 status with their history. It runs once per database (a marker account), and
-**refuses to run when `ASPNETCORE_ENVIRONMENT` is `Production`**. The flag is
+**runs only when `ASPNETCORE_ENVIRONMENT` is `Development`** (the compose
+stack's; any other name is refused). The flag is
 `Demo__SeedData=true` if you set it another way.
 
 All demo accounts share one password: `DEMO_PASSWORD` from `.env`, which
