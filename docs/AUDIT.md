@@ -646,3 +646,26 @@ under `docs/audit-evidence/` are kept as the record of the audited commit.
   the language switcher and the certificate, for about 48 kB gzip.
 - **ESLint 10 (part of L-9):** ESLint 9 is out of support; version 10 is a
   config migration of its own and was left out of this branch.
+
+### Final verification (commit `6db17be`)
+
+A fresh clone with LF line endings (0 CRLF files), every CI step in CI
+order; frontend steps in the `node:22` image (Node 22.23.5) as in CI. This
+section was added afterwards in a docs-only commit no CI step reads.
+
+| Job | Step | Result |
+| --- | ---- | ------ |
+| Build and test | restore · NuGet vulnerability check | OK · no vulnerable packages |
+| | build `-c Release -warnaserror` | 0 warnings, 0 errors |
+| | tests with coverage (`coverage.runsettings`) | **497 passed, 7 skipped (SQL Server only), 504 total**; coverage 93.7% |
+| SQL Server integration tests | `--filter Category=SqlServer` against SQL Server 2022 | **14 / 14 passed** (the 7 SQL Server tests and their SQLite siblings) |
+| Frontend | `npm ci` · `npm audit --audit-level=high` | OK · 0 vulnerabilities |
+| | lint · typecheck · Prettier check | OK · OK · OK |
+| | Vitest · build | **315 / 315 passed** · OK (the lazy certificate chunk is over 500 kB, as before) |
+| End-to-end | compose with the demo and e2e overrides, `--wait` | healthy; ports on 127.0.0.1; all migrations applied; demo data seeded |
+| | `CI=true npm run e2e -- --workers=4` | **150 / 150 passed** (97 at 1440 px, 53 at 390 px) in 1.8 min, at 20:21–20:23 UTC, when Baku is already on the next day |
+| Docker build | `docker buildx build` with the digest-pinned base images | OK |
+
+The first attempt (`2486455`) failed the Prettier check on
+`wizardState.ts`; `6db17be` formatted it and every step above was run
+again from a new clone.
