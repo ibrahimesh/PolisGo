@@ -112,3 +112,37 @@ test.describe('Landing v2 sections', () => {
     });
   });
 });
+
+// While a route's code loads, the shell must not show the footer under a
+// short placeholder and then push it away: that one jump was a CLS of ~0.55
+// on the landing page (Lighthouse calls anything over 0.25 poor).
+test.describe('Layout stability', () => {
+  for (const width of [1440, 390]) {
+    test(`the landing and sign-in pages don't jump while they load (${width}px)`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height: 900 });
+      await seedPreferences(page, { lang: 'en' });
+      for (const path of ['/', '/login']) {
+        await page.goto(path);
+        await page.waitForLoadState('networkidle');
+        const cls = await page.evaluate(
+          () =>
+            new Promise<number>((resolve) => {
+              let total = 0;
+              new PerformanceObserver((list) => {
+                for (const entry of list.getEntries() as (PerformanceEntry & {
+                  value: number;
+                  hadRecentInput: boolean;
+                })[]) {
+                  if (!entry.hadRecentInput) total += entry.value;
+                }
+              }).observe({ type: 'layout-shift', buffered: true });
+              setTimeout(() => resolve(total), 500);
+            }),
+        );
+        expect(cls, `cumulative layout shift on ${path}`).toBeLessThan(0.1);
+      }
+    });
+  }
+});
