@@ -17,7 +17,7 @@ public class CabinetEndpointTests : IClassFixture<ApiFactory>
 
     // TestData policies run a year from createdAt, so this makes the last
     // covered day `daysLeft` days from today.
-    private static DateTime CreatedForDaysLeft(int daysLeft) => DateTime.UtcNow.Date.AddYears(-1).AddDays(daysLeft + 1);
+    private static DateTime CreatedForDaysLeft(int daysLeft) => TestDates.TodayStart.AddYears(-1).AddDays(daysLeft + 1);
 
     private sealed record Seeded(HttpClient Client, Customer Customer, Vehicle Vehicle);
 

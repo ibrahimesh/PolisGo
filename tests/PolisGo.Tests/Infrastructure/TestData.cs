@@ -1,3 +1,4 @@
+using PolisGo.Application.Common;
 using PolisGo.Domain.Entities;
 using PolisGo.Domain.Enums;
 using PolisGo.Infrastructure.Persistence;
@@ -88,7 +89,9 @@ internal sealed class TestData
         DateTime? startDate = null)
     {
         var created = createdAt ?? DateTime.UtcNow;
-        var start = (startDate ?? created).Date;
+        // Cover dates are Baku business dates, as the API counts them: at
+        // 20:00 UTC it is already tomorrow there.
+        var start = startDate?.Date ?? TestDates.DateOf(created);
         var policy = new Policy
         {
             Id = Guid.NewGuid(),
@@ -164,6 +167,18 @@ internal sealed class TestData
         _db.SaveChanges();
         return claim;
     }
+}
+
+// Business dates for test data and expectations: the API counts "today" in
+// Asia/Baku (BusinessCalendar), so a test using the UTC date disagrees with
+// it every evening from 20:00 UTC.
+internal static class TestDates
+{
+    public static DateOnly Today => BusinessCalendar.Today(TimeProvider.System);
+    public static DateTime TodayStart => Today.ToDateTime(TimeOnly.MinValue);
+
+    public static DateTime DateOf(DateTime utc) =>
+        BusinessCalendar.DateOf(new DateTimeOffset(DateTime.SpecifyKind(utc, DateTimeKind.Utc))).ToDateTime(TimeOnly.MinValue);
 }
 
 // Settable clock for time-windowed logic.

@@ -267,7 +267,7 @@ public class StaffEndpointTests : IClassFixture<ApiFactory>
             db.SaveChanges();
             return (customer.Id, p1.Id, p2.Id, p3.Id, claim.Id);
         });
-        var today = DateOnly.FromDateTime(DateTime.UtcNow).ToString("yyyy-MM-dd");
+        var today = TestDates.Today.ToString("yyyy-MM-dd");
 
         // A: reads what they sold, nothing else, and may not act.
         Assert.Equal(HttpStatusCode.OK, (await agentA.GetAsync($"/api/policies/{sold}")).StatusCode);
