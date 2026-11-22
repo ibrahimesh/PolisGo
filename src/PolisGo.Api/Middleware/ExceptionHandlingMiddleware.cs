@@ -47,6 +47,18 @@ public class ExceptionHandlingMiddleware
             LogExpected(ex, context);
             await WriteProblem(context, StatusCodes.Status401Unauthorized, "Unauthorized", ex.Message);
         }
+        catch (TooManyRequestsException ex)
+        {
+            LogExpected(ex, context);
+            await WriteProblem(context, StatusCodes.Status429TooManyRequests, "Too many requests", ex.Message,
+                decorate: response =>
+                {
+                    if (ex.RetryAfter is { } wait)
+                    {
+                        response.Headers.RetryAfter = ((int)Math.Ceiling(wait.TotalSeconds)).ToString();
+                    }
+                });
+        }
         catch (NotFoundException ex)
         {
             LogExpected(ex, context);
@@ -121,7 +133,8 @@ public class ExceptionHandlingMiddleware
         int status,
         string title,
         string detail,
-        IReadOnlyDictionary<string, string[]>? errors = null)
+        IReadOnlyDictionary<string, string[]>? errors = null,
+        Action<HttpResponse>? decorate = null)
     {
         if (context.Response.HasStarted)
         {
@@ -131,6 +144,7 @@ public class ExceptionHandlingMiddleware
         context.Response.Clear();
         context.Response.StatusCode = status;
         context.Response.ContentType = "application/problem+json";
+        decorate?.Invoke(context.Response);
 
         var traceId = GetTraceId(context);
 

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using PolisGo.Application.Cabinet;
 using PolisGo.Application.Cabinet.Dtos;
 using PolisGo.Application.Profile;
@@ -211,6 +212,7 @@ public class MeController : ControllerBase
     /// <response code="400">Current password wrong, or the new one breaks the policy or repeats the old one.</response>
     /// <response code="401">No or invalid bearer token.</response>
     [HttpPost("change-password")]
+    [EnableRateLimiting(RateLimits.PasswordChange)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

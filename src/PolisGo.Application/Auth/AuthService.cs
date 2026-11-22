@@ -86,7 +86,10 @@ public class AuthService : IAuthService
 
         // Same exception for unknown email, wrong password and a deactivated
         // account: nothing tells a caller which one it was.
-        if (user is null || !user.IsActive || !_passwordHasher.Verify(request.Password, user.PasswordHash))
+        // An unknown email costs the same hash check as a wrong password, so
+        // response time doesn't tell which accounts exist.
+        var passwordOk = _passwordHasher.Verify(request.Password, user?.PasswordHash ?? DummyHash);
+        if (user is null || !user.IsActive || !passwordOk)
         {
             throw new UnauthorizedException();
         }
@@ -100,6 +103,9 @@ public class AuthService : IAuthService
         var (token, expiresAt) = _jwtTokenGenerator.GenerateToken(user, customerId);
         return new AuthResponse(token, expiresAt, user.Email, user.FullName, user.Role);
     }
+
+    private static string? _dummyHash;
+    private string DummyHash => _dummyHash ??= _passwordHasher.Hash($"no-account-{Guid.NewGuid():N}");
 
     public async Task<CurrentUserResponse> GetCurrentUserAsync(Guid userId, CancellationToken cancellationToken = default)
     {

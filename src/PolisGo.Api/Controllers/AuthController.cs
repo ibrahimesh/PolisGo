@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.JsonWebTokens;
 using PolisGo.Application.Abstractions;
 using PolisGo.Application.Auth.Dtos;
@@ -22,6 +23,7 @@ public class AuthController : ControllerBase
 
     [HttpPost("register")]
     [AllowAnonymous]
+    [EnableRateLimiting(RateLimits.Register)]
     public async Task<ActionResult<AuthResponse>> Register(
         [FromBody] RegisterRequest request, CancellationToken cancellationToken)
     {
@@ -31,6 +33,7 @@ public class AuthController : ControllerBase
 
     [HttpPost("login")]
     [AllowAnonymous]
+    [EnableRateLimiting(RateLimits.SignIn)]
     public async Task<ActionResult<AuthResponse>> Login(
         [FromBody] LoginRequest request, CancellationToken cancellationToken)
     {

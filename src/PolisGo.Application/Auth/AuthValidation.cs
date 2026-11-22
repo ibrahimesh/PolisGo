@@ -40,6 +40,8 @@ public static partial class AuthValidation
         public const string CurrentPasswordIncorrect = "Current password is incorrect.";
         public const string PasswordUnchanged = "New password must be different from the current one.";
         public const string PhoneNotApplicable = "Staff accounts have no phone on file.";
+        // 429 from the sign-in, registration and password-change limits.
+        public const string TooManyAttempts = "Too many attempts. Wait a few minutes and try again.";
     }
 
     // One @, a dotted domain and a 2+ letter TLD. MailAddress alone accepts

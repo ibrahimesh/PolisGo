@@ -69,6 +69,7 @@ public class Program
         builder.Services.AddAuthorization();
 
         builder.Services.AddCors(options => ConfigureFrontendCors(options, builder.Configuration));
+        builder.Services.AddPolisGoRateLimits(builder.Configuration);
 
         var app = builder.Build();
 
@@ -114,6 +115,9 @@ public class Program
 
         app.UseAuthentication();
         app.UseAuthorization();
+
+        // After authentication: the password-change limit is per account.
+        app.UseRateLimiter();
 
         // Health probe stays anonymous even though [Authorize] is applied at
         // controller level.

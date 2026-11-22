@@ -139,7 +139,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
-      COMPOSE_FILE: docker-compose.yml:docker-compose.demo.yml
+      COMPOSE_FILE: docker-compose.yml:docker-compose.demo.yml:docker-compose.e2e.yml
       SQL_SA_PASSWORD: Ci-Only-Sql-Passw0rd!
       JWT_SECRET_KEY: ci-only-jwt-signing-key-not-a-secret-0123456789
       SEED_ADMIN_EMAIL: admin@polisgo.test

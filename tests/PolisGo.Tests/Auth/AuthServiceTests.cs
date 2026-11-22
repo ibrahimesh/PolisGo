@@ -121,6 +121,38 @@ public class AuthServiceTests
         Assert.Equal(UserRole.Client, persisted.Role);
     }
 
+    // Response time must not tell which emails exist: an unknown email costs
+    // the same password check as a wrong password.
+    [Fact]
+    public async Task Login_with_an_unknown_email_still_checks_a_password_hash()
+    {
+        await using var db = NewDb();
+        var hasher = new CountingHasher();
+        var jwt = Options.Create(new JwtSettings
+        {
+            Issuer = "test-issuer", Audience = "test-audience",
+            SecretKey = "this-is-a-very-long-test-secret-key-32chars", ExpiryMinutes = 60
+        });
+        var sut = new AuthService(db, hasher, new JwtTokenGenerator(jwt));
+
+        await Assert.ThrowsAsync<UnauthorizedException>(() =>
+            sut.LoginAsync(new LoginRequest("nobody@example.com", "Secret12345")));
+
+        Assert.Equal(1, hasher.Verifications);
+    }
+
+    private sealed class CountingHasher : IPasswordHasher
+    {
+        private readonly BcryptPasswordHasher _inner = new();
+        public int Verifications { get; private set; }
+        public string Hash(string password) => _inner.Hash(password);
+        public bool Verify(string password, string hash)
+        {
+            Verifications++;
+            return _inner.Verify(password, hash);
+        }
+    }
+
     [Fact]
     public async Task Login_ValidCredentials_ReturnsToken()
     {
