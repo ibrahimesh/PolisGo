@@ -1,0 +1,7 @@
+# Audit-only: the repo hard-codes container_name, which collides with the
+# owner's own stack. Renames the containers; nothing else changes.
+services:
+  sqlserver:
+    container_name: audit-sqlserver
+  api:
+    container_name: audit-api
