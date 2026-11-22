@@ -64,6 +64,10 @@ every change in this repo.
 - **Errors** are ProblemDetails with `traceId`, written only by
   `ExceptionHandlingMiddleware` — throw `ValidationException`,
   `NotFoundException`, `ConflictException`; no try/catch in controllers.
+- **Security headers** (`SecurityHeadersMiddleware`, outermost): `nosniff`,
+  `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer`, a `default-src
+  'none'` CSP (not on `/swagger`), and `Cache-Control: no-store` on
+  signed-in responses unless the endpoint sets its own cache policy.
 - **Brute-force limits** (`RateLimiting.cs`, `[EnableRateLimiting]`): sign-in
   and registration per IP address, password change per account, fixed
   windows from `RateLimits` (strict in `appsettings.json`, relaxed by

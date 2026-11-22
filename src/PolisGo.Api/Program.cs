@@ -79,6 +79,9 @@ public class Program
         app.Logger.LogInformation("Business dates use {TimeZone} (UTC+{Offset}).",
             BusinessCalendar.TimeZoneId, BusinessCalendar.Zone.BaseUtcOffset.ToString(@"hh\:mm"));
 
+        // Outermost, so every response (errors included) gets the headers.
+        app.UseMiddleware<SecurityHeadersMiddleware>();
+
         // Runs first so every downstream exception hits ProblemDetails formatting.
         app.UseMiddleware<ExceptionHandlingMiddleware>();
 
