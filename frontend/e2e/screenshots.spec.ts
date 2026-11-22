@@ -6,10 +6,12 @@ import {
   cabinetApi,
   claimsApi,
   FILES,
+  isoToday,
   randomUser,
   uniqueVehicle,
   registerSession,
   seedPreferences,
+  startCoverEarlier,
   openSession,
   waitForPremium,
 } from './helpers';
@@ -189,7 +191,7 @@ async function seedStaff(page: Page) {
       data: {
         vehicleId: vehicle.id,
         policyTypeCode: index === 1 ? 'CASCO' : 'MTPL',
-        startDate: new Date().toISOString().slice(0, 10),
+        startDate: isoToday(1),
         termMonths: 12,
         customerId,
       },
@@ -198,6 +200,8 @@ async function seedStaff(page: Page) {
     await page.request.post(`${API_URL}/api/policies/${policyId}/pay`, {
       headers: { Authorization: `Bearer ${agent.session.token}` },
     });
+    // Sold today, it starts tomorrow: move it back so it can take a claim.
+    startCoverEarlier(policyId, 8);
 
     const claim = await claimsApi(page, session).file(policyId, {
       claimedAmount: [1240, 860, 2150][index],

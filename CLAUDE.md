@@ -117,6 +117,16 @@ every change in this repo.
 - **Policy status is effective on read.** Nothing stores `Expired`: an Active
   policy past its inclusive end date reads and filters as Expired
   (`Policy.StatusOn`, `PolicyStatusFilter`). Use them in any new policy query.
+- **Business dates are Baku dates.** "Today", start/end, incident, birth and
+  licence dates come from `BusinessCalendar.Today(clock)` (`Asia/Baku`, with
+  the injected `TimeProvider`), never `DateTime.UtcNow.Date`; the SPA's
+  `todayIso()` matches. Timestamps (`CreatedAt`, `PaidAt`, history) and the
+  admin dashboard / audit day filters stay UTC. The API logs the zone at
+  startup and refuses to start without time zone data (the aspnet image
+  ships `tzdata`).
+- **Cover starts tomorrow at the earliest** (`StartDateTooEarly`), and a
+  Draft whose start date has come can't be paid (`DraftStartPassed`): no
+  policy pays for the hours before its purchase.
 - **Status changes go through the entity** (`RecordIssued`, `Activate`,
   `Cancel`), which append `PolicyStatusHistory`. Pricing factors are frozen
   on the policy at issue (`Policy.Pricing`); quote and create share
@@ -347,6 +357,10 @@ Run from `frontend/`:
   Run locally with `--workers=4` or fewer: more Chromium workers than that
   crash on a laptop. Arrange data through the API
   (`registerSession`, `openSession`, `cabinetApi` in `e2e/helpers.ts`;
+  the API sells cover from tomorrow only, so `activePolicy()` moves a paid
+  policy back with `startCoverEarlier` — `sqlcmd` in the stack's `sqlserver`
+  container, run from the repo root; a renamed compose project needs
+  `COMPOSE_PROJECT_NAME`;
   no `use…` names there: ESLint's hooks rules cover `e2e/` too);
   test through the UI only what the test is about. Creates real users with
   `@polisgo.test` emails. Runs in CI (the `e2e` job) against a fresh

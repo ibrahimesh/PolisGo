@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using PolisGo.Application.Abstractions;
+using PolisGo.Application.Common;
 using PolisGo.Application.Common.Exceptions;
 using PolisGo.Application.Customers;
 using PolisGo.Application.Vehicles.Dtos;
@@ -12,11 +13,13 @@ public class VehicleService : IVehicleService
 {
     private readonly IApplicationDbContext _db;
     private readonly ICurrentUser _currentUser;
+    private readonly TimeProvider _clock;
 
-    public VehicleService(IApplicationDbContext db, ICurrentUser currentUser)
+    public VehicleService(IApplicationDbContext db, ICurrentUser currentUser, TimeProvider? clock = null)
     {
         _db = db;
         _currentUser = currentUser;
+        _clock = clock ?? TimeProvider.System;
     }
 
     public async Task<VehicleResponse> CreateAsync(
@@ -24,7 +27,7 @@ public class VehicleService : IVehicleService
     {
         var customerId = ResolveCustomerId(request.CustomerId);
 
-        ValidateInput(request);
+        ValidateInput(request, BusinessCalendar.Today(_clock).Year);
 
         // Staff register only for customers in their scope: an agent for
         // their own book, never someone else's (404, as for an unknown id).
@@ -113,7 +116,7 @@ public class VehicleService : IVehicleService
         return requestedCustomerId.Value;
     }
 
-    private static void ValidateInput(CreateVehicleRequest request)
+    private static void ValidateInput(CreateVehicleRequest request, int currentYear)
     {
         var errors = new Dictionary<string, string[]>();
         void Check(string field, string? error)
@@ -125,7 +128,7 @@ public class VehicleService : IVehicleService
         Check(nameof(request.Model), VehicleValidation.ModelError(request.Model));
         Check(nameof(request.PlateNumber), VehicleValidation.PlateError(request.PlateNumber));
         Check(nameof(request.Vin), VehicleValidation.VinError(request.Vin));
-        Check(nameof(request.Year), VehicleValidation.YearError(request.Year, DateTime.UtcNow.Year));
+        Check(nameof(request.Year), VehicleValidation.YearError(request.Year, currentYear));
         Check(nameof(request.EngineCapacityCc), VehicleValidation.EngineCapacityError(request.EngineCapacityCc));
 
         if (errors.Count > 0)

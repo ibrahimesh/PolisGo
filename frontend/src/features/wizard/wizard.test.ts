@@ -24,9 +24,11 @@ function fieldErrors(result: {
 describe('cover step schema (mirrors PolicyValidation.cs)', () => {
   const schema = createCoverSchema(TODAY);
 
-  it('accepts today and the 60th day', () => {
+  // Cover starts tomorrow at the earliest (PolicyValidation.StartDateTooEarly).
+  it('accepts tomorrow and the 60th day', () => {
     expect(
-      schema.safeParse({ policyTypeCode: 'MTPL', startDate: TODAY, termMonths: '12' }).success,
+      schema.safeParse({ policyTypeCode: 'MTPL', startDate: '2026-11-19', termMonths: '12' })
+        .success,
     ).toBe(true);
     expect(
       schema.safeParse({ policyTypeCode: 'MTPL', startDate: '2027-01-17', termMonths: 1 }).success,
@@ -34,7 +36,8 @@ describe('cover step schema (mirrors PolicyValidation.cs)', () => {
   });
 
   it.each([
-    [{ startDate: '2026-11-17' }, 'startDate', 'validation.startDatePast'],
+    [{ startDate: '2026-11-17' }, 'startDate', 'validation.startDateTooEarly'],
+    [{ startDate: TODAY }, 'startDate', 'validation.startDateTooEarly'],
     [{ startDate: '2027-01-18' }, 'startDate', 'validation.startDateTooFar'],
     [{ startDate: '' }, 'startDate', 'validation.startDateRequired'],
     [{ startDate: '2026-02-30' }, 'startDate', 'validation.date'],
@@ -44,7 +47,7 @@ describe('cover step schema (mirrors PolicyValidation.cs)', () => {
   ])('rejects %j', (patch, field, message) => {
     const result = schema.safeParse({
       policyTypeCode: 'MTPL',
-      startDate: TODAY,
+      startDate: '2026-11-19',
       termMonths: 12,
       ...patch,
     });

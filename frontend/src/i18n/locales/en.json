@@ -373,7 +373,7 @@
     "emailTaken": "An account with this email already exists.",
     "unknownProduct": "This insurance product isn't available.",
     "policyOverlap": "This vehicle already has a draft or active policy of this type for those dates.",
-    "draftStartPassed": "The start date of this draft has passed. Start a new purchase to choose a new date.",
+    "draftStartPassed": "This draft can no longer start on its date: cover starts tomorrow at the earliest. Start a new purchase to choose a new date.",
     "policyExpired": "This policy has already expired.",
     "plateTaken": "A vehicle with this plate is already registered.",
     "claimDuplicate": "A claim for this policy, date and amount is already on file.",
@@ -437,7 +437,7 @@
     "vinRequired": "Enter the VIN.",
     "vinInvalid": "A VIN has 17 characters: digits and letters except I, O and Q.",
     "vehicleYearRange": "Model year must be between 1950 and next year.",
-    "startDatePast": "The start date can’t be in the past.",
+    "startDateTooEarly": "Cover can start tomorrow at the earliest.",
     "startDateTooFar": "Choose a start date within the next 60 days.",
     "policyTypeRequired": "Choose a type of cover.",
     "vehicleRequired": "Choose a vehicle.",
@@ -751,7 +751,7 @@
     "fields": {
       "type": "Type of cover",
       "startDate": "Cover starts on",
-      "startDateHint": "Today or within the next 60 days",
+      "startDateHint": "From tomorrow up to 60 days ahead",
       "term": "Term",
       "vehicle": "Vehicle"
     },

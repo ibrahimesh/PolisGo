@@ -38,7 +38,8 @@ public class PolicyService : IPolicyService
     }
 
     private DateTime UtcNow => _clock.GetUtcNow().UtcDateTime;
-    private DateOnly Today => DateOnly.FromDateTime(UtcNow);
+    // The business date in Baku, not the UTC one (see BusinessCalendar).
+    private DateOnly Today => BusinessCalendar.Today(_clock);
 
     public async Task<PremiumBreakdown> QuoteAsync(
         CreatePolicyRequest request, CancellationToken cancellationToken = default)
@@ -260,9 +261,10 @@ public class PolicyService : IPolicyService
                 $"Policy {policy.PolicyNumber} is in status {policy.Status} and cannot be paid.");
         }
 
-        // Paying a draft whose start date has passed would activate cover
-        // backdated to before the payment — insurance bought after the event.
-        if (DateOnly.FromDateTime(policy.StartDate) < today)
+        // Cover starts tomorrow at the earliest: paying a draft whose start
+        // date has come would cover the hours before the payment — insurance
+        // bought after the event.
+        if (DateOnly.FromDateTime(policy.StartDate) <= today)
         {
             throw new ConflictException(PolicyValidation.Messages.DraftStartPassed);
         }
@@ -368,7 +370,7 @@ public class PolicyService : IPolicyService
             throw new ConflictException(PolicyValidation.Messages.Overlap);
         }
 
-        var threeYearsAgo = UtcNow.AddYears(-3);
+        var threeYearsAgo = today.AddYears(-3).ToDateTime(TimeOnly.MinValue);
         var claimCount = await _db.Claims
             .Where(c => c.Policy.CustomerId == customerId)
             .Where(c => c.Status == ClaimStatus.Approved || c.Status == ClaimStatus.Paid)
@@ -405,8 +407,8 @@ public class PolicyService : IPolicyService
         if (string.IsNullOrWhiteSpace(request.PolicyTypeCode))
             errors[nameof(request.PolicyTypeCode)] = [PolicyValidation.Messages.PolicyTypeRequired];
 
-        if (request.StartDate < today)
-            errors[nameof(request.StartDate)] = [PolicyValidation.Messages.StartDateInPast];
+        if (request.StartDate <= today)
+            errors[nameof(request.StartDate)] = [PolicyValidation.Messages.StartDateTooEarly];
         else if (request.StartDate > today.AddDays(PolicyValidation.StartDateHorizonDays))
             errors[nameof(request.StartDate)] = [PolicyValidation.Messages.StartDateTooFar];
 

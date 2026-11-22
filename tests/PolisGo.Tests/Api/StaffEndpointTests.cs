@@ -1,7 +1,7 @@
-using System.Net;
 using System.Net.Http.Json;
-using System.Text;
+using System.Net;
 using System.Text.Json;
+using System.Text;
 using PolisGo.Application.Claims;
 using PolisGo.Application.Common;
 using PolisGo.Application.Customers;
@@ -174,7 +174,7 @@ public class StaffEndpointTests : IClassFixture<ApiFactory>
         var sale = new
         {
             vehicleId, policyTypeCode = "CASCO", termMonths = 12, customerId = theirs.Id,
-            startDate = DateOnly.FromDateTime(DateTime.UtcNow).ToString("yyyy-MM-dd")
+            startDate = BusinessCalendar.Today(TimeProvider.System).AddDays(1).ToString("yyyy-MM-dd")
         };
         await AssertProblem(await agent.PostAsJsonAsync("/api/policies/quote", sale), HttpStatusCode.NotFound);
         await AssertProblem(await agent.PostAsJsonAsync("/api/policies", sale), HttpStatusCode.NotFound);
@@ -259,7 +259,8 @@ public class StaffEndpointTests : IClassFixture<ApiFactory>
             var customer = data.Customer(agentId: agentAId);
             var vehicle = data.Vehicle(customer.Id);
             var p1 = data.Policy(customer, vehicle, agentId: agentAId, createdAt: DateTime.UtcNow.AddMonths(-1));
-            var p2 = data.Policy(customer, data.Vehicle(customer.Id), PolicyStatus.Draft, agentId: agentAId);
+            var p2 = data.Policy(customer, data.Vehicle(customer.Id), PolicyStatus.Draft, agentId: agentAId,
+                startDate: BusinessCalendar.Today(TimeProvider.System).AddDays(1).ToDateTime(TimeOnly.MinValue));
             var p3 = data.Policy(customer, data.Vehicle(customer.Id), createdAt: DateTime.UtcNow.AddMonths(-2));
             var claim = data.Claim(p1);
             customer.AgentId = agentBId; // an Admin reassigns the customer

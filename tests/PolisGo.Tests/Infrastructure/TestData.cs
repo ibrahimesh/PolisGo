@@ -84,9 +84,11 @@ internal sealed class TestData
         DateTime? createdAt = null,
         decimal premium = 100m,
         Guid? agentId = null,
-        bool cascoType = false)
+        bool cascoType = false,
+        DateTime? startDate = null)
     {
         var created = createdAt ?? DateTime.UtcNow;
+        var start = (startDate ?? created).Date;
         var policy = new Policy
         {
             Id = Guid.NewGuid(),
@@ -95,8 +97,8 @@ internal sealed class TestData
             VehicleId = vehicle.Id,
             PolicyTypeId = cascoType ? PolicyTypeConfiguration.CascoId : PolicyTypeConfiguration.MtplId,
             AgentId = agentId,
-            StartDate = created.Date,
-            EndDate = created.Date.AddYears(1).AddDays(-1),
+            StartDate = start,
+            EndDate = start.AddYears(1).AddDays(-1),
             Premium = premium,
             Status = status,
             CreatedAt = created

@@ -44,14 +44,14 @@ const SERVER_MESSAGE_KEYS: Record<string, string> = {
   'Model year must be between 1950 and next year.': 'validation.vehicleYearRange',
   'Engine capacity must be 10000 cc or less.': 'validation.engineCapacityMax',
   // Purchase rules — PolicyValidation.Messages (same contract test).
-  'Start date cannot be in the past.': 'validation.startDatePast',
+  'Cover can start tomorrow at the earliest.': 'validation.startDateTooEarly',
   'Start date cannot be more than 60 days in the future.': 'validation.startDateTooFar',
   'Policy type is required.': 'validation.policyTypeRequired',
   'Vehicle is required.': 'validation.vehicleRequired',
   'Search must be at most 100 characters.': 'validation.searchTooLong',
   'An active or draft policy of this type already covers the vehicle in the chosen period.':
     'errors.policyOverlap',
-  'The start date of this draft has passed. Start a new purchase to choose a new date.':
+  'This draft can no longer start on its date: cover starts tomorrow at the earliest. Start a new purchase to choose a new date.':
     'errors.draftStartPassed',
   'This policy has already expired.': 'errors.policyExpired',
   'A vehicle with this plate number is already registered.': 'errors.plateTaken',

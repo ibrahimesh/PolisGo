@@ -69,7 +69,7 @@ test.describe('DateField', () => {
   }) => {
     const { session } = await registerSession(page);
     // Cover from today: the only allowed incident day is today.
-    const { vehicle } = await cabinetApi(page, session).activePolicy();
+    const { vehicle } = await cabinetApi(page, session).activePolicy(12, 'MTPL', 0);
     await seedPreferences(page, { lang: 'en' });
     await openSession(page, session);
     await page.goto('/app/claims/new');

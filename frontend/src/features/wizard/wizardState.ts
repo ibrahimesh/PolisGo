@@ -1,4 +1,4 @@
-import { todayIso } from '../../lib/dates';
+import { tomorrowIso } from '../../lib/dates';
 
 // Purchase wizard state. It lives in sessionStorage, keyed by user, so a
 // reload keeps the step and the answers, a second account in the same tab
@@ -45,7 +45,7 @@ export function initialState(values: Partial<WizardValues> = {}): WizardState {
     version: 1,
     step: 'cover',
     // Cover from today, for a year: the most common choice.
-    values: { policyTypeCode: '', startDate: todayIso(), termMonths: 12, vehicleId: '', ...values },
+    values: { policyTypeCode: '', startDate: tomorrowIso(), termMonths: 12, vehicleId: '', ...values },
     draft: null,
     receipt: null,
   };

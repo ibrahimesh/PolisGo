@@ -51,7 +51,7 @@ public class CustomerService : ICustomerService
         var visiblePolicies = PolicyAccess.VisibleTo(_db.Policies.AsNoTracking(), _currentUser);
         var visibleClaims = ClaimAccess.VisibleTo(_db.Claims.AsNoTracking(), _currentUser);
         // Effective status: an Active policy past its end date is Expired.
-        var startOfToday = _clock.GetUtcNow().UtcDateTime.Date;
+        var startOfToday = BusinessCalendar.Today(_clock).ToDateTime(TimeOnly.MinValue);
 
         var items = await ApplySort(customers, query.SortBy, query.SortDirection)
             .Skip((page - 1) * pageSize)
@@ -97,7 +97,7 @@ public class CustomerService : ICustomerService
                     .Where(p => p.CustomerId == id)
                     .OrderByDescending(p => p.CreatedAt))
             .ToListAsync(cancellationToken);
-        var today = DateOnly.FromDateTime(_clock.GetUtcNow().UtcDateTime);
+        var today = BusinessCalendar.Today(_clock);
 
         var claims = ClaimAccess.VisibleTo(_db.Claims.AsNoTracking(), _currentUser)
             .Where(c => c.Policy.CustomerId == id);

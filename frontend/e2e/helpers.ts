@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect } from '@playwright/test';
@@ -121,10 +122,48 @@ export function uniqueVehicle() {
   };
 }
 
+// The business date in Baku, as the API and the SPA count it (UTC+4).
 export function isoToday(offsetDays = 0): string {
-  const date = new Date();
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Baku',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    })
+      .formatToParts(new Date())
+      .map((p) => [p.type, p.value]),
+  );
+  const date = new Date(`${parts.year}-${parts.month}-${parts.day}T00:00:00Z`);
   date.setUTCDate(date.getUTCDate() + offsetDays);
   return date.toISOString().slice(0, 10);
+}
+
+// Cover sold through the API starts tomorrow at the earliest, so a claim
+// needs cover that began earlier. This moves a paid policy's dates back in
+// the database (sqlcmd in the compose stack's sqlserver container, with the
+// password the container already has), like TestData does for the backend
+// tests. Run from the repo root so docker compose finds the stack (CI sets
+// COMPOSE_FILE; a renamed local project needs COMPOSE_PROJECT_NAME).
+export function startCoverEarlier(policyId: string, days: number) {
+  if (!/^[0-9a-f-]{36}$/i.test(policyId) || !Number.isInteger(days))
+    throw new Error('bad arguments');
+  const sql = `UPDATE Policies SET StartDate = DATEADD(day, -${days}, StartDate), EndDate = DATEADD(day, -${days}, EndDate) WHERE Id = '${policyId}'`;
+  execFileSync(
+    'docker',
+    [
+      'compose',
+      'exec',
+      '-T',
+      '-e',
+      `SQL=${sql}`,
+      'sqlserver',
+      'bash',
+      '-c',
+      '/opt/mssql-tools18/bin/sqlcmd -C -b -S localhost -U sa -P "$MSSQL_SA_PASSWORD" -d PolisGo -Q "$SQL"',
+    ],
+    { cwd: resolve(process.cwd(), '..'), stdio: 'pipe' },
+  );
 }
 
 // What a DateField shows for an ISO date: DD.MM.YYYY in every language.
@@ -144,20 +183,42 @@ export function cabinetApi(page: Page, session: Session) {
   return {
     vehicle: (vehicle = uniqueVehicle()) =>
       call<{ id: string; plateNumber: string }>('POST', '/api/vehicles', vehicle),
-    policy: (vehicleId: string, policyTypeCode = 'MTPL', termMonths = 12, startDate = isoToday()) =>
-      call<{ id: string; policyNumber: string; endDate: string }>('POST', '/api/policies', {
-        vehicleId,
-        policyTypeCode,
-        startDate,
-        termMonths,
-      }),
+    policy: (
+      vehicleId: string,
+      policyTypeCode = 'MTPL',
+      termMonths = 12,
+      startDate = isoToday(1),
+    ) =>
+      call<{ id: string; policyNumber: string; startDate: string; endDate: string }>(
+        'POST',
+        '/api/policies',
+        {
+          vehicleId,
+          policyTypeCode,
+          startDate,
+          termMonths,
+        },
+      ),
     pay: (policyId: string) => call('POST', `/api/policies/${policyId}/pay`),
-    // A paid policy; a 1-month term ends within the 30-day reminder window.
-    async activePolicy(termMonths = 12, policyTypeCode = 'MTPL') {
+    // A paid policy whose cover began `startedDaysAgo` days ago (0: today),
+    // so it can take a claim; a 1-month term still ends within the 30-day
+    // reminder window.
+    async activePolicy(termMonths = 12, policyTypeCode = 'MTPL', startedDaysAgo = 7) {
       const vehicle = await this.vehicle();
       const policy = await this.policy(vehicle.id, policyTypeCode, termMonths);
       await this.pay(policy.id);
-      return { vehicle, policy };
+      // Bought today, it starts tomorrow: one more day back.
+      const days = startedDaysAgo + 1;
+      startCoverEarlier(policy.id, days);
+      const shift = (iso: string) => {
+        const date = new Date(`${iso}T00:00:00Z`);
+        date.setUTCDate(date.getUTCDate() - days);
+        return date.toISOString().slice(0, 10);
+      };
+      return {
+        vehicle,
+        policy: { ...policy, startDate: shift(policy.startDate), endDate: shift(policy.endDate) },
+      };
     },
   };
 }

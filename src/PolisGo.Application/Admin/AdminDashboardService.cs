@@ -41,7 +41,9 @@ public class AdminDashboardService : IAdminDashboardService
         DateOnly? from, DateOnly? to, CancellationToken cancellationToken = default)
     {
         var now = _clock.GetUtcNow().UtcDateTime;
-        var today = DateOnly.FromDateTime(now);
+        // The default period ends on today's business date (Baku); the
+        // figures themselves are grouped by their UTC timestamps.
+        var today = BusinessCalendar.Today(_clock);
         var end = to ?? today;
         // Default: the last twelve calendar months, this one included.
         var start = from ?? new DateOnly(end.Year, end.Month, 1).AddMonths(-(DefaultMonths - 1));

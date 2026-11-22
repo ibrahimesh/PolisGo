@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using PolisGo.Application.Abstractions;
+using PolisGo.Application.Common;
 using PolisGo.Application.Policies;
 using PolisGo.Application.Pricing;
 using PolisGo.Domain.Enums;
@@ -30,7 +31,9 @@ public class PolicyPaymentConcurrencyTests
             var user = data.User(UserRole.Client);
             var customer = data.Customer(userId: user.Id);
             (userId, customerId) = (user.Id, customer.Id);
-            policyId = data.Policy(customer, data.Vehicle(customer.Id), PolicyStatus.Draft).Id;
+            // A payable draft: its cover starts tomorrow.
+            policyId = data.Policy(customer, data.Vehicle(customer.Id), PolicyStatus.Draft,
+                startDate: BusinessCalendar.Today(TimeProvider.System).AddDays(1).ToDateTime(TimeOnly.MinValue)).Id;
         }
         var gateway = new GatedPaymentGateway(parties: 2);
         var caller = new FakeCurrentUser { UserId = userId, Role = UserRole.Client, CustomerId = customerId };

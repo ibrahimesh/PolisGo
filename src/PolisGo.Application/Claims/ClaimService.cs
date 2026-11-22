@@ -23,18 +23,23 @@ public class ClaimService : IClaimService
     private readonly ICurrentUser _currentUser;
     private readonly IPayoutGateway _payoutGateway;
     private readonly ClaimOptions _options;
+    private readonly TimeProvider _clock;
 
     public ClaimService(
         IApplicationDbContext db,
         ICurrentUser currentUser,
         IPayoutGateway payoutGateway,
-        IOptions<ClaimOptions> options)
+        IOptions<ClaimOptions> options,
+        TimeProvider? clock = null)
     {
         _db = db;
         _currentUser = currentUser;
         _payoutGateway = payoutGateway;
         _options = options.Value;
+        _clock = clock ?? TimeProvider.System;
     }
+
+    private DateTime UtcNow => _clock.GetUtcNow().UtcDateTime;
 
     // ---------- Submit ----------
 
@@ -73,7 +78,7 @@ public class ClaimService : IClaimService
         var claim = new DomainClaim
         {
             Id = Guid.NewGuid(),
-            ClaimNumber = await AllocateClaimNumberAsync(DateTime.UtcNow.Year, cancellationToken),
+            ClaimNumber = await AllocateClaimNumberAsync(BusinessCalendar.Today(_clock).Year, cancellationToken),
             PolicyId = policy.Id,
             IncidentDate = request.IncidentDate.Date,
             IncidentType = request.IncidentType,
@@ -81,7 +86,7 @@ public class ClaimService : IClaimService
             Description = request.Description.Trim(),
             ClaimedAmount = request.ClaimedAmount,
             Status = ClaimStatus.Submitted,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = UtcNow
         };
 
         // First history row at the start of the audit trail (null -> Submitted).
@@ -107,7 +112,7 @@ public class ClaimService : IClaimService
             }
             catch (DbUpdateException) when (attempt < ClaimNumberMaxAttempts - 1)
             {
-                claim.ClaimNumber = await AllocateClaimNumberAsync(DateTime.UtcNow.Year, cancellationToken);
+                claim.ClaimNumber = await AllocateClaimNumberAsync(BusinessCalendar.Today(_clock).Year, cancellationToken);
             }
         }
 
@@ -302,7 +307,7 @@ public class ClaimService : IClaimService
         // the same version only one can save this (RowVersion), so only one
         // reaches the gateway. A claim that isn't Approved fails here, before
         // any money moves.
-        claim.StartPayout(DateTime.UtcNow);
+        claim.StartPayout(UtcNow);
         await _db.SaveChangesAsync(cancellationToken);
 
         // If the gateway fails the claim stays Approved and can be paid again;
@@ -464,7 +469,9 @@ public class ClaimService : IClaimService
     private void ValidateSubmit(SubmitClaimRequest request, Policy policy)
     {
         var errors = new Dictionary<string, string[]>();
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        // The incident date is a date in Baku: at 01:00 local time it is
+        // already today there, though UTC still says yesterday.
+        var today = BusinessCalendar.Today(_clock);
 
         // Effective status: an Active policy past its end date reads as Expired
         // everywhere else, so it can't take a new claim either.

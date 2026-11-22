@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using PolisGo.Application.Common;
 using PolisGo.Application.Pricing;
 using PolisGo.Application.Pricing.Dtos;
 
@@ -10,10 +11,12 @@ namespace PolisGo.Api.Controllers;
 public class QuotesController : ControllerBase
 {
     private readonly IQuoteService _quoteService;
+    private readonly TimeProvider _clock;
 
-    public QuotesController(IQuoteService quoteService)
+    public QuotesController(IQuoteService quoteService, TimeProvider clock)
     {
         _quoteService = quoteService;
+        _clock = clock;
     }
 
     /// <summary>
@@ -30,7 +33,8 @@ public class QuotesController : ControllerBase
     public async Task<ActionResult<PremiumBreakdown>> Calculate(
         [FromBody] CalculateQuoteRequest request, CancellationToken cancellationToken)
     {
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        // Ages and the vehicle's age count in Baku dates, as at issue.
+        var today = BusinessCalendar.Today(_clock);
         var breakdown = await _quoteService.CalculateAsync(request, today, cancellationToken);
         return Ok(breakdown);
     }

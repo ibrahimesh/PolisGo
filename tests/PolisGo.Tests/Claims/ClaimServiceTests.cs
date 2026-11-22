@@ -1,8 +1,10 @@
+using DomainClaim = PolisGo.Domain.Entities.Claim;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using PolisGo.Application.Abstractions;
 using PolisGo.Application.Claims;
 using PolisGo.Application.Claims.Dtos;
+using PolisGo.Application.Common;
 using PolisGo.Application.Common.Exceptions;
 using PolisGo.Application.Policies;
 using PolisGo.Application.Policies.Dtos;
@@ -13,13 +15,13 @@ using PolisGo.Domain.Exceptions;
 using PolisGo.Infrastructure.Persistence;
 using PolisGo.Tests.Infrastructure;
 using Xunit;
-using DomainClaim = PolisGo.Domain.Entities.Claim;
 
 namespace PolisGo.Tests.Claims;
 
 public class ClaimServiceTests
 {
-    private static DateTime Today => DateTime.UtcNow.Date;
+    // Business dates are Baku dates (BusinessCalendar).
+    private static DateTime Today => BusinessCalendar.Today(TimeProvider.System).ToDateTime(TimeOnly.MinValue);
 
     private static IOptions<ClaimOptions> DefaultOptions() =>
         Options.Create(new ClaimOptions { MaxClaimAmount = 50_000m });
@@ -107,8 +109,26 @@ public class ClaimServiceTests
     // Each call uses its own DbContext over the shared connection, matching
     // the per-request scoped lifetime in production. This stops change-tracker
     // state from one service call from leaking into the next.
-    private static ClaimService NewSut(SqliteTestDb fixture, ICurrentUser user) =>
-        new(fixture.NewContext(), user, new FakePayoutStub(), DefaultOptions());
+    private static ClaimService NewSut(SqliteTestDb fixture, ICurrentUser user, TimeProvider? clock = null) =>
+        new(fixture.NewContext(), user, new FakePayoutStub(), DefaultOptions(), clock);
+
+    // 21:30 UTC on 1 March is 01:30 on 2 March in Baku: the incident date is
+    // checked against the Baku date, from the injected clock.
+    [Fact]
+    public async Task An_incident_today_in_Baku_is_accepted_while_UTC_is_still_on_yesterday()
+    {
+        using var fixture = new SqliteTestDb();
+        var seed = SeedActiveClient(fixture.Db, policyStart: new DateTime(2026, 1, 1), policyEnd: new DateTime(2026, 12, 31));
+        var clock = new FakeClock(new DateTimeOffset(2026, 3, 1, 21, 30, 0, TimeSpan.Zero));
+
+        var filed = await NewSut(fixture, Client(seed), clock).SubmitAsync(ValidSubmit(seed) with { IncidentDate = new DateTime(2026, 3, 2) });
+        Assert.Equal(new DateTime(2026, 3, 2), filed.IncidentDate);
+        Assert.StartsWith("CL-2026-", filed.ClaimNumber);
+
+        var future = await Assert.ThrowsAsync<ValidationException>(() => NewSut(fixture, Client(seed), clock)
+            .SubmitAsync(ValidSubmit(seed, 77m) with { IncidentDate = new DateTime(2026, 3, 3) }));
+        Assert.Equal(ClaimValidation.Messages.IncidentDateInFuture, future.Errors["IncidentDate"][0]);
+    }
 
     private static FakeCurrentUser Client(SeededClient seed) => new()
     {
@@ -373,7 +393,7 @@ public class ClaimServiceTests
         var policies = new PolicyService(
             fixture.Db, new PremiumCalculator(), new StubPaymentGateway(), Client(seed));
         var cleanQuote = await policies.CreateAsync(new CreatePolicyRequest(
-            seed.VehicleId, "CASCO", DateOnly.FromDateTime(Today), 12, null));
+            seed.VehicleId, "CASCO", DateOnly.FromDateTime(Today).AddDays(1), 12, null));
         await policies.CancelAsync(cleanQuote.Id);
 
         // Client submits a claim; adjuster reviews + approves.
@@ -385,7 +405,7 @@ public class ClaimServiceTests
 
         // New CASCO policy — the premium now reflects one Approved claim.
         var afterClaim = await policies.CreateAsync(new CreatePolicyRequest(
-            seed.VehicleId, "CASCO", DateOnly.FromDateTime(Today), 12, null));
+            seed.VehicleId, "CASCO", DateOnly.FromDateTime(Today).AddDays(1), 12, null));
 
         Assert.True(afterClaim.Premium > cleanQuote.Premium,
             $"Expected premium after approved claim ({afterClaim.Premium}) to exceed clean-record ({cleanQuote.Premium}).");

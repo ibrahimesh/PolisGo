@@ -7,6 +7,7 @@ using Microsoft.OpenApi.Models;
 using PolisGo.Api.Auth;
 using PolisGo.Api.Middleware;
 using PolisGo.Application;
+using PolisGo.Application.Common;
 using PolisGo.Infrastructure;
 using PolisGo.Infrastructure.Auth;
 using PolisGo.Infrastructure.Persistence;
@@ -70,6 +71,12 @@ public class Program
         builder.Services.AddCors(options => ConfigureFrontendCors(options, builder.Configuration));
 
         var app = builder.Build();
+
+        // Business dates are Baku dates. Resolving the zone here stops the
+        // API at startup when the image lacks time zone data, instead of on
+        // the first request.
+        app.Logger.LogInformation("Business dates use {TimeZone} (UTC+{Offset}).",
+            BusinessCalendar.TimeZoneId, BusinessCalendar.Zone.BaseUtcOffset.ToString(@"hh\:mm"));
 
         // Runs first so every downstream exception hits ProblemDetails formatting.
         app.UseMiddleware<ExceptionHandlingMiddleware>();

@@ -35,16 +35,17 @@ test.describe('Purchase wizard', () => {
       ).toBeVisible();
       await expect(page.getByText('Choose a vehicle to see your exact price.')).toBeVisible();
 
-      await page.getByLabel('Cover starts on').fill(isoToday(-1));
+      // Cover starts tomorrow at the earliest: today is too early.
+      await page.getByLabel('Cover starts on').fill(isoToday());
       await page.getByRole('button', { name: 'Continue' }).click();
       const summary = page.getByTestId('error-summary');
       await expect(summary).toContainText('Choose a type of cover.');
-      await expect(summary).toContainText('The start date can’t be in the past.');
+      await expect(summary).toContainText('Cover can start tomorrow at the earliest.');
       // Focus goes to the first invalid field: the first product radio.
       await expect(page.getByRole('radio', { name: /^MTPL/ })).toBeFocused();
 
       await page.getByRole('radio', { name: /^MTPL/ }).check();
-      await page.getByLabel('Cover starts on').fill(isoToday());
+      await page.getByLabel('Cover starts on').fill(isoToday(1));
       await page.getByRole('button', { name: 'Continue' }).click();
       await expect(page.getByRole('heading', { name: 'Which vehicle?' })).toBeFocused();
       await expectNoHorizontalScroll(page);
@@ -185,7 +186,7 @@ test.describe('Purchase wizard', () => {
     await expect(date).toHaveAttribute('aria-invalid', 'true');
     await expect(date).toBeFocused();
     await expect(
-      page.getByText('The start date can’t be in the past.', { exact: true }),
+      page.getByText('Cover can start tomorrow at the earliest.', { exact: true }),
     ).toBeVisible();
   });
 

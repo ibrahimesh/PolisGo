@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using PolisGo.Application.Abstractions;
+using PolisGo.Application.Common;
 using PolisGo.Application.Auth.Dtos;
 using PolisGo.Application.Common.Exceptions;
 using PolisGo.Domain.Entities;
@@ -12,20 +13,24 @@ public class AuthService : IAuthService
     private readonly IApplicationDbContext _db;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IJwtTokenGenerator _jwtTokenGenerator;
+    private readonly TimeProvider _clock;
 
     public AuthService(
         IApplicationDbContext db,
         IPasswordHasher passwordHasher,
-        IJwtTokenGenerator jwtTokenGenerator)
+        IJwtTokenGenerator jwtTokenGenerator,
+        TimeProvider? clock = null)
     {
         _db = db;
         _passwordHasher = passwordHasher;
         _jwtTokenGenerator = jwtTokenGenerator;
+        _clock = clock ?? TimeProvider.System;
     }
 
     public async Task<AuthResponse> RegisterAsync(RegisterRequest request, CancellationToken cancellationToken = default)
     {
-        var phone = ValidateRegister(request);
+        // Age and licence rules count in Baku dates (BusinessCalendar).
+        var phone = ValidateRegister(request, BusinessCalendar.Today(_clock).ToDateTime(TimeOnly.MinValue));
 
         // Normalise email so duplicate detection is case-insensitive.
         var email = request.Email.Trim().ToLowerInvariant();
@@ -35,7 +40,7 @@ public class AuthService : IAuthService
             throw new ConflictException("A user with this email already exists.");
         }
 
-        var now = DateTime.UtcNow;
+        var now = _clock.GetUtcNow().UtcDateTime;
 
         var user = new User
         {
@@ -106,9 +111,8 @@ public class AuthService : IAuthService
 
     // Returns the phone in E.164 so storage is canonical whatever format the
     // client sent. Every failing field is reported at once (one 400, all errors).
-    private static string ValidateRegister(RegisterRequest request)
+    private static string ValidateRegister(RegisterRequest request, DateTime today)
     {
-        var today = DateTime.UtcNow.Date;
         var errors = new Dictionary<string, string[]>();
         void Check(string field, string? error)
         {

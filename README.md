@@ -34,7 +34,8 @@ product catalogue (`/api/policy-types`); health check.
   18+) and sign in; JWT-based session.
 - Register vehicles; buy a policy for one — the premium is recalculated on the
   server from stored data, including approved or paid claims of the last three
-  years; start date within 60 days; no overlapping policy of the same type.
+  years; cover starts tomorrow at the earliest and within 60 days; no
+  overlapping policy of the same type.
 - Live quote from stored data (`POST /api/policies/quote`): the same calculation
   as issuing, so the quoted premium is the charged premium.
 - Pay a policy (Draft → Active) or cancel it; file claims on own active
@@ -200,8 +201,14 @@ frontend/                  React SPA, Playwright e2e, DESIGN.md
 - **Expiry is derived, not scheduled.** An Active policy past its inclusive
   end date reads and filters as Expired
   ([PolicyStatusFilter.cs](src/PolisGo.Application/Policies/PolicyStatusFilter.cs)),
-  and a Draft whose start date has passed can no longer be paid (no backdated
-  cover).
+  and a Draft whose start date has come can no longer be paid: cover starts
+  tomorrow at the earliest, so it never covers the hours before a purchase.
+- **Business dates are Baku dates.** Start and end dates, incident dates,
+  ages and "today" use the `Asia/Baku` date on the server
+  ([BusinessCalendar.cs](src/PolisGo.Application/Common/BusinessCalendar.cs),
+  from the injected `TimeProvider`) and in the SPA (`todayIso`), not UTC:
+  between 00:00 and 04:00 in Baku the UTC date is still yesterday. Timestamps
+  stay UTC; the API refuses to start without time zone data.
 - **Certificates rendered in the browser** with pdf-lib + fontkit (MIT) and
   the app's own fonts (OFL), so they come out in the user's language with no
   server-side translation. The code loads only on Download.

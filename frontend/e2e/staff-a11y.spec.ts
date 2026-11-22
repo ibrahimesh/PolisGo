@@ -8,6 +8,7 @@ import {
   clientWithClaim,
   expectNoHorizontalScroll,
   FILES,
+  isoToday,
   openSession,
   registerSession,
   seedPreferences,
@@ -98,7 +99,7 @@ for (const theme of THEMES) {
     const sale = await staffApi(page, agent.session).post('/api/policies', {
       vehicleId: vehicles[0]?.id,
       policyTypeCode: 'MTPL',
-      startDate: new Date().toISOString().slice(0, 10),
+      startDate: isoToday(1),
       termMonths: 12,
       customerId,
     });

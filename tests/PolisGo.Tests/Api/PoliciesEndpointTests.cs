@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using PolisGo.Application.Common;
 using PolisGo.Application.Policies;
 using PolisGo.Domain.Enums;
 using PolisGo.Tests.Infrastructure;
@@ -13,13 +14,15 @@ public class PoliciesEndpointTests : IClassFixture<ApiFactory>
 
     public PoliciesEndpointTests(ApiFactory factory) => _factory = factory;
 
-    private static string Today => DateOnly.FromDateTime(DateTime.UtcNow).ToString("yyyy-MM-dd");
+    // Cover starts tomorrow (Baku) at the earliest.
+    private static DateOnly BakuToday => BusinessCalendar.Today(TimeProvider.System);
+    private static string Tomorrow => BakuToday.AddDays(1).ToString("yyyy-MM-dd");
 
     private static object Purchase(Guid vehicleId, string? start = null, int term = 12, string type = "MTPL") => new
     {
         vehicleId,
         policyTypeCode = type,
-        startDate = start ?? Today,
+        startDate = start ?? Tomorrow,
         termMonths = term
     };
 
@@ -202,13 +205,13 @@ public class PoliciesEndpointTests : IClassFixture<ApiFactory>
     public async Task Quote_validates_dates_and_term_with_field_errors()
     {
         var (client, _, vehicleId) = ClientWithVehicle();
-        var yesterday = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(-1).ToString("yyyy-MM-dd");
+        var today = BakuToday.ToString("yyyy-MM-dd");
 
-        var response = await client.PostAsJsonAsync("/api/policies/quote", Purchase(vehicleId, start: yesterday, term: 13));
+        var response = await client.PostAsJsonAsync("/api/policies/quote", Purchase(vehicleId, start: today, term: 13));
 
         await AssertProblem(response, HttpStatusCode.BadRequest);
         var errors = (await Json(response)).GetProperty("errors");
-        Assert.Equal(PolicyValidation.Messages.StartDateInPast, errors.GetProperty("StartDate")[0].GetString());
+        Assert.Equal(PolicyValidation.Messages.StartDateTooEarly, errors.GetProperty("StartDate")[0].GetString());
         Assert.Equal(PolicyValidation.Messages.TermOutOfRange, errors.GetProperty("TermMonths")[0].GetString());
     }
 

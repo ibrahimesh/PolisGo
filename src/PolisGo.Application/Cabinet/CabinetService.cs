@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using PolisGo.Application.Abstractions;
+using PolisGo.Application.Common;
 using PolisGo.Application.Cabinet.Dtos;
 using PolisGo.Application.Claims;
 using PolisGo.Application.Common.Exceptions;
@@ -34,7 +35,7 @@ public class CabinetService : ICabinetService
     }
 
     private DateTime UtcNow => _clock.GetUtcNow().UtcDateTime;
-    private DateOnly Today => DateOnly.FromDateTime(UtcNow);
+    private DateOnly Today => BusinessCalendar.Today(_clock);
 
     private Guid CustomerId => _currentUser.CustomerId
         ?? throw new UnauthorizedException("Client account has no linked customer profile.");
@@ -52,7 +53,8 @@ public class CabinetService : ICabinetService
         var activeCount = await active.CountAsync(cancellationToken);
         var insuredVehicles = await active.Select(p => p.VehicleId).Distinct().CountAsync(cancellationToken);
         var awaitingPayment = await policies
-            .CountAsync(p => p.Status == PolicyStatus.Draft && p.StartDate >= startOfToday, cancellationToken);
+            // Payable drafts: their cover starts tomorrow or later.
+            .CountAsync(p => p.Status == PolicyStatus.Draft && p.StartDate > startOfToday, cancellationToken);
         var vehicles = await _db.Vehicles.CountAsync(v => v.CustomerId == customerId, cancellationToken);
 
         var next = await active
@@ -286,7 +288,7 @@ public class CabinetService : ICabinetService
                 && n.PolicyTypeId == p.PolicyTypeId
                 && n.StartDate > p.EndDate
                 && (n.Status == PolicyStatus.Active
-                    || (n.Status == PolicyStatus.Draft && n.StartDate >= startOfToday))));
+                    || (n.Status == PolicyStatus.Draft && n.StartDate > startOfToday))));
     }
 
     // Idempotent: policies already marked keep their first ReadAt.

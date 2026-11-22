@@ -373,7 +373,7 @@
     "emailTaken": "Bu e-poçtla hesab artıq mövcuddur.",
     "unknownProduct": "Bu sığorta məhsulu mövcud deyil.",
     "policyOverlap": "Bu avtomobilin həmin tarixlər üçün bu növdə qaralama və ya qüvvədə olan polisi artıq var.",
-    "draftStartPassed": "Bu qaralamanın başlama tarixi keçib. Yeni tarix seçmək üçün alışı yenidən başladın.",
+    "draftStartPassed": "Bu qaralama artıq öz tarixində başlaya bilməz: sığorta ən tezi sabahdan başlayır. Yeni tarix seçmək üçün alışı yenidən başladın.",
     "policyExpired": "Bu polisin müddəti artıq bitib.",
     "plateTaken": "Bu dövlət nömrə nişanı ilə avtomobil artıq qeydiyyatdadır.",
     "claimDuplicate": "Bu polis, tarix və məbləğ üzrə bildiriş artıq var.",
@@ -437,7 +437,7 @@
     "vinRequired": "VIN kodunu daxil edin.",
     "vinInvalid": "VIN 17 simvoldan ibarətdir: rəqəmlər və I, O, Q-dan başqa latın hərfləri.",
     "vehicleYearRange": "Buraxılış ili 1950-ci ildən gələn ilə qədər olmalıdır.",
-    "startDatePast": "Başlama tarixi keçmişdə ola bilməz.",
+    "startDateTooEarly": "Sığorta ən tezi sabahdan başlaya bilər.",
     "startDateTooFar": "Növbəti 60 gün ərzində başlama tarixi seçin.",
     "policyTypeRequired": "Sığorta növünü seçin.",
     "vehicleRequired": "Avtomobili seçin.",
@@ -751,7 +751,7 @@
     "fields": {
       "type": "Sığorta növü",
       "startDate": "Başlama tarixi",
-      "startDateHint": "Bu gün və ya növbəti 60 gün ərzində",
+      "startDateHint": "Sabahdan 60 gün irəliyə qədər",
       "term": "Müddət",
       "vehicle": "Avtomobil"
     },

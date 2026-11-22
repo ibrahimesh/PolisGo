@@ -100,7 +100,7 @@ public class StaffOverviewService : IStaffOverviewService
 
     private async Task<SalesSummary> SalesAsync(DateTime now, CancellationToken ct)
     {
-        var today = DateOnly.FromDateTime(now);
+        var today = BusinessCalendar.Today(_clock);
         var since = now.AddDays(-WindowDays);
         // Sales are what the caller sold (an Admin: everything), not every
         // policy they can read: an agent also reads their book's other cover.

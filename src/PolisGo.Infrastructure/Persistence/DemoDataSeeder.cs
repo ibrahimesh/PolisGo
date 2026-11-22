@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using PolisGo.Application.Abstractions;
+using PolisGo.Application.Common;
 using PolisGo.Application.Pricing;
 using PolisGo.Domain.Entities;
 using PolisGo.Domain.Enums;
@@ -91,7 +92,8 @@ public static class DemoDataSeeder
         private int _claimSeq;
         private int _plateSeq;
 
-        private DateTime Today => now.Date;
+        // Business dates in Baku, as everywhere else (BusinessCalendar).
+        private DateTime Today => BusinessCalendar.DateOf(new DateTimeOffset(now, TimeSpan.Zero)).ToDateTime(TimeOnly.MinValue);
 
         public void Build()
         {
