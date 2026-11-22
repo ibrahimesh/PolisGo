@@ -62,8 +62,9 @@ claim), approve an amount up to the claimed sum (two decimals), reject with a
 required reason, pay out. Only the assigned adjuster (or an Admin) can decide.
 Decisions carry the claim's `rowVersion`: a decision made on a version
 someone else has changed is a 409 "Concurrent update". The claim detail lists
-every action with the reason it is unavailable. Sees customers only through
-claims in reach, not the agents' books. CSV export of the queue.
+every action with the reason it is unavailable. Sees customers and policies
+only through claims in reach, not the agents' books, and cannot cancel a
+policy. CSV export of the queue.
 
 **Admin** — all of the above; manages staff accounts (create Agent,
 Adjuster or Admin with the registration rules; deactivate, reactivate;
@@ -392,10 +393,10 @@ Generated from the controllers; full schemas in Swagger.
 | GET | `/api/vehicles` | Signed in (Clients: own; staff: customers in scope) |
 | POST | `/api/vehicles` | Client, Agent, Admin (Agents: own customers) |
 | POST | `/api/policies/quote`, `/api/policies` | Client, Agent, Admin |
-| GET | `/api/policies`, `/api/policies/{id}` | Signed in, row-filtered |
+| GET | `/api/policies`, `/api/policies/{id}` | Signed in, row-filtered (Adjusters: policies with a claim in reach) |
 | GET | `/api/policies/export` (CSV, list filters) | Agent, Admin |
 | POST | `/api/policies/{id}/pay` | Client, Agent, Admin |
-| POST | `/api/policies/{id}/cancel` | Signed in, row-filtered |
+| POST | `/api/policies/{id}/cancel` | Client, Agent, Admin; row-filtered |
 | POST | `/api/claims` | Client, Agent, Admin |
 | GET | `/api/claims` (status, open, search, sort, paged), `/api/claims/{id}`, `/api/claims/{id}/history` | Signed in, row-filtered |
 | POST | `/api/claims/{id}/withdraw` | Client, Agent, Admin; row-filtered |

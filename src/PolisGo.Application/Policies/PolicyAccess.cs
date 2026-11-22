@@ -15,6 +15,10 @@ internal static class PolicyAccess
             ? query.Where(p => p.CustomerId == currentUser.CustomerId!.Value)
             : query.Where(_ => false),
         UserRole.Agent => query.Where(p => p.AgentId == currentUser.UserId),
-        _ => query // Adjuster and Admin see everything
+        // Only through a claim they can work on (the open queue or their own),
+        // the same reach as CustomerAccess gives them.
+        UserRole.Adjuster => query.Where(p => p.Claims.Any(c =>
+            c.AssignedAdjusterId == null || c.AssignedAdjusterId == currentUser.UserId)),
+        _ => query // Admin
     };
 }

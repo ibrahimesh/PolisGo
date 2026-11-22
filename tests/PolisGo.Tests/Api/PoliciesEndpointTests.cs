@@ -72,13 +72,60 @@ public class PoliciesEndpointTests : IClassFixture<ApiFactory>
     }
 
     [Fact]
-    public async Task Adjuster_gets_403_on_quote_create_and_pay()
+    public async Task Adjuster_gets_403_on_quote_create_pay_and_cancel()
     {
         var client = _factory.ClientAs(UserRole.Adjuster);
         var id = Guid.NewGuid();
         Assert.Equal(HttpStatusCode.Forbidden, (await client.PostAsJsonAsync("/api/policies/quote", Purchase(id))).StatusCode);
         Assert.Equal(HttpStatusCode.Forbidden, (await client.PostAsJsonAsync("/api/policies", Purchase(id))).StatusCode);
         Assert.Equal(HttpStatusCode.Forbidden, (await client.PostAsync($"/api/policies/{id}/pay", null)).StatusCode);
+
+        // A real, paid policy with a claim in the adjuster's queue: still no cancel.
+        var policyId = _factory.WithDb(db =>
+        {
+            var data = new TestData(db);
+            var customer = data.Customer();
+            var policy = data.Policy(customer, data.Vehicle(customer.Id));
+            data.Claim(policy);
+            return policy.Id;
+        });
+        Assert.Equal(HttpStatusCode.Forbidden, (await client.PostAsync($"/api/policies/{policyId}/cancel", null)).StatusCode);
+        Assert.Equal(PolicyStatus.Active,
+            _factory.WithDb(db => db.Policies.Single(p => p.Id == policyId).Status));
+    }
+
+    // Adjusters reach a policy only through a claim they can work on (the
+    // open queue or their own), the same rule as for customers.
+    [Fact]
+    public async Task Adjuster_sees_only_policies_with_a_claim_in_reach()
+    {
+        var adjuster = _factory.ClientAs(UserRole.Adjuster, out var adjusterId, out _);
+        var (queued, own, others, none) = _factory.WithDb(db =>
+        {
+            var data = new TestData(db);
+            var customer = data.Customer();
+            var vehicle = data.Vehicle(customer.Id);
+            var otherAdjuster = data.User(UserRole.Adjuster);
+            var a = data.Policy(customer, vehicle);
+            data.Claim(a);
+            var b = data.Policy(customer, vehicle);
+            data.Claim(b, ClaimStatus.UnderReview, adjusterId: adjusterId);
+            var c = data.Policy(customer, vehicle);
+            data.Claim(c, ClaimStatus.UnderReview, adjusterId: otherAdjuster.Id);
+            var d = data.Policy(customer, vehicle);
+            return (a.Id, b.Id, c.Id, d.Id);
+        });
+
+        var page = await Json(await adjuster.GetAsync("/api/policies?pageSize=50"));
+        var ids = page.GetProperty("items").EnumerateArray().Select(p => p.GetProperty("id").GetGuid()).ToHashSet();
+        Assert.Contains(queued, ids);
+        Assert.Contains(own, ids);
+        Assert.DoesNotContain(others, ids);
+        Assert.DoesNotContain(none, ids);
+
+        Assert.Equal(HttpStatusCode.OK, (await adjuster.GetAsync($"/api/policies/{own}")).StatusCode);
+        await AssertProblem(await adjuster.GetAsync($"/api/policies/{others}"), HttpStatusCode.NotFound);
+        await AssertProblem(await adjuster.GetAsync($"/api/policies/{none}"), HttpStatusCode.NotFound);
     }
 
     [Fact]

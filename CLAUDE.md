@@ -30,7 +30,8 @@ every change in this repo.
   existence isn't leaked. Any new endpoint that returns policies, claims or
   customers must go through them. An agent's customers are those with
   `Customer.AgentId` = the agent (an Admin assigns them); adjusters see a
-  customer only through a claim in their reach.
+  customer, and a policy, only through a claim in their reach (the open
+  queue or their own), and never cancel a policy.
 - **Claim decisions take the `rowVersion`** the caller loaded; a stale one is
   a 409 titled "Concurrent update" (`ConcurrencyConflictException`), which
   the SPA tells apart from other 409s. The claim detail's `actions` list says
@@ -73,9 +74,9 @@ every change in this repo.
 | GET | `/api/policy-types` | Anonymous (public cache 5 min) |
 | GET | `/api/vehicles` | Signed in; Clients see only their own, staff those of customers in `CustomerAccess` |
 | POST | `/api/vehicles` | Client, Agent, Admin (an Agent only for their own customers) |
-| GET | `/api/policies` (status, type, search, sort, paged) · `/api/policies/{id}` (detail) | Signed in, scoped by `PolicyAccess` |
+| GET | `/api/policies` (status, type, search, sort, paged) · `/api/policies/{id}` (detail) | Signed in, scoped by `PolicyAccess` (an Adjuster sees only policies with a claim in reach) |
 | POST | `/api/policies/quote` · `/api/policies` · `/api/policies/{id}/pay` | Client, Agent, Admin |
-| POST | `/api/policies/{id}/cancel` | Signed in, scoped by `PolicyAccess` |
+| POST | `/api/policies/{id}/cancel` | Client, Agent, Admin; scoped by `PolicyAccess` |
 | GET | `/api/policies/export` (list filters, CSV) | Agent, Admin; scoped by `PolicyAccess` |
 | GET | `/api/claims` (status, open, search, sort, paged) · `/{id}` · `/{id}/history` · `/{id}/documents/{docId}` | Signed in, scoped by `ClaimAccess` |
 | POST | `/api/claims` · `/api/claims/{id}/withdraw` | Client, Agent, Admin (withdraw scoped by `ClaimAccess`) |

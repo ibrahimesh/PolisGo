@@ -140,8 +140,9 @@ public class CustomerServiceTests : IDisposable
         var asAgent = await RowFor(Staff(agent));
         Assert.Equal((2, 2, 1, 1), (asAgent.VehicleCount, asAgent.PolicyCount, asAgent.ActivePolicyCount, asAgent.ClaimCount));
 
+        // Only policies with a claim in reach (unassigned + own), not the draft.
         var asAdjuster = await RowFor(Staff(adjuster));
-        Assert.Equal((3, 2), (asAdjuster.PolicyCount, asAdjuster.ClaimCount)); // unassigned + own
+        Assert.Equal((2, 2), (asAdjuster.PolicyCount, asAdjuster.ClaimCount));
     }
 
     // ---------- Detail ----------
