@@ -370,6 +370,7 @@
       "503": "The service is temporarily unavailable."
     },
     "invalidCredentials": "The email or password is incorrect.",
+    "tooManyAttempts": "Too many attempts. Wait a few minutes and try again.",
     "emailTaken": "An account with this email already exists.",
     "unknownProduct": "This insurance product isn't available.",
     "policyOverlap": "This vehicle already has a draft or active policy of this type for those dates.",

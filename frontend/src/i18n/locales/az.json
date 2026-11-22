@@ -370,6 +370,7 @@
       "503": "Xidmət müvəqqəti olaraq əlçatan deyil."
     },
     "invalidCredentials": "E-poçt və ya şifrə yanlışdır.",
+    "tooManyAttempts": "Həddən artıq cəhd edildi. Bir neçə dəqiqə gözləyin və yenidən cəhd edin.",
     "emailTaken": "Bu e-poçtla hesab artıq mövcuddur.",
     "unknownProduct": "Bu sığorta məhsulu mövcud deyil.",
     "policyOverlap": "Bu avtomobilin həmin tarixlər üçün bu növdə qaralama və ya qüvvədə olan polisi artıq var.",

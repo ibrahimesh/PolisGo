@@ -31,6 +31,8 @@ const SERVER_MESSAGE_KEYS: Record<string, string> = {
   'Current password is required.': 'validation.currentPasswordRequired',
   'Current password is incorrect.': 'validation.currentPasswordIncorrect',
   'New password must be different from the current one.': 'validation.passwordUnchanged',
+  // The sign-in, registration and password-change limits (429, RateLimiting.cs).
+  'Too many attempts. Wait a few minutes and try again.': 'errors.tooManyAttempts',
   'Staff accounts have no phone on file.': 'validation.phoneNotApplicable',
   // Vehicle rules — VehicleValidation.Messages (same contract test).
   'Make is required.': 'validation.makeRequired',

@@ -63,6 +63,13 @@ every change in this repo.
 - **Errors** are ProblemDetails with `traceId`, written only by
   `ExceptionHandlingMiddleware` — throw `ValidationException`,
   `NotFoundException`, `ConflictException`; no try/catch in controllers.
+- **Brute-force limits** (`RateLimiting.cs`, `[EnableRateLimiting]`): sign-in
+  and registration per IP address, password change per account, fixed
+  windows from `RateLimits` (strict in `appsettings.json`, relaxed by
+  `docker-compose.e2e.yml` and `ApiFactory`). Over the limit the limiter
+  throws `TooManyRequestsException`: a 429 with `Retry-After` and
+  `AuthValidation.Messages.TooManyAttempts` (translated in the SPA). Behind a
+  reverse proxy, configure forwarded headers before trusting the address.
 - **Swagger:** XML `<summary>` and `<response>` docs plus
   `[ProducesResponseType]` for every status an endpoint can return.
 
@@ -369,9 +376,12 @@ Run from `frontend/`:
   `claims-api.spec.ts` and `api-staff.spec.ts` check length limits, uploads,
   decisions, concurrency and scoping against SQL Server. `staff-admin.spec.ts`
   covers the admin panel and reads the demo data; `cabinet-datefield.spec.ts`
-  the date field. CI starts the stack with `docker-compose.demo.yml`
-  (`COMPOSE_FILE`); locally use `docker compose -f docker-compose.yml -f
-  docker-compose.demo.yml up --build` before `npm run e2e`.
+  the date field. CI starts the stack with `docker-compose.demo.yml` and
+  `docker-compose.e2e.yml` (`COMPOSE_FILE`; the e2e file relaxes the
+  brute-force limits, which one address registering hundreds of users would
+  otherwise hit); locally use `docker compose -f docker-compose.yml -f
+  docker-compose.demo.yml -f docker-compose.e2e.yml up --build` before
+  `npm run e2e`.
 - `npm run e2e:screenshots` — regenerates `frontend/docs/screenshots`
   (landing full page; cabinet, staff and admin pages first screen, dark and
   light, desktop and mobile; admin pages need the demo data).

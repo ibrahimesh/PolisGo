@@ -233,6 +233,12 @@ frontend/                  React SPA, Playwright e2e, DESIGN.md
   header ([Program.cs](src/PolisGo.Api/Program.cs)).
 - **Pricing as a pure function** of its input, including the as-of date;
   coefficients live in one place ([Tariff.cs](src/PolisGo.Application/Pricing/Tariff.cs)).
+- **Brute-force limits.** Sign-in and registration are limited per IP
+  address and password changes per account (fixed windows, `RateLimits` in
+  [appsettings.json](src/PolisGo.Api/appsettings.json)); over the limit is a
+  429 with `Retry-After`, translated in the SPA. An unknown email costs the
+  same password-hash check as a wrong password, so timing doesn't reveal
+  accounts.
 - **Validation enforced twice**: in the browser and in
   [AuthValidation.cs](src/PolisGo.Application/Auth/AuthValidation.cs); a
   frontend test fails if a server message has no translation.
@@ -346,6 +352,13 @@ cd frontend
 npm test
 npx playwright install chromium
 npm run e2e
+```
+
+The e2e suite needs the stack with the demo data and relaxed sign-in limits
+(one address registers hundreds of test users), from the repository root:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.demo.yml -f docker-compose.e2e.yml up --build
 ```
 
 **309 frontend unit tests** (Vitest) and **146 end-to-end tests** (Playwright +
