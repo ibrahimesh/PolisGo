@@ -1,7 +1,6 @@
 services:
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
-    container_name: polisgo-sqlserver
     environment:
       ACCEPT_EULA: "Y"
       # Compose fails fast with the quoted message if SQL_SA_PASSWORD is missing.
@@ -27,7 +26,6 @@ services:
     build:
       context: .
       dockerfile: src/PolisGo.Api/Dockerfile
-    container_name: polisgo-api
     depends_on:
       sqlserver:
         condition: service_healthy

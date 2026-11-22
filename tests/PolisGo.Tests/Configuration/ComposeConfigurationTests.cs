@@ -34,6 +34,18 @@ public class ComposeConfigurationTests
         Assert.All(ports, port => Assert.StartsWith("127.0.0.1:", port));
     }
 
+    // A fixed container_name is global per Docker host: a second checkout,
+    // a worktree or a parallel CI runner can't start its stack while another
+    // one (even stopped) holds the name. Compose's project-scoped names don't clash.
+    [Fact]
+    public void No_service_has_a_fixed_container_name()
+    {
+        foreach (var file in ComposeFiles)
+        {
+            Assert.DoesNotContain("container_name:", RepoFiles.Read(file));
+        }
+    }
+
     [Fact]
     public void Secrets_have_no_usable_default()
     {
