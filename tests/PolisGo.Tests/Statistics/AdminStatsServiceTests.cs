@@ -42,6 +42,24 @@ public class AdminStatsServiceTests : IDisposable
         Assert.All(stats.Monthly, m => Assert.Equal((0, 0), (m.NewPolicies, m.NewClaims)));
     }
 
+    // Nothing stores Expired: an Active policy past its end date reads as
+    // Expired everywhere, the stats included (Policy.StatusOn).
+    [Fact]
+    public async Task An_active_policy_past_its_end_date_counts_as_expired()
+    {
+        var data = new TestData(_testDb.Db);
+        var customer = data.Customer();
+        var vehicle = data.Vehicle(customer.Id);
+        data.Policy(customer, vehicle, PolicyStatus.Active, createdAt: Now.UtcDateTime.AddYears(-3));
+        data.Policy(customer, vehicle, PolicyStatus.Active, createdAt: Now.UtcDateTime.AddDays(-10));
+
+        var stats = await NewSut().GetAsync();
+
+        Assert.Equal(1, stats.Policies.ByStatus.Single(s => s.Status == PolicyStatus.Active).Count);
+        Assert.Equal(1, stats.Policies.ByStatus.Single(s => s.Status == PolicyStatus.Expired).Count);
+        Assert.Equal(2, stats.Policies.Total);
+    }
+
     [Fact]
     public async Task Counts_policies_and_claims_by_status()
     {
