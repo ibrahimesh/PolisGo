@@ -733,25 +733,25 @@ namespace PolisGo.Infrastructure.Persistence.Migrations
                                 .HasColumnType("decimal(18,2)");
 
                             b1.Property<decimal>("BonusMalusFactor")
-                                .HasColumnType("decimal(9,4)");
+                                .HasColumnType("decimal(18,10)");
 
                             b1.Property<decimal>("DriverAgeFactor")
-                                .HasColumnType("decimal(9,4)");
+                                .HasColumnType("decimal(18,10)");
 
                             b1.Property<decimal>("EngineFactor")
-                                .HasColumnType("decimal(9,4)");
+                                .HasColumnType("decimal(18,10)");
 
                             b1.Property<decimal>("ExperienceFactor")
-                                .HasColumnType("decimal(9,4)");
+                                .HasColumnType("decimal(18,10)");
 
                             b1.Property<decimal>("TermFactor")
-                                .HasColumnType("decimal(9,4)");
+                                .HasColumnType("decimal(18,10)");
 
                             b1.Property<decimal>("TotalFactor")
-                                .HasColumnType("decimal(9,4)");
+                                .HasColumnType("decimal(18,10)");
 
                             b1.Property<decimal>("VehicleAgeFactor")
-                                .HasColumnType("decimal(9,4)");
+                                .HasColumnType("decimal(18,10)");
 
                             b1.HasKey("PolicyId");
 
