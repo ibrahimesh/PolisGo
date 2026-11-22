@@ -45,7 +45,13 @@ export function initialState(values: Partial<WizardValues> = {}): WizardState {
     version: 1,
     step: 'cover',
     // Cover from today, for a year: the most common choice.
-    values: { policyTypeCode: '', startDate: tomorrowIso(), termMonths: 12, vehicleId: '', ...values },
+    values: {
+      policyTypeCode: '',
+      startDate: tomorrowIso(),
+      termMonths: 12,
+      vehicleId: '',
+      ...values,
+    },
     draft: null,
     receipt: null,
   };
