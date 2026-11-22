@@ -34,6 +34,7 @@ public class AuditLogService : IAuditLogService
     {
         var page = Math.Clamp(query.Page, 1, MaxPage);
         var pageSize = Math.Clamp(query.PageSize, 1, MaxPageSize);
+        AdminValidation.EnsureInRange(query.From, query.To);
         if (query.From is { } f && query.To is { } t && f > t)
         {
             throw new ValidationException("from", M.RangeOrder);
@@ -122,7 +123,7 @@ public class AuditLogService : IAuditLogService
 
         var items = rows
             .OrderByDescending(r => r.OccurredAt).ThenBy(r => r.Id)
-            .Skip((page - 1) * pageSize)
+            .Skip(Paging.Skip(page, pageSize))
             .Take(pageSize)
             .ToList();
         return new PagedResult<AuditEventResponse>(items, page, pageSize, total);

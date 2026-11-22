@@ -182,7 +182,7 @@ public class PolicyService : IPolicyService
         var totalCount = await policies.CountAsync(cancellationToken);
 
         var rows = await Project(Sort(policies, query.SortBy, query.SortDir)
-                .Skip((page - 1) * pageSize)
+                .Skip(Paging.Skip(page, pageSize))
                 .Take(pageSize))
             .ToListAsync(cancellationToken);
 

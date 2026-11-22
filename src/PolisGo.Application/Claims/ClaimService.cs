@@ -188,7 +188,7 @@ public class ClaimService : IClaimService
         var totalCount = await query.CountAsync(cancellationToken);
 
         var items = await Project(Sort(query, filter.SortBy, filter.SortDir))
-            .Skip((page - 1) * pageSize)
+            .Skip(Paging.Skip(page, pageSize))
             .Take(pageSize)
             .ToListAsync(cancellationToken);
 

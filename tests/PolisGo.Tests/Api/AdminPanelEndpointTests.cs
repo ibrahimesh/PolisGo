@@ -243,6 +243,25 @@ public class AdminPanelEndpointTests : IClassFixture<ApiFactory>
         await AssertProblem(await admin.GetAsync("/api/admin/audit?from=2025-03-11&to=2025-03-10"), HttpStatusCode.BadRequest);
     }
 
+    // Dates at the ends of the calendar broke the date arithmetic (a 500);
+    // they are a field error now.
+    [Theory]
+    [InlineData("/api/admin/dashboard?to=9999-12-31", "to")]
+    [InlineData("/api/admin/dashboard?to=0001-01-15", "to")]
+    [InlineData("/api/admin/dashboard?from=0001-01-01&to=0001-06-01", "from")]
+    [InlineData("/api/admin/audit?to=9999-12-31", "to")]
+    [InlineData("/api/admin/audit?from=0001-01-01", "from")]
+    public async Task Dates_outside_2000_to_2100_are_a_400(string url, string field)
+    {
+        var admin = _factory.ClientAs(UserRole.Admin);
+
+        var response = await admin.GetAsync(url);
+
+        await AssertProblem(response, HttpStatusCode.BadRequest);
+        var problem = JsonDocument.Parse(await response.Content.ReadAsStringAsync()).RootElement;
+        Assert.Equal(AdminValidation.Messages.DateOutOfRange, problem.GetProperty("errors").GetProperty(field)[0].GetString());
+    }
+
     [Fact]
     public async Task The_dashboard_covers_a_range_and_rejects_bad_ones()
     {

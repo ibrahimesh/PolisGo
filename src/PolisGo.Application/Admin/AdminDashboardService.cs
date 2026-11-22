@@ -40,6 +40,7 @@ public class AdminDashboardService : IAdminDashboardService
     public async Task<AdminDashboardResponse> GetAsync(
         DateOnly? from, DateOnly? to, CancellationToken cancellationToken = default)
     {
+        AdminValidation.EnsureInRange(from, to);
         var now = _clock.GetUtcNow().UtcDateTime;
         // The default period ends on today's business date (Baku); the
         // figures themselves are grouped by their UTC timestamps.

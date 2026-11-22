@@ -468,6 +468,7 @@
     "rejectionReasonRequired": "Give the reason for the rejection; the customer will read it.",
     "staffRoleRequired": "Choose Agent, Adjuster or Admin.",
     "rangeOrder": "The start must be on or before the end.",
+    "dateOutOfRange": "Dates must be between 1 January 2000 and 31 December 2100.",
     "rangeTooLong": "Choose at most 24 months.",
     "dateOutsideRange": "This date is outside the allowed range."
   },

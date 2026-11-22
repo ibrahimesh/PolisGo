@@ -94,6 +94,7 @@ const SERVER_MESSAGE_KEYS: Record<string, string> = {
   'The account already has this role.': 'errors.sameRole',
   'The start of the range must be on or before its end.': 'validation.rangeOrder',
   'The range can be at most 24 months.': 'validation.rangeTooLong',
+  'Dates must be between 1 January 2000 and 31 December 2100.': 'validation.dateOutOfRange',
 };
 
 export function serverMessageKey(message: string | undefined): string | undefined {

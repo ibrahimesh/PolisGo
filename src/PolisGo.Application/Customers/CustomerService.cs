@@ -54,7 +54,7 @@ public class CustomerService : ICustomerService
         var startOfToday = BusinessCalendar.Today(_clock).ToDateTime(TimeOnly.MinValue);
 
         var items = await ApplySort(customers, query.SortBy, query.SortDirection)
-            .Skip((page - 1) * pageSize)
+            .Skip(Paging.Skip(page, pageSize))
             .Take(pageSize)
             .Select(c => new CustomerListItem(
                 c.Id,

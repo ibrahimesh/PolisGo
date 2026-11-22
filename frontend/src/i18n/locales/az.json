@@ -468,6 +468,7 @@
     "rejectionReasonRequired": "Rədd səbəbini yazın — müştəri onu görəcək.",
     "staffRoleRequired": "Agent, tənzimləyici və ya administrator seçin.",
     "rangeOrder": "Başlanğıc sondan gec ola bilməz.",
+    "dateOutOfRange": "Tarixlər 1 yanvar 2000 ilə 31 dekabr 2100 arasında olmalıdır.",
     "rangeTooLong": "Ən çox 24 ay seçin.",
     "dateOutsideRange": "Bu tarix icazə verilən müddətdən kənardadır."
   },

@@ -73,7 +73,7 @@ public class StaffAdminService : IStaffAdminService
 
         var total = await staff.CountAsync(cancellationToken);
         var items = await Project(staff.OrderBy(u => u.FullName).ThenBy(u => u.Id)
-                .Skip((page - 1) * pageSize).Take(pageSize))
+                .Skip(Paging.Skip(page, pageSize)).Take(pageSize))
             .ToListAsync(cancellationToken);
         return new PagedResult<StaffMemberResponse>(items, page, pageSize, total);
     }
