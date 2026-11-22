@@ -344,12 +344,19 @@ instead of `echo` — its redirect writes UTF-16, which Vite does not read.
 dotnet test PolisGo.slnx
 ```
 
-**449 backend tests** (xUnit): domain and service tests on SQLite in-memory
+**504 backend tests** (xUnit): domain and service tests on SQLite in-memory
 and HTTP tests via `WebApplicationFactory` (401/403/404 per role, JSON contract,
 and one client reading, paying, searching, uploading to or withdrawing
 another's policy or claim → 404; a client on every staff endpoint → 403, an
 agent deciding → 403, one agent's customers hidden from another and from
-adjusters, decision field rules, stale decisions → 409, CSV escaping).
+adjusters, decision field rules, stale decisions → 409, CSV escaping), the
+rate limits and security headers, contract tests over the compose, CI and
+configuration files, and two requests at once (payments, payouts, the last
+admin) on a SQLite file. Seven of them need SQL Server itself
+(`[SqlServerFact]`: the same races, paging, decimal precision, the migration
+backfills over existing rows); they are skipped unless
+`POLISGO_TEST_SQLSERVER` holds a connection string, and CI's SQL Server job
+runs them.
 
 ```bash
 cd frontend

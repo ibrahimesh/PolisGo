@@ -22,31 +22,31 @@ docs. Effort: **S** ≤ 2 h, **M** ≤ 1 day, **L** > 1 day.
 
 ## Summary
 
-| ID | Sev. | Area | Finding | Reproduced by | Effort |
-| -- | ---- | ---- | ------- | ------------- | ------ |
-| H-1 | High | Security | Any Adjuster can cancel any customer's policy (and reads every policy) | xUnit + HTTP on SQL Server | S |
-| H-2 | High | Money | Concurrent `POST /pay` charges one policy several times (3× on SQL Server) | xUnit + HTTP on SQL Server | M |
-| M-1 | Medium | Staff rules | Two admins deactivating each other at once leave **no** active admin | xUnit + HTTP on SQL Server | M |
-| M-2 | Medium | Money | Claim payout calls the gateway before the concurrency guard: double payout | xUnit | M |
-| M-3 | Medium | Security | An agent keeps write access to a customer moved to another book; the new agent can't see that customer's policies | xUnit (HTTP) | M |
-| M-4 | Medium | Security | No throttling or lockout on sign-in; timing and 409 reveal which emails exist | HTTP on SQL Server | M |
-| M-5 | Medium | Frontend | After a session expires, the next person to sign in on that tab sees the previous person's data | Playwright + screenshot | S |
-| M-6 | Medium | Logic | Cover bought today pays for an incident earlier that day; "today" is UTC for a UTC+4 market | xUnit + HTTP on SQL Server | M |
-| M-7 | Medium | Config | Compose publishes SQL Server on all interfaces with the documented `sa` password; API runs Development on all interfaces; placeholders accepted | HTTP + `sqlcmd` via host port | S |
-| M-8 | Medium | Performance | Landing page CLS ≈ 0.55 (Lighthouse "poor" > 0.25): the footer jumps when the route chunk lands | Playwright (PerformanceObserver) | S |
-| L-1 | Low | Robustness | Crafted `page` / date values give 500 on SQL Server (SQLite hides it) and leak SQL text under compose | HTTP on SQL Server | S |
-| L-2 | Low | Logic | `/api/admin/stats` counts expired policies as Active | xUnit | S |
-| L-3 | Low | Config | Demo seeder refuses only the exact name `Production`; `Staging`/`prod` seed staff with the documented password | xUnit | S |
-| L-4 | Low | Security | Changing the password doesn't end other sessions (roadmap item) | xUnit (HTTP) | S |
-| L-5 | Low | Security | The 64-character cap doesn't keep passwords within BCrypt's 72 bytes | xUnit | S |
-| L-6 | Low | Money | Frozen factors stored at 4 dp don't reproduce the premium (215.84 vs 215.85) | HTTP on SQL Server | S |
-| L-7 | Low | Security | No `nosniff`, `no-store` or CSP headers on API responses and document downloads | HTTP | S |
-| L-8 | Low | DX | Hard-coded `container_name` stops a second checkout's stack from starting | README quick start | S |
-| L-9 | Low | Supply chain | No npm in Dependabot; CI runs no format or vulnerability check; actions and images not pinned; ESLint 9 out of support | Reading + `npm ci` output | S |
-| L-10 | Low | CI | CI's coverage summary shows 31.2%; excluding generated migrations it is 93.3% | Cobertura from the CI step | S |
-| L-11 | Low | Docs | README e2e breakdown is stale (78 + 36 vs 94 + 52); CI section omits demo data | `playwright --list` | S |
-| L-12 | Low | Performance | All three locales (72 kB gzip) and ~378 kB of fonts load on first paint | Build output + Playwright | S |
-| L-13 | Low | Tests | Gaps: migration backfills never run against data; concurrency tested only for claim approvals; "mobile" is desktop Chrome at 390 px; `AuthServiceTests` on EF InMemory | Reading | M |
+| ID | Sev. | Area | Finding | Reproduced by | Effort | Status |
+| -- | ---- | ---- | ------- | ------------- | ------ | ------ |
+| H-1 | High | Security | Any Adjuster can cancel any customer's policy (and reads every policy) | xUnit + HTTP on SQL Server | S | Fixed in `63aabf5` |
+| H-2 | High | Money | Concurrent `POST /pay` charges one policy several times (3× on SQL Server) | xUnit + HTTP on SQL Server | M | Fixed in `1658be1` |
+| M-1 | Medium | Staff rules | Two admins deactivating each other at once leave **no** active admin | xUnit + HTTP on SQL Server | M | Fixed in `a75568f` |
+| M-2 | Medium | Money | Claim payout calls the gateway before the concurrency guard: double payout | xUnit | M | Fixed in `b552443` |
+| M-3 | Medium | Security | An agent keeps write access to a customer moved to another book; the new agent can't see that customer's policies | xUnit (HTTP) | M | Fixed in `89e3083` |
+| M-4 | Medium | Security | No throttling or lockout on sign-in; timing and 409 reveal which emails exist | HTTP on SQL Server | M | Fixed in `68263d2`, `5733216` |
+| M-5 | Medium | Frontend | After a session expires, the next person to sign in on that tab sees the previous person's data | Playwright + screenshot | S | Fixed in `dda2489` |
+| M-6 | Medium | Logic | Cover bought today pays for an incident earlier that day; "today" is UTC for a UTC+4 market | xUnit + HTTP on SQL Server | M | Fixed in `ff6c800`, `de053f5`, `d8112cf` |
+| M-7 | Medium | Config | Compose publishes SQL Server on all interfaces with the documented `sa` password; API runs Development on all interfaces; placeholders accepted | HTTP + `sqlcmd` via host port | S | Fixed in `af67558` |
+| M-8 | Medium | Performance | Landing page CLS ≈ 0.55 (Lighthouse "poor" > 0.25): the footer jumps when the route chunk lands | Playwright (PerformanceObserver) | S | Fixed in `c1f527e` |
+| L-1 | Low | Robustness | Crafted `page` / date values give 500 on SQL Server (SQLite hides it) and leak SQL text under compose | HTTP on SQL Server | S | Fixed in `342bf83` |
+| L-2 | Low | Logic | `/api/admin/stats` counts expired policies as Active | xUnit | S | Fixed in `78095b0` |
+| L-3 | Low | Config | Demo seeder refuses only the exact name `Production`; `Staging`/`prod` seed staff with the documented password | xUnit | S | Fixed in `a2684ee` |
+| L-4 | Low | Security | Changing the password doesn't end other sessions (roadmap item) | xUnit (HTTP) | S | Fixed in `eb6d370` |
+| L-5 | Low | Security | The 64-character cap doesn't keep passwords within BCrypt's 72 bytes | xUnit | S | Fixed in `f8d8083` |
+| L-6 | Low | Money | Frozen factors stored at 4 dp don't reproduce the premium (215.84 vs 215.85) | HTTP on SQL Server | S | Fixed in `90ffb35` |
+| L-7 | Low | Security | No `nosniff`, `no-store` or CSP headers on API responses and document downloads | HTTP | S | Fixed in `3c36ab1` |
+| L-8 | Low | DX | Hard-coded `container_name` stops a second checkout's stack from starting | README quick start | S | Fixed in `8c982d5` |
+| L-9 | Low | Supply chain | No npm in Dependabot; CI runs no format or vulnerability check; actions and images not pinned; ESLint 9 out of support | Reading + `npm ci` output | S | Fixed in `9f547d8` (ESLint 10: not done, see below) |
+| L-10 | Low | CI | CI's coverage summary shows 31.2%; excluding generated migrations it is 93.3% | Cobertura from the CI step | S | Fixed in `a52996d` |
+| L-11 | Low | Docs | README e2e breakdown is stale (78 + 36 vs 94 + 52); CI section omits demo data | `playwright --list` | S | Fixed in `134d199`; counts refreshed after the final run |
+| L-12 | Low | Performance | All three locales (72 kB gzip) and ~378 kB of fonts load on first paint | Build output + Playwright | S | Won't fix (risk, see below) |
+| L-13 | Low | Tests | Gaps: migration backfills never run against data; concurrency tested only for claim approvals; "mobile" is desktop Chrome at 390 px; `AuthServiceTests` on EF InMemory | Reading | M | Fixed in `588e10a`; concurrency tests in `1658be1`, `a75568f`, `b552443` |
 
 No Critical findings: nothing lets an anonymous caller in or reads another
 customer's data across the API, and the JWT/session layer held up to tampering.
@@ -572,3 +572,77 @@ Found by reading; none of these hides a known bug beyond the findings above.
 - M-3 and M-6 need a product decision from you before I can fix them
   (which agent model; when cover may start). H-1 needs one for the adjuster
   read scope.
+
+---
+
+## Phase 2 — fixes (branch `audit/opus`)
+
+One commit per finding, each with a regression test that failed before the
+fix and passes after it. The money and concurrency tests run on a SQLite file
+and on SQL Server; SQL Server-only behaviour (OFFSET, decimal scale, locking,
+migration SQL) has `[SqlServerFact]` tests, run by a new CI job. The
+`AUD_*` reproductions became permanent tests in the test projects; the files
+under `docs/audit-evidence/` are kept as the record of the audited commit.
+
+### Decisions taken by the owner
+
+- **H-1:** adjusters can't cancel policies and see only policies with a
+  claim they can work on (the same reach as `CustomerAccess`).
+- **M-3:** an agent keeps read access to what they sold; every write needs
+  the customer in the agent's current book; the current agent reads the
+  customer's existing cover and claims.
+- **M-6:** cover starts tomorrow at the earliest; business dates are Baku
+  dates on server and SPA.
+
+### Decisions taken while fixing
+
+- **Payments (H-2, M-2):** both gateways take an idempotency key (per policy,
+  per claim) and the fakes honour it like a real provider. A payout is
+  claimed on the claim (`PayoutRequestedAt`, new `RowVersion`) before the
+  gateway call; a failed payout leaves the claim Approved and payable, and
+  the retry uses the same key. The unique index on completed payments will
+  refuse to build on a database that already holds duplicates from the old
+  race; such data must be cleaned first.
+- **Last admin (M-1):** a serializable transaction. On SQL Server the losing
+  request is a deadlock victim; the middleware answers it as 409
+  "Concurrent update".
+- **Agents' sales (M-3):** the overview's sales block and the agent's Sales
+  page stay "what I sold"; the wider read scope shows on the customer pages.
+- **Business dates (M-6):** "today", cover, incident, birth and licence dates
+  are Baku dates; timestamps stay UTC; the admin dashboard and audit day
+  filters are Baku days (follow-up `d8112cf`, found by the e2e suite at
+  20:30 UTC), while the dashboard's monthly buckets still group by UTC month.
+  The aspnet image (Ubuntu 24.04) ships `tzdata`, so nothing is installed;
+  the API refuses to start if the zone can't be resolved. The e2e suite
+  arranges claimable cover by moving a paid policy's dates back with
+  `sqlcmd` in the stack's `sqlserver` container (`startCoverEarlier`), since
+  the API no longer sells cover that has started. Tests that built dates
+  from UTC failed every evening after the change; `de053f5` moved them to
+  the Baku date.
+- **Rate limits (M-4):** fixed windows per IP for sign-in (10/min) and
+  registration (10/hour), per account for password changes (5/15 min),
+  configurable under `RateLimits`; relaxed in `docker-compose.e2e.yml`,
+  which CI now loads. The 409 "already exists" on registration stays (the
+  sign-up form needs it) and is covered by the per-IP limit. Behind a
+  reverse proxy, forwarded headers must be configured first.
+- **Defaults (M-7):** ports on 127.0.0.1; `.env.example` has empty secrets so
+  compose refuses to start; the JWT validator refuses keys ever printed in
+  the repo; the demo seeder has no built-in password (`DEMO_PASSWORD` is
+  required, also in CI).
+- **Password change (L-4):** the endpoint answers 200 with a fresh token
+  (was 204); the SPA stores it.
+- **Passwords (L-5):** SHA-256 then bcrypt behind a `$pg1$` prefix; older
+  hashes still verify and are upgraded at the next sign-in.
+- **Pricing precision (L-6):** factors at `decimal(18,10)`; policies stored
+  before keep their 4-decimal factors (the unrounded values were never
+  stored).
+
+### Not done
+
+- **L-12 (locales loaded up front): won't fix for now.** The three locale
+  files are imported synchronously at start-up; the Vitest setup and the
+  in-browser PDF certificate (drawn in EN, RU or AZ whatever the UI
+  language) rely on that. Lazy loading would need an async path in the boot,
+  the language switcher and the certificate, for about 48 kB gzip.
+- **ESLint 10 (part of L-9):** ESLint 9 is out of support; version 10 is a
+  config migration of its own and was left out of this branch.
