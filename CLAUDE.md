@@ -122,6 +122,11 @@ every change in this repo.
 - **Claim status changes go through the entity** too (`StartReview`,
   `Approve`, `Reject`, `MarkPaid`, `Withdraw`), each appending
   `ClaimStatusHistory`. Documents can be added only while `Claim.IsOpen`.
+- **Money moves once.** A payout is claimed in the database
+  (`Claim.StartPayout`, saved) before the payout gateway is called; a policy
+  payment is settled by `Policy.RowVersion` and a unique completed payment.
+  Both gateways take an idempotency key per claim / per policy, so a retry
+  is the same transfer, never a second one.
   Claim updates and renewal reminders are derived on read; only read marks
   (`ClaimUpdateRead`, `PolicyReminderRead`) are stored.
 - **Check text lengths in the service, not only in the column.** SQLite

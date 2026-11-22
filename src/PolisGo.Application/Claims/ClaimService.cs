@@ -293,23 +293,26 @@ public class ClaimService : IClaimService
         EnsureCommentLength(request.Comment);
         var claim = await LoadVisibleAsync(claimId, cancellationToken);
         EnsureVersion(claim, request.RowVersion);
-        if (claim.Status != ClaimStatus.Approved)
-        {
-            // Throws the usual transition error before the gateway: no payout
-            // may go out for a claim that then can't be marked paid.
-            claim.MarkPaid(_currentUser.UserId);
-        }
 
-        // Gateway call BEFORE SaveChanges so a payout failure aborts without
-        // touching the DB. Fake gateway always succeeds today.
+        // Claim the payout in the database first: of two requests that read
+        // the same version only one can save this (RowVersion), so only one
+        // reaches the gateway. A claim that isn't Approved fails here, before
+        // any money moves.
+        claim.StartPayout(DateTime.UtcNow);
+        await _db.SaveChangesAsync(cancellationToken);
+
+        // If the gateway fails the claim stays Approved and can be paid again;
+        // the per-claim key makes that retry the same payout, not a second one.
         _ = await _payoutGateway.PayoutAsync(
-            claim.Id, claim.ApprovedAmount ?? 0m, cancellationToken);
+            claim.Id, claim.ApprovedAmount ?? 0m, PayoutIdempotencyKey(claim.Id), cancellationToken);
 
         claim.MarkPaid(_currentUser.UserId, NullIfBlank(request.Comment));
         await _db.SaveChangesAsync(cancellationToken);
 
         return await ProjectOneAsync(claim.Id, cancellationToken);
     }
+
+    private static string PayoutIdempotencyKey(Guid claimId) => $"claim-payout:{claimId:N}";
 
     public async Task<ClaimResponse> WithdrawAsync(
         Guid claimId, WithdrawClaimRequest request, CancellationToken cancellationToken = default)

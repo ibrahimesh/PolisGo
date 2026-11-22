@@ -459,7 +459,7 @@ public class ClaimServiceTests
     // the focus of most tests here.
     private sealed class FakePayoutStub : IPayoutGateway
     {
-        public Task<PayoutReceipt> PayoutAsync(Guid claimId, decimal amount, CancellationToken ct = default)
+        public Task<PayoutReceipt> PayoutAsync(Guid claimId, decimal amount, string idempotencyKey, CancellationToken ct = default)
             => Task.FromResult(new PayoutReceipt("PAYOUT-TEST", DateTime.UtcNow));
     }
 

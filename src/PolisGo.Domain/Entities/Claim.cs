@@ -33,6 +33,10 @@ public class Claim
 
     public DateTime CreatedAt { get; set; }
 
+    // When the payout of an Approved claim was started. Saved before the
+    // payout gateway is called, so of two requests only one sends money.
+    public DateTime? PayoutRequestedAt { get; set; }
+
     // Optimistic concurrency token. Guid keeps the type portable (no
     // provider-specific rowversion) and has value equality so EF's change
     // tracker sees modifications without needing a custom comparer. The
@@ -99,6 +103,21 @@ public class Claim
         }
 
         TransitionTo(ClaimStatus.Rejected, adjusterId, comment);
+    }
+
+    // Reserves the payout: a new RowVersion, so a second request that read
+    // the same version fails to save its own start. Allowed again while the
+    // claim is still Approved (a retry after a failed payout); the gateway's
+    // idempotency key keeps that retry from paying twice.
+    public void StartPayout(DateTime at)
+    {
+        if (Status != ClaimStatus.Approved)
+        {
+            throw new InvalidStateTransitionException(
+                $"Claim {ClaimNumber} cannot be paid from status {Status}; only Approved is allowed.");
+        }
+        PayoutRequestedAt = at;
+        RowVersion = Guid.NewGuid();
     }
 
     public void MarkPaid(Guid userId, string? comment = null)

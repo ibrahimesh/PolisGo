@@ -1,16 +1,21 @@
+using System.Collections.Concurrent;
 using PolisGo.Application.Abstractions;
 
 namespace PolisGo.Infrastructure.Payments;
 
-// Deterministic-ish stand-in for a real payout rail. Idempotency is handled by
-// the caller (ClaimService guards against re-entering the Paid state via the
-// Claim state machine), so the gateway itself just mints a reference.
+// Stand-in for a real payout rail. ClaimService claims the payout in the
+// database before calling it, so concurrent requests reach it once; it also
+// honours the idempotency key like a real rail, so a retry after a failure
+// gets the first receipt instead of a second payout.
 public class FakePayoutGateway : IPayoutGateway
 {
+    private readonly ConcurrentDictionary<string, PayoutReceipt> _receipts = new();
+
     public Task<PayoutReceipt> PayoutAsync(
-        Guid claimId, decimal amount, CancellationToken cancellationToken = default)
+        Guid claimId, decimal amount, string idempotencyKey, CancellationToken cancellationToken = default)
     {
-        var reference = $"PAYOUT-{Guid.NewGuid():N}"[..20].ToUpperInvariant();
-        return Task.FromResult(new PayoutReceipt(reference, DateTime.UtcNow));
+        var receipt = _receipts.GetOrAdd(idempotencyKey, _ =>
+            new PayoutReceipt($"PAYOUT-{Guid.NewGuid():N}"[..20].ToUpperInvariant(), DateTime.UtcNow));
+        return Task.FromResult(receipt);
     }
 }

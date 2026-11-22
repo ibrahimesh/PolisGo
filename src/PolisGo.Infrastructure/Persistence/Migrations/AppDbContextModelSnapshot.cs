@@ -103,6 +103,9 @@ namespace PolisGo.Infrastructure.Persistence.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
+                    b.Property<DateTime?>("PayoutRequestedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<Guid>("PolicyId")
                         .HasColumnType("uniqueidentifier");
 
