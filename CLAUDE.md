@@ -46,8 +46,11 @@ every change in this repo.
   (`AuditLogService`) reads only recorded rows: status history and audit
   entries. Never synthesise events.
 - **Staff management rules** live in `StaffAdminService`: nobody acts on
-  their own account, the last active admin is kept (checked first), a former
-  agent's customers are released. Messages in `AdminValidation` (contract-tested).
+  their own account, the last active admin is kept (checked first, inside
+  `BeginSerializableTransactionAsync` with the write, so two admins acting on
+  each other at once can't both pass; SQL Server's deadlock victim is a 409
+  "Concurrent update"), a former agent's customers are released. Messages in
+  `AdminValidation` (contract-tested).
 - **CSV exports** reuse the list's filter (`Filter(...)` in the service), are
   capped at 5000 rows, and build cells only through `Csv.Text` /
   `Csv.Number` / `Csv.Date` (formula-safe, UTF-8 with BOM).

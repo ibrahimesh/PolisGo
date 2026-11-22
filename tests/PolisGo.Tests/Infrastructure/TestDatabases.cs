@@ -122,7 +122,10 @@ internal sealed class SaveGate(int parties) : SaveChangesInterceptor
 
 internal static class Outcome
 {
-    // "ok" or the exception's type name, so a test can assert who won.
+    public const string Deadlock = "deadlock victim";
+
+    // "ok", "deadlock victim" (SQL Server killed this transaction; the API
+    // answers 409), or the exception's type name, so a test can assert who won.
     public static async Task<string> Of<T>(Func<Task<T>> action)
     {
         try
@@ -132,6 +135,10 @@ internal static class Outcome
         }
         catch (Exception ex)
         {
+            for (Exception? e = ex; e is not null; e = e.InnerException)
+            {
+                if (e.Message.Contains(Deadlock, StringComparison.OrdinalIgnoreCase)) return Deadlock;
+            }
             return ex.GetType().Name;
         }
     }

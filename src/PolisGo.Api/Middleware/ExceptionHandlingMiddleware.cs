@@ -75,6 +75,14 @@ public class ExceptionHandlingMiddleware
             await WriteProblem(context, StatusCodes.Status409Conflict,
                 ConcurrentUpdateTitle, ConcurrencyConflictException.DefaultMessage);
         }
+        // SQL Server ends a serializable race (the last-admin rule) by killing
+        // one transaction: that caller collided with another, as above.
+        catch (Exception ex) when (IsDeadlockVictim(ex))
+        {
+            LogExpected(ex, context);
+            await WriteProblem(context, StatusCodes.Status409Conflict,
+                ConcurrentUpdateTitle, ConcurrencyConflictException.DefaultMessage);
+        }
         catch (DbUpdateException ex) when (IsUniqueConstraintViolation(ex))
         {
             LogExpected(ex, context);
@@ -147,6 +155,18 @@ public class ExceptionHandlingMiddleware
 
     private static string GetTraceId(HttpContext context)
         => Activity.Current?.Id ?? context.TraceIdentifier;
+
+    // SQL Server error 1205 ("... was deadlocked ... chosen as the deadlock
+    // victim"), wrapped by EF or not. Text, like the check below, so the Api
+    // needn't reference the provider's exception types.
+    private static bool IsDeadlockVictim(Exception ex)
+    {
+        for (Exception? e = ex; e is not null; e = e.InnerException)
+        {
+            if (e.Message.Contains("deadlock victim", StringComparison.OrdinalIgnoreCase)) return true;
+        }
+        return false;
+    }
 
     private static bool IsUniqueConstraintViolation(DbUpdateException ex)
     {

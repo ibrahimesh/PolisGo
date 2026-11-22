@@ -119,6 +119,25 @@ public class ExceptionHandlingMiddlewareTests
         Assert.Equal("Concurrent update", json.GetProperty("title").GetString());
     }
 
+    // SQL Server ends a serializable race by killing one transaction; that
+    // caller acted at the same moment as another, which is a 409, not a 500.
+    [Fact]
+    public async Task Maps_a_deadlock_victim_to_409_concurrent_update()
+    {
+        var (ctx, body) = NewContext();
+        var deadlock = new InvalidOperationException(
+            "Transaction (Process ID 57) was deadlocked on lock resources with another process and has been chosen as the deadlock victim. Rerun the transaction.");
+        var middleware = Build(_ => throw new DbUpdateException("save failed", deadlock));
+
+        await middleware.InvokeAsync(ctx);
+
+        Assert.Equal(StatusCodes.Status409Conflict, ctx.Response.StatusCode);
+        var json = await ReadProblem(body);
+        Assert.Equal("Concurrent update", json.GetProperty("title").GetString());
+        Assert.Equal(PolisGo.Application.Common.Exceptions.ConcurrencyConflictException.DefaultMessage,
+            json.GetProperty("detail").GetString());
+    }
+
     [Fact]
     public async Task Maps_DbUpdateException_UniqueViolation_To_409()
     {
