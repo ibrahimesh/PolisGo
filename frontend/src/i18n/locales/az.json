@@ -1279,7 +1279,8 @@
         "NotApproved": "Yalnız təsdiqlənmiş zərərlər ödənilir.",
         "AlreadyPaid": "Zərər artıq ödənilib.",
         "Withdrawn": "Müştəri zərəri geri götürüb.",
-        "Closed": "Zərər bağlanıb."
+        "Closed": "Zərər bağlanıb.",
+        "OutsideYourBook": "Müştəri indi başqa agentə təhkim olunub; onun adından yalnız həmin agent iş görə bilər."
       },
       "conflict": {
         "title": "Siz baxarkən bu zərəri başqası dəyişdi",

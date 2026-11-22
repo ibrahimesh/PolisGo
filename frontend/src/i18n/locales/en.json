@@ -1279,7 +1279,8 @@
         "NotApproved": "Only approved claims are paid out.",
         "AlreadyPaid": "The claim is already paid out.",
         "Withdrawn": "The customer withdrew the claim.",
-        "Closed": "The claim is closed."
+        "Closed": "The claim is closed.",
+        "OutsideYourBook": "The customer is now in another agent’s book; only that agent can act for them."
       },
       "conflict": {
         "title": "Someone else changed this claim while you had it open",

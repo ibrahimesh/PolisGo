@@ -137,8 +137,11 @@ public class CustomerServiceTests : IDisposable
         Assert.Equal((2, 3, 2, 3), (asAdmin.VehicleCount, asAdmin.PolicyCount, asAdmin.ActivePolicyCount, asAdmin.ClaimCount));
         Assert.True(asAdmin.HasAccount);
 
+        // The customer is in the agent's book: all of their cover, whoever sold it.
         var asAgent = await RowFor(Staff(agent));
-        Assert.Equal((2, 2, 1, 1), (asAgent.VehicleCount, asAgent.PolicyCount, asAgent.ActivePolicyCount, asAgent.ClaimCount));
+        Assert.Equal((2, 3, 2, 3), (asAgent.VehicleCount, asAgent.PolicyCount, asAgent.ActivePolicyCount, asAgent.ClaimCount));
+        // The previous seller no longer has the customer in their book.
+        Assert.Empty((await Sut(Staff(otherAgent)).ListAsync(new ListCustomersQuery())).Items);
 
         // Only policies with a claim in reach (unassigned + own), not the draft.
         var asAdjuster = await RowFor(Staff(adjuster));
@@ -199,21 +202,22 @@ public class CustomerServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task Detail_for_an_agent_shows_only_their_policies_and_claims()
+    public async Task Detail_for_the_current_agent_shows_all_of_the_customers_policies_and_claims()
     {
         var agent = _data.User(UserRole.Agent);
         var customer = _data.Customer(agentId: agent.Id);
         var vehicle = _data.Vehicle(customer.Id);
         var mine = _data.Policy(customer, vehicle, agentId: agent.Id);
-        var theirs = _data.Policy(customer, vehicle, agentId: _data.User(UserRole.Agent).Id);
+        // Sold by the customer's previous agent: the current one serves it now.
+        var earlier = _data.Policy(customer, vehicle, agentId: _data.User(UserRole.Agent).Id);
         _data.Claim(mine);
-        _data.Claim(theirs);
+        _data.Claim(earlier);
 
         var detail = await Sut(Staff(agent)).GetByIdAsync(customer.Id);
 
-        Assert.Equal(mine.Id, Assert.Single(detail.Policies).Id);
-        Assert.Equal(1, detail.Claims.Total);
-        Assert.Single(detail.Vehicles); // the customer is theirs, so all of the customer's vehicles
+        Assert.Equal(new[] { mine.Id, earlier.Id }.Order(), detail.Policies.Select(p => p.Id).Order());
+        Assert.Equal(2, detail.Claims.Total);
+        Assert.Single(detail.Vehicles);
     }
 
     [Fact]

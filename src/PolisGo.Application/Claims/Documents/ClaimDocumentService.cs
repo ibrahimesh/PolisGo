@@ -37,8 +37,11 @@ public class ClaimDocumentService : IClaimDocumentService
         long contentLength,
         CancellationToken cancellationToken = default)
     {
-        // Ownership check — throws 404 if the caller can't see this claim.
-        var claim = await LoadVisibleAsync(claimId, cancellationToken);
+        // Adding evidence acts for the customer: an agent only for one in
+        // their current book. 404 otherwise, as for a claim they can't see.
+        var claim = await ClaimAccess.WritableBy(_db.Claims.Where(c => c.Id == claimId), _currentUser)
+                .FirstOrDefaultAsync(cancellationToken)
+            ?? throw new NotFoundException(nameof(DomainClaim), claimId);
 
         // A decided claim is a closed file; late evidence goes through the adjuster.
         if (!claim.IsOpen)

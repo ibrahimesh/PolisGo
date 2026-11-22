@@ -29,9 +29,14 @@ every change in this repo.
   rows a caller sees; a row outside that scope is a 404, never a 403, so
   existence isn't leaked. Any new endpoint that returns policies, claims or
   customers must go through them. An agent's customers are those with
-  `Customer.AgentId` = the agent (an Admin assigns them); adjusters see a
-  customer, and a policy, only through a claim in their reach (the open
-  queue or their own), and never cancel a policy.
+  `Customer.AgentId` = the agent (an Admin assigns them). An agent *reads*
+  the policies they sold (kept after the customer moves on) and every policy
+  and claim of a customer now in their book; every *write* (file or
+  withdraw a claim, upload, pay, cancel) goes through `PolicyAccess.WritableBy`
+  / `ClaimAccess.WritableBy`, which need the customer in the agent's current
+  book (a blocked withdraw says `OutsideYourBook`). Adjusters see a customer,
+  and a policy, only through a claim in their reach (the open queue or
+  their own), and never cancel a policy.
 - **Claim decisions take the `rowVersion`** the caller loaded; a stale one is
   a 409 titled "Concurrent update" (`ConcurrencyConflictException`), which
   the SPA tells apart from other 409s. The claim detail's `actions` list says

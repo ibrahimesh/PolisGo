@@ -24,6 +24,9 @@ public static class ClaimActionBlock
     public const string AlreadyPaid = "AlreadyPaid";
     public const string Withdrawn = "Withdrawn";
     public const string Closed = "Closed";
+    // An agent reading a claim on a policy they sold, for a customer now in
+    // another agent's book: only the current agent acts for them.
+    public const string OutsideYourBook = "OutsideYourBook";
 }
 
 public record ClaimActionState(ClaimAction Action, bool Allowed, string? BlockedReason);
@@ -33,7 +36,7 @@ internal static class ClaimActions
     // Only the actions the caller's role may ever take are listed: staff get
     // the decision steps, the customer side (Client, Agent) gets withdraw.
     public static IReadOnlyList<ClaimActionState> For(
-        ClaimStatus status, Guid? assignedAdjusterId, ICurrentUser user)
+        ClaimStatus status, Guid? assignedAdjusterId, ICurrentUser user, bool writable = true)
     {
         var actions = new List<ClaimActionState>();
         if (user.Role is UserRole.Adjuster or UserRole.Admin)
@@ -46,7 +49,10 @@ internal static class ClaimActions
         }
         if (ClaimService.CanWithdrawRole(user.Role))
         {
-            actions.Add(State(ClaimAction.Withdraw, IsOpen(status) ? null : ClaimActionBlock.Closed));
+            actions.Add(State(ClaimAction.Withdraw,
+                !IsOpen(status) ? ClaimActionBlock.Closed
+                : !writable ? ClaimActionBlock.OutsideYourBook
+                : null));
         }
         return actions;
     }

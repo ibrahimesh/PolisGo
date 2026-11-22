@@ -43,9 +43,9 @@ public class ClaimService : IClaimService
     {
         var customerId = ResolveCustomerId(request.CustomerId);
 
-        // PolicyAccess: an agent files only on policies they sold, as for
-        // every other policy endpoint.
-        var policy = await PolicyAccess.VisibleTo(_db.Policies, _currentUser)
+        // Filing acts for the customer: an agent only for one in their
+        // current book (PolicyAccess.WritableBy), as for pay and cancel.
+        var policy = await PolicyAccess.WritableBy(_db.Policies, _currentUser)
             .FirstOrDefaultAsync(p => p.Id == request.PolicyId, cancellationToken)
             ?? throw new NotFoundException(nameof(Policy), request.PolicyId);
 
@@ -148,6 +148,10 @@ public class ClaimService : IClaimService
             .ToList();
 
         var open = claim.Status is ClaimStatus.Submitted or ClaimStatus.UnderReview;
+        // Reading isn't acting: an agent reads claims of policies they sold
+        // but acts only for customers in their current book.
+        var writable = await ClaimAccess.WritableBy(_db.Claims.AsNoTracking(), _currentUser)
+            .AnyAsync(c => c.Id == claimId, cancellationToken);
         return new ClaimDetailResponse(
             claim,
             new ClaimPolicySummary(policy.Id, policy.PolicyNumber, policy.Code,
@@ -155,10 +159,10 @@ public class ClaimService : IClaimService
             policy.Customer,
             history,
             documents,
-            CanWithdraw: open && CanWithdrawRole(_currentUser.Role),
-            CanAddDocuments: open && documents.Count < ClaimValidation.MaxDocumentsPerClaim,
+            CanWithdraw: open && writable && CanWithdrawRole(_currentUser.Role),
+            CanAddDocuments: open && writable && documents.Count < ClaimValidation.MaxDocumentsPerClaim,
             MaxDocuments: ClaimValidation.MaxDocumentsPerClaim,
-            Actions: ClaimActions.For(claim.Status, claim.AssignedAdjusterId, _currentUser));
+            Actions: ClaimActions.For(claim.Status, claim.AssignedAdjusterId, _currentUser, writable));
     }
 
     public async Task<IReadOnlyList<ClaimHistoryEntry>> GetHistoryAsync(
@@ -323,7 +327,9 @@ public class ClaimService : IClaimService
             throw new ValidationException(nameof(request.Reason), M.ReasonTooLong);
         }
 
-        var claim = await LoadVisibleAsync(claimId, cancellationToken);
+        var claim = await ClaimAccess.WritableBy(_db.Claims.Where(c => c.Id == claimId), _currentUser)
+                .FirstOrDefaultAsync(cancellationToken)
+            ?? throw new NotFoundException(nameof(DomainClaim), claimId);
         claim.Withdraw(_currentUser.UserId, string.IsNullOrEmpty(reason) ? null : reason);
         await _db.SaveChangesAsync(cancellationToken);
         return await ProjectOneAsync(claim.Id, cancellationToken);

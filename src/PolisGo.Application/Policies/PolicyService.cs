@@ -248,7 +248,7 @@ public class PolicyService : IPolicyService
         Guid policyId, CancellationToken cancellationToken = default)
     {
         var today = Today;
-        var policy = await LoadVisibleAsync(policyId, cancellationToken);
+        var policy = await LoadWritableAsync(policyId, cancellationToken);
 
         // A Draft becomes Active once paid; any other status means an earlier
         // Pay already landed. Two requests that both read the Draft are
@@ -306,7 +306,7 @@ public class PolicyService : IPolicyService
         Guid policyId, CancellationToken cancellationToken = default)
     {
         var today = Today;
-        var policy = await LoadVisibleAsync(policyId, cancellationToken);
+        var policy = await LoadWritableAsync(policyId, cancellationToken);
 
         if (policy.StatusOn(today) == PolicyStatus.Expired)
         {
@@ -451,12 +451,12 @@ public class PolicyService : IPolicyService
         return row.ToResponse(today);
     }
 
-    // Loads a tracked policy the current user is allowed to see. Returns
-    // NotFoundException both when the row is missing AND when it belongs to
-    // somebody else — never leaks existence of other users' policies.
-    private async Task<Policy> LoadVisibleAsync(Guid policyId, CancellationToken cancellationToken)
+    // Loads a tracked policy the current user may act on (pay, cancel).
+    // NotFoundException both when the row is missing AND when it is outside
+    // the caller's write scope — never leaks existence of other users' policies.
+    private async Task<Policy> LoadWritableAsync(Guid policyId, CancellationToken cancellationToken)
     {
-        var query = PolicyAccess.VisibleTo(_db.Policies.Where(p => p.Id == policyId), _currentUser);
+        var query = PolicyAccess.WritableBy(_db.Policies.Where(p => p.Id == policyId), _currentUser);
 
         return await query.FirstOrDefaultAsync(cancellationToken)
             ?? throw new NotFoundException(nameof(Policy), policyId);

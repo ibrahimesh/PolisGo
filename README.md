@@ -53,9 +53,11 @@ product catalogue (`/api/policy-types`); health check.
 
 **Agent** — works their own book: the customers an Admin assigned to them
 (`Customer.AgentId`), never another agent's (404). Registers vehicles for
-them, sells and takes payment for policies, files claims on policies they sold;
-sees only those policies and the claims on them; sales figures and a CSV
-export of their policies.
+them, sells and takes payment for policies, files and withdraws claims; reads
+every policy and claim of their book's customers, whoever sold it, and keeps
+read-only sight of what they sold to customers since moved to another agent
+(only the current agent acts for a customer). Sales figures and a CSV export
+of their own sales.
 
 **Adjuster** — claims queue (unassigned and own); start review (assigns the
 claim), approve an amount up to the claimed sum (two decimals), reject with a
