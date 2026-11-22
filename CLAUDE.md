@@ -169,6 +169,14 @@ every change in this repo.
 - **HTTP tests** use `ApiFactory` (`WebApplicationFactory` + SQLite) and
   `ClientAs(role)` for a real JWT. Every endpoint gets one: anonymous → 401,
   each wrong role → 403, happy path and 404 as ProblemDetails.
+- **Concurrency and SQL Server tests:** two requests at once run on
+  `FileSqliteDb` (one connection per context) with `ArrivalGate`/`SaveGate`
+  lining them up, and again on SQL Server as `[SqlServerFact]` with
+  `SqlServerTestDb` (a fresh database built by the migrations). Those run
+  when `POLISGO_TEST_SQLSERVER` holds a connection string (CI job "SQL Server
+  integration tests"; locally e.g. `Server=127.0.0.1,1433;User Id=sa;...`)
+  and are skipped otherwise. Anything that depends on locking, decimal
+  rounding or migration SQL gets one.
 - CI builds with `-warnaserror`; keep the build warning-free.
 
 ## Frontend

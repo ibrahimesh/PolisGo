@@ -16,6 +16,9 @@ public class PolicyConfiguration : IEntityTypeConfiguration<Policy>
 
         builder.HasIndex(p => p.PolicyNumber).IsUnique();
 
+        // A stale save (two payments of one Draft) fails instead of landing twice.
+        builder.Property(p => p.RowVersion).IsConcurrencyToken();
+
         // Admin stats: GROUP BY Status, and the monthly window on CreatedAt
         // (which also serves the default newest-first list ordering).
         builder.HasIndex(p => p.Status);

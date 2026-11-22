@@ -250,8 +250,10 @@ public class PolicyService : IPolicyService
         var today = Today;
         var policy = await LoadVisibleAsync(policyId, cancellationToken);
 
-        // Idempotency guard: a Draft policy becomes Active once paid. Any
-        // non-Draft status means a previous Pay already won the race.
+        // A Draft becomes Active once paid; any other status means an earlier
+        // Pay already landed. Two requests that both read the Draft are
+        // settled by the policy's RowVersion at SaveChanges (the loser is a
+        // 409) and, at the PSP, by the idempotency key below.
         if (policy.Status != PolicyStatus.Draft)
         {
             throw new ConflictException(
@@ -265,8 +267,10 @@ public class PolicyService : IPolicyService
             throw new ConflictException(PolicyValidation.Messages.DraftStartPassed);
         }
 
+        // One key per policy: a policy is paid once, so a repeated charge for
+        // it is always a duplicate.
         var receipt = await _paymentGateway.ChargeAsync(
-            policy.Id, policy.Premium, cancellationToken);
+            policy.Id, policy.Premium, PaymentIdempotencyKey(policy.Id), cancellationToken);
 
         var payment = new Payment
         {
@@ -295,6 +299,8 @@ public class PolicyService : IPolicyService
             Reference: receipt.Reference,
             PaidAt: payment.PaidAt);
     }
+
+    internal static string PaymentIdempotencyKey(Guid policyId) => $"policy-payment:{policyId:N}";
 
     public async Task<PolicyResponse> CancelAsync(
         Guid policyId, CancellationToken cancellationToken = default)

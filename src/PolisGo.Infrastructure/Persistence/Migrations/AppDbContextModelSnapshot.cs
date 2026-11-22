@@ -311,6 +311,11 @@ namespace PolisGo.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("PolicyId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Payments_PolicyId_Completed")
+                        .HasFilter("[Status] = 'Completed'");
+
                     b.HasIndex("PolicyId", "PaidAt");
 
                     b.ToTable("Payments");
@@ -344,6 +349,10 @@ namespace PolisGo.Infrastructure.Persistence.Migrations
 
                     b.Property<decimal>("Premium")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid>("RowVersion")
+                        .IsConcurrencyToken()
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("datetime2");

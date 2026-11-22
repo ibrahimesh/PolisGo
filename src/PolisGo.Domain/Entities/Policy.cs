@@ -33,6 +33,10 @@ public class Policy
     // Factors behind Premium, frozen at issue; null on legacy rows.
     public PolicyPricing? Pricing { get; set; }
 
+    // Optimistic concurrency token, as on Claim: every transition sets a new
+    // value, so of two requests that read the same Draft only one can pay it.
+    public Guid RowVersion { get; set; } = Guid.NewGuid();
+
     public ICollection<Payment> Payments { get; set; } = new List<Payment>();
     public ICollection<Claim> Claims { get; set; } = new List<Claim>();
     public ICollection<PolicyStatusHistory> StatusHistory { get; set; } = new List<PolicyStatusHistory>();
@@ -102,5 +106,6 @@ public class Policy
             ChangedAt = DateTime.UtcNow
         });
         Status = to;
+        RowVersion = Guid.NewGuid();
     }
 }

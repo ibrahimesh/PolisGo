@@ -217,6 +217,62 @@ jobs:
         if: always()
         run: docker compose down --volumes
 
+  # Tests that need SQL Server itself: locking under concurrent requests,
+  # decimal rounding and the migrations' SQL. They are [SqlServerFact]s,
+  # skipped in the job above; here each gets a fresh, migrated database.
+  sqlserver-tests:
+    name: SQL Server integration tests
+    runs-on: ubuntu-latest
+    env:
+      SQL_SA_PASSWORD: Ci-Only-Sql-Passw0rd!
+    services:
+      sqlserver:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: "Y"
+          MSSQL_SA_PASSWORD: Ci-Only-Sql-Passw0rd!
+        ports:
+          - 1433:1433
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.x
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v6
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Build
+        run: |
+          dotnet restore PolisGo.slnx
+          dotnet build PolisGo.slnx --no-restore -c Release -warnaserror
+
+      - name: Wait for SQL Server
+        run: |
+          for attempt in $(seq 1 30); do
+            if docker exec ${{ job.services.sqlserver.id }} /opt/mssql-tools18/bin/sqlcmd \
+                 -C -S localhost -U sa -P "$SQL_SA_PASSWORD" -Q "SELECT 1" > /dev/null 2>&1; then
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "SQL Server did not accept connections in time."
+          exit 1
+
+      - name: Test on SQL Server
+        env:
+          POLISGO_TEST_SQLSERVER: Server=localhost,1433;User Id=sa;Password=${{ env.SQL_SA_PASSWORD }};TrustServerCertificate=True;Encrypt=False
+        run: dotnet test PolisGo.slnx --no-build -c Release --filter "Category=SqlServer"
+
   docker-build:
     name: Docker build
     needs: build-test

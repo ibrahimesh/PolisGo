@@ -18,6 +18,13 @@ public class PaymentConfiguration : IEntityTypeConfiguration<Payment>
         // Overview: premiums paid in the last 12 months, per policy.
         builder.HasIndex(p => new { p.PolicyId, p.PaidAt });
 
+        // Backstop for the Policy concurrency token: a policy is paid once.
+        // Square brackets quote the column on SQL Server and SQLite alike.
+        builder.HasIndex(p => p.PolicyId)
+            .IsUnique()
+            .HasFilter("[Status] = 'Completed'")
+            .HasDatabaseName("IX_Payments_PolicyId_Completed");
+
         // Cascade: a payment has no meaning without its policy. Deleting the
         // policy aggregate also sweeps its payment rows.
         builder.HasOne(p => p.Policy)
