@@ -356,8 +356,12 @@ React Router, TanStack Query, React Hook Form + Zod, react-i18next.
 
 Run from `frontend/`:
 
-- `npm run lint` · `npm run typecheck` · `npm test` (Vitest) · `npm run build`
-  — CI runs exactly these.
+- `npm audit --audit-level=high` · `npm run lint` · `npm run typecheck` ·
+  `npm run format:check` · `npm test` (Vitest) · `npm run build` — CI runs
+  exactly these, in this order.
+- **Pinning:** GitHub Actions by commit SHA (`# vN` comment), base images by
+  digest (`tag@sha256:...`), both kept current by Dependabot (NuGet, npm,
+  Docker, docker-compose, Actions); `SupplyChainConfigurationTests` checks it.
 - `npm run e2e` — Playwright + axe against the real API (needs the Docker
   stack on `:8080`, rebuilt from the current branch; starts the dev server
   itself). Covers happy paths, negative form cases, server-400 mapping,
