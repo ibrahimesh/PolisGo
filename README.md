@@ -365,8 +365,8 @@ The e2e suite needs the stack with the demo data and relaxed sign-in limits
 docker compose -f docker-compose.yml -f docker-compose.demo.yml -f docker-compose.e2e.yml up --build
 ```
 
-**309 frontend unit tests** (Vitest) and **146 end-to-end tests** (Playwright +
-axe-core: 78 at 1440px, plus the 36 cabinet and staff tests again at 390px) against the
+**315 frontend unit tests** (Vitest) and **150 end-to-end tests** (Playwright +
+axe-core: 97 at 1440px, plus the 53 cabinet and staff tests again at 390px) against the
 real API — the e2e suite needs the Docker stack on `:8080`. They cover
 sign-up and sign-in, buying a policy end to end, the certificate download,
 renewal, filing a claim with photos, withdrawing it, the claim timeline after
@@ -392,14 +392,25 @@ stops working and that the last active admin is kept.
 [`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs on pushes and pull
 requests to `main`:
 
-- **Build and test** — Release build with warnings as errors, all backend tests
-  with coverage (TRX and Cobertura uploaded as artifacts).
-- **Frontend** — Node 22, `npm ci`, lint, typecheck, Vitest, production build.
-- **End-to-end** — `docker compose` starts SQL Server and the API (fresh
-  database, migrations and the dev admin seed on start-up), then the full
+- **Build and test** — NuGet vulnerability check, Release build with
+  warnings as errors, all backend tests with coverage (generated migrations
+  excluded; TRX and Cobertura uploaded as artifacts). The SQL Server tests
+  are skipped here.
+- **Frontend** — Node 22, `npm ci`, `npm audit` (high), lint, typecheck,
+  Prettier check, Vitest, production build.
+- **End-to-end** — `docker compose` with the demo and e2e overrides starts
+  SQL Server and the API (fresh database, migrations, the dev admin seed and
+  the demo data on start-up, relaxed sign-in limits), then the full
   Playwright suite runs against it; on failure the HTML report, traces,
   screenshots and container logs are kept as artifacts.
+- **SQL Server integration tests** — the `[SqlServerFact]` tests (concurrent
+  payments, payouts and admin changes, paging, decimal precision, migrations
+  with data) against a SQL Server service container, each on a fresh
+  database built by the migrations.
 - **Docker build** — builds the API image with Buildx (not pushed).
+
+Actions are pinned by commit SHA and base images by digest; Dependabot
+updates NuGet, npm, Docker, docker-compose and Actions weekly.
 
 ## API overview
 
