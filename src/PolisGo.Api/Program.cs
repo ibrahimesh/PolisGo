@@ -149,6 +149,10 @@ public class Program
         {
             logger.LogCritical("Demo:SeedData is set in Production; demo data was NOT seeded.");
         }
+        else if (result == DemoSeedResult.MissingPassword)
+        {
+            logger.LogError("Demo:SeedData is set but Demo:Password is empty; demo data was NOT seeded.");
+        }
         else
         {
             logger.LogInformation("Demo data: {Result}.", result);

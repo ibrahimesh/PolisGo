@@ -75,13 +75,16 @@ public class DemoDataSeederTests
         Assert.Equal(7, await fixture.Db.Customers.CountAsync(c => c.AgentId != null));
     }
 
+    // No built-in password: demo staff accounts with a password printed in
+    // the README would be a usable default secret.
     [Fact]
-    public async Task Without_a_configured_password_uses_the_documented_demo_one()
+    public async Task Without_a_configured_password_nothing_is_seeded()
     {
         using var fixture = new SqliteTestDb();
-        await Seed(fixture, Config(("Demo:SeedData", "true")));
 
-        var agent = await fixture.Db.Users.SingleAsync(u => u.Email == DemoDataSeeder.MarkerEmail);
-        Assert.True(new BcryptPasswordHasher().Verify(DemoDataSeeder.DefaultPassword, agent.PasswordHash));
+        var result = await Seed(fixture, Config(("Demo:SeedData", "true")));
+
+        Assert.Equal(DemoSeedResult.MissingPassword, result);
+        Assert.False(await fixture.Db.Users.AnyAsync(u => u.Email.EndsWith(DemoDataSeeder.Domain)));
     }
 }

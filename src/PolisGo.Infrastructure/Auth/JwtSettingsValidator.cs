@@ -7,7 +7,13 @@ namespace PolisGo.Infrastructure.Auth;
 public class JwtSettingsValidator : IValidateOptions<JwtSettings>
 {
     private const int MinSecretLength = 32;
-    private const string Placeholder = "SET-VIA-USER-SECRETS";
+    // Values printed in this repository (appsettings, the old .env.example)
+    // are public: refused like a missing key, however long.
+    private static readonly string[] PublishedPlaceholders =
+    [
+        "SET-VIA-USER-SECRETS",
+        "replace-with-at-least-32-chars-of-random-base64"
+    ];
 
     public ValidateOptionsResult Validate(string? name, JwtSettings options)
     {
@@ -19,7 +25,7 @@ public class JwtSettingsValidator : IValidateOptions<JwtSettings>
         if (string.IsNullOrWhiteSpace(options.Audience))
             errors.Add("Jwt:Audience must be configured.");
 
-        if (string.IsNullOrWhiteSpace(options.SecretKey) || options.SecretKey == Placeholder)
+        if (string.IsNullOrWhiteSpace(options.SecretKey) || PublishedPlaceholders.Contains(options.SecretKey))
         {
             errors.Add(
                 $"Jwt:SecretKey is missing. Set it with: " +

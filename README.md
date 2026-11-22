@@ -251,16 +251,19 @@ Requires Docker with Compose and, for the frontend, Node.js 22+.
 cp .env.example .env
 ```
 
-Edit `.env`: `SQL_SA_PASSWORD` needs 8+ characters with three of upper case,
-lower case, digit, symbol; `JWT_SECRET_KEY` needs 32+ characters or the API
-refuses to start (`openssl rand -base64 48`); `SEED_ADMIN_EMAIL` and
-`SEED_ADMIN_PASSWORD` define the admin created on first start.
+Fill in `.env` — the secrets are empty on purpose, and compose refuses to
+start until each is set: `SQL_SA_PASSWORD` needs 8+ characters with three of
+upper case, lower case, digit, symbol; `JWT_SECRET_KEY` needs 32+ characters
+or the API refuses to start (`openssl rand -base64 48`); `SEED_ADMIN_EMAIL`
+and `SEED_ADMIN_PASSWORD` define the admin created on first start.
+`DEMO_PASSWORD` is only needed for the demo data below.
 
 ```bash
 docker compose up --build
 ```
 
-API http://localhost:8080 (no page at `/`) · Swagger
+SQL Server (`1433`) and the API (`8080`) listen on `127.0.0.1` only, not on
+the network. API http://localhost:8080 (no page at `/`) · Swagger
 http://localhost:8080/swagger (sign in with `POST /api/auth/login`, then
 **Authorize**) · health http://localhost:8080/health
 
@@ -290,8 +293,8 @@ status with their history. It runs once per database (a marker account), and
 **refuses to run when `ASPNETCORE_ENVIRONMENT` is `Production`**. The flag is
 `Demo__SeedData=true` if you set it another way.
 
-All demo accounts share one password: `DEMO_PASSWORD` from `.env`, or
-`Demo-Passw0rd` when it is not set (never the admin password). Sign in as,
+All demo accounts share one password: `DEMO_PASSWORD` from `.env`, which
+must be set (there is no built-in one; never the admin password). Sign in as,
 for example:
 
 | Account | Role |

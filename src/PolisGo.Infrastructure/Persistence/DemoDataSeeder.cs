@@ -13,6 +13,7 @@ public enum DemoSeedResult
 {
     Disabled,
     RefusedInProduction,
+    MissingPassword,
     AlreadySeeded,
     Seeded
 }
@@ -22,13 +23,13 @@ public enum DemoSeedResult
 // vehicles, policies started months ago with their payments, and claims in
 // every status with a believable history. Never in Production; idempotent
 // (a marker account means it already ran). All demo accounts share one
-// password: Demo:Password, or the documented DefaultPassword, never the
+// password, Demo:Password, which must be set: there is no built-in one, so no
+// password printed in the docs ever guards a staff account. Never the
 // admin's secret.
 public static class DemoDataSeeder
 {
     public const string Domain = "demo.polisgo.az";
     public const string MarkerEmail = "demo.agent1@" + Domain;
-    public const string DefaultPassword = "Demo-Passw0rd";
 
     private record Person(string Key, string FullName, string Phone, DateOnly Birth, DateOnly Licence);
 
@@ -73,7 +74,11 @@ public static class DemoDataSeeder
         }
 
         var password = configuration["Demo:Password"];
-        var hash = passwordHasher.Hash(string.IsNullOrWhiteSpace(password) ? DefaultPassword : password);
+        if (string.IsNullOrWhiteSpace(password))
+        {
+            return DemoSeedResult.MissingPassword;
+        }
+        var hash = passwordHasher.Hash(password);
         new Builder(db, hash, calculator, clock.GetUtcNow().UtcDateTime).Build();
         await db.SaveChangesAsync(cancellationToken);
         return DemoSeedResult.Seeded;
