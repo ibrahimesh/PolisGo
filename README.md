@@ -74,8 +74,8 @@ Adjuster or Admin with the registration rules; deactivate, reactivate;
 change role), never their own account and never the last active admin;
 assigns customers to agents; reads the dashboard for any period up to 24
 months and the audit log. Every staff account carries a security stamp in its
-token, checked on each request: deactivation or a role change ends that
-person's open sessions at once, and a deactivated account can't sign in.
+token, checked on each request: deactivation, a role change or a password change
+ends that person's open sessions at once, and a deactivated account can't sign in.
 Staff actions (creation, deactivation, reactivation, role changes, customer
 assignment) are recorded in the audit log from this release on.
 
@@ -460,7 +460,6 @@ Not done yet:
   by type and first bytes and kept on a local volume).
 - A scheduled job that stores `Expired` (today it is derived from the end
   date on every read) and server-side language/theme preferences.
-- Revoking other sessions on a password change (tokens live up to 60 minutes).
 - Real payment and payout providers instead of the fake gateways.
 - Refresh tokens (sessions are a single 60-minute access token).
 

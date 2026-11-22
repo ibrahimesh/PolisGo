@@ -42,6 +42,14 @@ public class User
         SecurityStamp = Guid.NewGuid();
     }
 
+    // A new password ends every session issued before it: someone changing
+    // a password because a session was stolen must lock that session out.
+    public void ChangePassword(string passwordHash)
+    {
+        PasswordHash = passwordHash;
+        SecurityStamp = Guid.NewGuid();
+    }
+
     public void Reactivate()
     {
         if (IsActive)

@@ -44,7 +44,8 @@ every change in this repo.
   there and a translation in the same change.
 - **Sessions are checked on every request** (`SessionValidator`): the
   token's `stamp` must match the user's `SecurityStamp` and the user must be
-  active. Rotate the stamp (`User.Deactivate`, `User.ChangeRole`) whenever a
+  active. Rotate the stamp (`User.Deactivate`, `User.ChangeRole`,
+  `User.ChangePassword`, which hands the caller a fresh token) whenever a
   change must end existing sessions; inactive users can't sign in.
 - **Staff actions are audited**: any admin change to an account or an
   assignment adds an `AuditEntry` in the same SaveChanges. The audit feed

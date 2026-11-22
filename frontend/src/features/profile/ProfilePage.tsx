@@ -5,6 +5,7 @@ import { useMemo, useState } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { profileApi } from '../../api/endpoints';
+import { tokenStore } from '../../api/tokenStore';
 import type { ProfileResponse } from '../../api/types';
 import { ME_QUERY_KEY } from '../../auth/AuthProvider';
 import { PageHeader } from '../../components/layout/PageHeader';
@@ -251,10 +252,12 @@ function PasswordForm() {
       setSubmitError(null);
       try {
         // The confirmation never leaves the browser.
-        await profileApi.changePassword({
+        const session = await profileApi.changePassword({
           currentPassword: values.currentPassword,
           newPassword: values.newPassword,
         });
+        // The old token stopped working with the change; carry on with the new one.
+        tokenStore.set({ token: session.token, expiresAt: session.expiresAt });
         reset();
         toast({ title: t('profile.passwordChanged'), tone: 'success' });
       } catch (error) {

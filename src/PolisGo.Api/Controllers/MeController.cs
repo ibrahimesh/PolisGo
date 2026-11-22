@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using PolisGo.Application.Cabinet;
 using PolisGo.Application.Cabinet.Dtos;
 using PolisGo.Application.Profile;
+using PolisGo.Application.Auth.Dtos;
 using PolisGo.Application.Profile.Dtos;
 
 namespace PolisGo.Api.Controllers;
@@ -205,21 +206,22 @@ public class MeController : ControllerBase
     /// </summary>
     /// <remarks>
     /// A wrong current password is a 400 on <c>currentPassword</c>, not a 401:
-    /// the caller is signed in, and a 401 would end their session. Tokens
-    /// issued before the change stay valid until they expire (60 minutes).
+    /// the caller is signed in, and a 401 would end their session. The change
+    /// ends every session issued before it (the security stamp rotates), this
+    /// one included; the response carries a fresh token for the caller.
     /// </remarks>
-    /// <response code="204">Password changed.</response>
+    /// <response code="200">Password changed; a new session for the caller.</response>
     /// <response code="400">Current password wrong, or the new one breaks the policy or repeats the old one.</response>
     /// <response code="401">No or invalid bearer token.</response>
     [HttpPost("change-password")]
     [EnableRateLimiting(RateLimits.PasswordChange)]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType<AuthResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> ChangePassword(
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status429TooManyRequests)]
+    public async Task<ActionResult<AuthResponse>> ChangePassword(
         [FromBody] ChangePasswordRequest request, CancellationToken cancellationToken)
     {
-        await _profile.ChangePasswordAsync(request, cancellationToken);
-        return NoContent();
+        return Ok(await _profile.ChangePasswordAsync(request, cancellationToken));
     }
 }

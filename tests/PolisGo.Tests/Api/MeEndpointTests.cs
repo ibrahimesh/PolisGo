@@ -46,6 +46,31 @@ public class MeEndpointTests : IClassFixture<ApiFactory>
         return problem.GetProperty("errors");
     }
 
+    // Someone who changes a password because a session was stolen must end
+    // that session: the change rotates the security stamp, so every older
+    // token stops working, and this tab gets a fresh one.
+    [Fact]
+    public async Task Changing_the_password_ends_other_sessions_and_renews_this_one()
+    {
+        var (me, email) = await RegisterClientAsync();
+        var login = await _factory.CreateClient().PostAsJsonAsync("/api/auth/login", new { email, password = Password });
+        using var other = _factory.CreateClient();
+        other.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer",
+            (await login.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("token").GetString());
+        Assert.Equal(HttpStatusCode.OK, (await other.GetAsync("/api/me")).StatusCode);
+
+        var change = await me.PostAsJsonAsync("/api/me/change-password",
+            new { currentPassword = Password, newPassword = "Changed-Secret1" });
+
+        Assert.Equal(HttpStatusCode.OK, change.StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await other.GetAsync("/api/me")).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await me.GetAsync("/api/me")).StatusCode);
+        var renewed = await change.Content.ReadFromJsonAsync<JsonElement>();
+        me.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", renewed.GetProperty("token").GetString());
+        Assert.Equal(HttpStatusCode.OK, (await me.GetAsync("/api/me")).StatusCode);
+        Assert.Equal(email, renewed.GetProperty("email").GetString());
+    }
+
     [Fact]
     public async Task Anonymous_gets_401_on_every_action()
     {
@@ -140,7 +165,7 @@ public class MeEndpointTests : IClassFixture<ApiFactory>
 
         var response = await client.PostAsJsonAsync("/api/me/change-password",
             new { currentPassword = Password, newPassword = "Better456x" });
-        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
         var anonymous = _factory.CreateClient();
         Assert.Equal(HttpStatusCode.Unauthorized,
