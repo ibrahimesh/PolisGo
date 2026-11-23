@@ -352,7 +352,7 @@ instead of `echo` — its redirect writes UTF-16, which Vite does not read.
 dotnet test PolisGo.slnx
 ```
 
-**504 backend tests** (xUnit): domain and service tests on SQLite in-memory
+**507 backend tests** (xUnit; 7 of them need SQL Server): domain and service tests on SQLite in-memory
 and HTTP tests via `WebApplicationFactory` (401/403/404 per role, JSON contract,
 and one client reading, paying, searching, uploading to or withdrawing
 another's policy or claim → 404; a client on every staff endpoint → 403, an
@@ -383,8 +383,8 @@ address registers hundreds of test users), from the repository root:
 docker compose -f docker-compose.yml -f docker-compose.demo.yml -f docker-compose.e2e.yml up --build
 ```
 
-**315 frontend unit tests** (Vitest) and **150 end-to-end tests** (Playwright +
-axe-core: 97 at 1440px, plus the 53 cabinet and staff tests again at 390px) against the
+**337 frontend unit tests** (Vitest) and **214 end-to-end tests** (Playwright +
+axe-core: 145 at 1440px, plus the 69 cabinet and staff tests again at 390px) against the
 real API — the e2e suite needs the Docker stack on `:8080`. They cover
 sign-up and sign-in, buying a policy end to end, the certificate download,
 renewal, filing a claim with photos, withdrawing it, the claim timeline after
