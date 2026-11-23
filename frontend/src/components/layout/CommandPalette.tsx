@@ -23,6 +23,7 @@ interface Command {
 interface CommandPaletteProps {
   open: boolean;
   onClose: () => void;
+  returnFocusTo?: React.RefObject<HTMLElement | null>;
 }
 
 // Ctrl/⌘+K command palette: WAI-ARIA combobox + listbox inside a native

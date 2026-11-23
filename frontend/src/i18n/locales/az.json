@@ -18,7 +18,15 @@
     "claims": "Sığorta hadisələri",
     "faq": "Suallar",
     "menu": "Menyunu aç",
-    "closeMenu": "Menyunu bağla"
+    "closeMenu": "Menyunu bağla",
+    "more": "Daha çox",
+    "short": {
+      "calculator": "Kalkulyator",
+      "pricing": "Qiymət",
+      "coverage": "Təminat",
+      "claims": "Sığorta hadisələri",
+      "faq": "Suallar"
+    }
   },
   "theme": {
     "label": "Mövzu",

@@ -8,7 +8,7 @@ import { BellIcon } from '../../components/ui/icons';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { useFormatters } from '../../i18n/format';
 import { useClaimUpdates, useInvalidateCabinet, useReminders } from '../cabinet/queries';
-import { usePopover } from '../cabinet/usePopover';
+import { usePopover } from '../../components/ui/usePopover';
 import { ClaimUpdateList } from './ClaimUpdateList';
 import { ReminderList } from './ReminderList';
 

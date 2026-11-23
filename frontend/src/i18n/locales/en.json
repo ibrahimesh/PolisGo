@@ -18,7 +18,15 @@
     "claims": "Claims",
     "faq": "Questions",
     "menu": "Open menu",
-    "closeMenu": "Close menu"
+    "closeMenu": "Close menu",
+    "more": "More",
+    "short": {
+      "calculator": "Calculator",
+      "pricing": "Pricing",
+      "coverage": "Coverage",
+      "claims": "Claims",
+      "faq": "Questions"
+    }
   },
   "theme": {
     "label": "Theme",

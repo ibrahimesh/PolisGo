@@ -12,7 +12,7 @@ import {
 } from '../../components/ui/icons';
 import { useSettings } from '../../settings/SettingsProvider';
 import { initials } from '../../lib/names';
-import { usePopover } from './usePopover';
+import { usePopover } from '../../components/ui/usePopover';
 
 const itemClass =
   'flex min-h-10 items-center gap-3 rounded-sm px-3 py-2 text-sm font-medium text-text transition-colors duration-150 hover:bg-surface-2';
