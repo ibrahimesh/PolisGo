@@ -8,6 +8,7 @@ import { isApiError } from './api/errors';
 import { App } from './App';
 import { AuthProvider } from './auth/AuthProvider';
 import { ToastProvider } from './components/ui/ToastProvider';
+import { SettingsProvider } from './settings/SettingsProvider';
 import { ThemeProvider } from './theme/ThemeProvider';
 
 const queryClient = new QueryClient({
@@ -29,11 +30,13 @@ createRoot(root).render(
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <BrowserRouter>
-          <ToastProvider>
-            <AuthProvider>
-              <App />
-            </AuthProvider>
-          </ToastProvider>
+          <SettingsProvider>
+            <ToastProvider>
+              <AuthProvider>
+                <App />
+              </AuthProvider>
+            </ToastProvider>
+          </SettingsProvider>
         </BrowserRouter>
       </ThemeProvider>
     </QueryClientProvider>

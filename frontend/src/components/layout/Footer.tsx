@@ -5,7 +5,9 @@ import { Link } from 'react-router';
 import { healthApi } from '../../api/endpoints';
 import { isApiError } from '../../api/errors';
 import { useAuth } from '../../auth/AuthContext';
+import { useSettings } from '../../settings/SettingsProvider';
 import { cx } from '../ui/cx';
+import { SettingsIcon } from '../ui/icons';
 import { LANDING_SECTIONS } from './navigation';
 import { Wordmark } from './Wordmark';
 
@@ -51,6 +53,7 @@ export function Footer() {
   const { t } = useTranslation();
   const { status } = useAuth();
   const health = useApiHealth();
+  const { openSettings } = useSettings();
 
   return (
     <footer className="border-t border-line">
@@ -111,6 +114,14 @@ export function Footer() {
       <div className="border-t border-line">
         <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-6 text-sm text-muted sm:px-6 md:flex-row md:justify-between lg:px-8">
           <p>{t('footer.legal')}</p>
+          <button
+            type="button"
+            onClick={openSettings}
+            className="inline-flex items-center gap-2 self-start rounded-sm text-text transition-colors duration-(--duration-fast) hover:text-accent"
+          >
+            <SettingsIcon />
+            {t('settings.open')}
+          </button>
           <p>{t('footer.copyright', { year: new Date().getFullYear() })}</p>
         </div>
       </div>

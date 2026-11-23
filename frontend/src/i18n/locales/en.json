@@ -12,7 +12,6 @@
     "register": "Open an account",
     "workspace": "Workspace",
     "signOut": "Sign out",
-    "settings": "Display settings",
     "home": "Home",
     "pricing": "How pricing works",
     "coverage": "Coverage",
@@ -1730,5 +1729,17 @@
       "more_one": "{{count}} match; narrow the search to see more.",
       "more_other": "{{count}} matches; narrow the search to see them all."
     }
+  },
+  "settings": {
+    "title": "Settings",
+    "open": "Settings",
+    "appearance": "Appearance",
+    "language": "Language",
+    "motion": "Motion",
+    "reduceMotion": "Reduce motion",
+    "reduceMotionHint": "Turns off page transitions, count-ups and other animations on this device.",
+    "systemReduces": "Your device already asks for reduced motion, so animations stay off.",
+    "savedOnDevice": "These choices are saved on this device.",
+    "done": "Done"
   }
 }

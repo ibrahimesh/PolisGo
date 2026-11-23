@@ -5,9 +5,8 @@ import { useAuth } from '../../auth/AuthContext';
 import { useRequestSignOut } from '../../auth/signOut';
 import { Button, ButtonLink } from '../ui/Button';
 import { cx } from '../ui/cx';
-import { CloseIcon, MenuIcon, SearchIcon } from '../ui/icons';
-import { LanguageSwitcher } from '../ui/LanguageSwitcher';
-import { ThemeToggle } from '../ui/ThemeToggle';
+import { CloseIcon, MenuIcon, SearchIcon, SettingsIcon } from '../ui/icons';
+import { useSettings } from '../../settings/SettingsProvider';
 import { CommandPalette } from './CommandPalette';
 import { LANDING_SECTIONS } from './navigation';
 import { isMac, usePaletteShortcut } from './usePaletteShortcut';
@@ -17,6 +16,7 @@ export function Header() {
   const { t } = useTranslation();
   const { status, user } = useAuth();
   const signOut = useRequestSignOut();
+  const { openSettings } = useSettings();
   const { pathname, hash } = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
@@ -71,15 +71,6 @@ export function Header() {
             <kbd className="hidden font-sans sm:inline">{isMac ? '⌘K' : 'Ctrl K'}</kbd>
           </button>
 
-          <div
-            role="group"
-            aria-label={t('nav.settings')}
-            className="hidden items-center gap-2 xl:flex"
-          >
-            <LanguageSwitcher />
-            <ThemeToggle />
-          </div>
-
           <div className="hidden items-center gap-2 md:flex">
             {authed ? (
               <Button variant="secondary" size="sm" onClick={signOut}>
@@ -132,14 +123,10 @@ export function Header() {
               </Link>
             )}
           </nav>
-          <div
-            role="group"
-            aria-label={t('nav.settings')}
-            className="flex flex-wrap items-center gap-4"
-          >
-            <LanguageSwitcher />
-            <ThemeToggle />
-          </div>
+          <Button variant="secondary" onClick={openSettings}>
+            <SettingsIcon />
+            {t('settings.open')}
+          </Button>
           <div className="flex flex-wrap gap-2 md:hidden">
             {authed ? (
               <Button variant="secondary" onClick={signOut}>

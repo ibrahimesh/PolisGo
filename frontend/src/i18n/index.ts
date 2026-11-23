@@ -20,15 +20,31 @@ export function isLanguage(value: unknown): value is Language {
   return typeof value === 'string' && (LANGUAGES as readonly string[]).includes(value);
 }
 
-function detectLanguage(): Language {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (isLanguage(stored)) return stored;
-  } catch {
-    // Storage blocked: fall through to the browser language.
+// A returning visitor gets their choice; a first visit takes the first of
+// the browser's languages we speak (az, ru, en), else English. Either way
+// it is remembered on this device by the languageChanged handler below.
+export function detectLanguage(
+  stored: string | null,
+  browserLanguages: readonly string[],
+): Language {
+  if (isLanguage(stored)) return stored;
+  for (const tag of browserLanguages) {
+    const base = tag.slice(0, 2).toLowerCase();
+    if (isLanguage(base)) return base;
   }
-  const browser = navigator.language.slice(0, 2).toLowerCase();
-  return isLanguage(browser) ? browser : 'en';
+  return 'en';
+}
+
+function storedLanguage(): string | null {
+  try {
+    return localStorage.getItem(STORAGE_KEY);
+  } catch {
+    return null; // Storage blocked: fall back to the browser languages.
+  }
+}
+
+function browserLanguages(): readonly string[] {
+  return navigator.languages.length ? navigator.languages : [navigator.language];
 }
 
 export function currentLanguage(): Language {
@@ -46,7 +62,7 @@ i18n.on('languageChanged', (lng) => {
 
 void i18n.use(initReactI18next).init({
   resources: { en: { translation: en }, ru: { translation: ru }, az: { translation: az } },
-  lng: detectLanguage(),
+  lng: detectLanguage(storedLanguage(), browserLanguages()),
   fallbackLng: 'en',
   supportedLngs: LANGUAGES,
   interpolation: { escapeValue: false },
@@ -55,5 +71,11 @@ void i18n.use(initReactI18next).init({
 });
 
 document.documentElement.lang = currentLanguage();
+// Remember the first-visit pick too (init doesn't always emit languageChanged).
+try {
+  localStorage.setItem(STORAGE_KEY, currentLanguage());
+} catch {
+  // Non-fatal.
+}
 
 export default i18n;

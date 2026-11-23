@@ -5,8 +5,6 @@ import { CommandPalette } from '../../components/layout/CommandPalette';
 import { isMac, usePaletteShortcut } from '../../components/layout/usePaletteShortcut';
 import { LogoLink } from '../../components/layout/Wordmark';
 import { SearchIcon } from '../../components/ui/icons';
-import { LanguageSwitcher } from '../../components/ui/LanguageSwitcher';
-import { ThemeToggle } from '../../components/ui/ThemeToggle';
 import { UserMenu } from './UserMenu';
 
 // Top bar of the signed-in area. The wordmark lives in the sidebar on
@@ -34,15 +32,6 @@ export function CabinetHeader({ notifications }: { notifications?: ReactNode }) 
           </button>
 
           {notifications}
-
-          <div
-            role="group"
-            aria-label={t('nav.settings')}
-            className="hidden items-center gap-2 xl:flex"
-          >
-            <LanguageSwitcher />
-            <ThemeToggle />
-          </div>
 
           <UserMenu />
         </div>

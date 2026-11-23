@@ -7,6 +7,17 @@
    user's explicit choice always wins (System mode resolves it in JS). */
 @custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
 
+/* "Reduce motion" (Settings) counts like the OS setting: motion-reduce:
+   applies under either, so components honour both with one variant. */
+@custom-variant motion-reduce {
+  @media (prefers-reduced-motion: reduce) {
+    @slot;
+  }
+  &:where([data-motion='reduce'], [data-motion='reduce'] *) {
+    @slot;
+  }
+}
+
 /* ---- Colour tokens (see DESIGN.md for contrast measurements) ---- */
 :root,
 :root[data-theme='dark'] {
@@ -94,7 +105,6 @@
 
   --radius-sm: 2px;
   --radius: 2px;
-
 
   --animate-toast-in: toast-in 200ms var(--ease-institutional);
 
@@ -187,4 +197,13 @@
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+:root[data-motion='reduce'] *,
+:root[data-motion='reduce'] *::before,
+:root[data-motion='reduce'] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
 }

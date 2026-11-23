@@ -1,6 +1,7 @@
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import AxeBuilder from '@axe-core/playwright';
 import { expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
 
@@ -29,12 +30,40 @@ export async function seedPreferences(
   );
 }
 
-// Segmented controls are visually hidden radios inside labels; click the
-// label like a user would.
-export async function chooseSegment(page: Page, name: string) {
-  const radio = page.getByRole('radio', { name, exact: true });
+// Language, theme and motion live in the Settings dialog (no header
+// switchers). Public pages open it from the footer; choices are visually
+// hidden radios inside labels, clicked like a user would. Escape closes it.
+export async function chooseSetting(page: Page, name: string) {
+  await page
+    .getByRole('contentinfo')
+    .getByRole('button', { name: /^(Settings|Настройки|Ayarlar)$/ })
+    .click();
+  const dialog = page.getByRole('dialog', { name: /^(Settings|Настройки|Ayarlar)$/ });
+  await expect(dialog).toBeVisible();
+  const radio = dialog.getByRole('radio', { name, exact: true });
   await radio.locator('xpath=..').click();
   await expect(radio).toBeChecked();
+  await page.keyboard.press('Escape');
+  await expect(dialog).toBeHidden();
+}
+
+// axe (WCAG 2.2 AA) on the current page; serious and critical findings fail.
+export async function expectNoAxeViolations(page: Page) {
+  // Colours caught mid-transition (a theme switch) aren't the real contrast.
+  await page.waitForFunction(() =>
+    document.getAnimations().every((a) => a.playState !== 'running'),
+  );
+  const results = await new AxeBuilder({ page })
+    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
+    .analyze();
+  const blocking = results.violations
+    .filter((v) => v.impact === 'serious' || v.impact === 'critical')
+    .map((v) => ({
+      id: v.id,
+      help: v.help,
+      targets: v.nodes.slice(0, 5).map((n) => `${n.target.join(' ')} — ${n.failureSummary ?? ''}`),
+    }));
+  expect(blocking, JSON.stringify(blocking, null, 2)).toEqual([]);
 }
 
 export function premiumText(page: Page) {

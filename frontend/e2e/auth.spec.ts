@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { chooseSegment, randomUser, registerViaApi, seedPreferences } from './helpers';
+import { chooseSetting, randomUser, registerViaApi, seedPreferences } from './helpers';
 
 test.describe('Auth', () => {
   test.beforeEach(async ({ page }) => {
@@ -70,7 +70,7 @@ test.describe('Auth', () => {
     await registerViaApi(page, user);
 
     await page.goto('/login');
-    await chooseSegment(page, 'Русский');
+    await chooseSetting(page, 'Русский');
     await page.getByLabel('Эл. почта').fill(user.email);
     await page.getByLabel('Пароль', { exact: true }).fill('Wrong-password-1');
 

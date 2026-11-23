@@ -3,9 +3,14 @@ import { Link } from 'react-router';
 import { useAuth } from '../../auth/AuthContext';
 import { useRequestSignOut } from '../../auth/signOut';
 import { Badge } from '../../components/ui/Badge';
-import { ChevronDownIcon, HelpIcon, SignOutIcon, UserIcon } from '../../components/ui/icons';
-import { LanguageSwitcher } from '../../components/ui/LanguageSwitcher';
-import { ThemeToggle } from '../../components/ui/ThemeToggle';
+import {
+  ChevronDownIcon,
+  HelpIcon,
+  SettingsIcon,
+  SignOutIcon,
+  UserIcon,
+} from '../../components/ui/icons';
+import { useSettings } from '../../settings/SettingsProvider';
 import { initials } from '../../lib/names';
 import { usePopover } from './usePopover';
 
@@ -17,6 +22,7 @@ export function UserMenu() {
   const { user } = useAuth();
   const signOut = useRequestSignOut();
   const popover = usePopover();
+  const { openSettings } = useSettings();
   if (!user) return null;
 
   return (
@@ -66,17 +72,18 @@ export function UserMenu() {
           </Link>
         </div>
 
-        {/* Below xl the header has no room for these; the menu carries them. */}
-        <div
-          role="group"
-          aria-label={t('nav.settings')}
-          className="flex flex-wrap gap-3 border-t border-line px-4 py-4 xl:hidden"
-        >
-          <LanguageSwitcher />
-          <ThemeToggle />
-        </div>
-
-        <div className="border-t border-line p-2">
+        <div className="space-y-1 border-t border-line p-2">
+          <button
+            type="button"
+            onClick={() => {
+              popover.close();
+              openSettings();
+            }}
+            className={`${itemClass} w-full`}
+          >
+            <SettingsIcon />
+            {t('settings.open')}
+          </button>
           <button type="button" onClick={signOut} className={`${itemClass} w-full`}>
             <SignOutIcon />
             {t('nav.signOut')}

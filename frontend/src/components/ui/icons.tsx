@@ -230,6 +230,15 @@ export const ChartIcon = () => (
   </Icon>
 );
 
+// A slider pair: settings, not a gear (reads as "adjust").
+export const SettingsIcon = () => (
+  <Icon>
+    <path d="M2.5 5h6M11.5 5h2M2.5 11h2M7.5 11h6" />
+    <circle cx="10" cy="5" r="1.5" />
+    <circle cx="6" cy="11" r="1.5" />
+  </Icon>
+);
+
 export const CalendarIcon = () => (
   <Icon>
     <rect x="2.5" y="3.5" width="11" height="10" rx="0.5" />
