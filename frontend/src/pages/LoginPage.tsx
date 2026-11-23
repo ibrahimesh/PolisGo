@@ -91,7 +91,11 @@ export function LoginPage() {
         >
           <FormErrorSummary errors={errors} fields={fields} show={submitCount > 0} />
           {submitError !== null && (
-            <ErrorNotice error={submitError} overrides={{ 401: 'errors.invalidCredentials' }} />
+            <ErrorNotice
+              error={submitError}
+              overrides={{ 401: 'errors.invalidCredentials' }}
+              shake
+            />
           )}
           <Input
             id={ID.email}

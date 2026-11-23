@@ -8,6 +8,9 @@ export interface AuthContextValue {
   user: CurrentUserResponse | null;
   // Set when /me failed for a reason other than 401 (e.g. API down).
   error: unknown;
+  // True after a session ended without "Sign out" (expired, or the API
+  // rejected the token); guarded pages then say so instead of redirecting.
+  sessionEnded?: boolean;
   login: (credentials: LoginRequest) => Promise<CurrentUserResponse>;
   register: (request: RegisterRequest) => Promise<CurrentUserResponse>;
   logout: () => void;

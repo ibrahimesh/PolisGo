@@ -4,10 +4,10 @@ export const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(
 
 // Ctrl+K / ⌘K opens the command palette from anywhere in the layout that
 // mounts this; Escape is forwarded for menus that close on it.
-export function usePaletteShortcut(onOpen: () => void, onEscape?: () => void) {
+export function usePaletteShortcut(onOpen?: () => void, onEscape?: () => void) {
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+      if (onOpen && (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
         event.preventDefault();
         onOpen();
       } else if (event.key === 'Escape') {

@@ -11,6 +11,7 @@ import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { cx } from './cx';
 import { AlertIcon, CheckIcon, CloseIcon } from './icons';
+import { ReferenceChip } from './ReferenceChip';
 
 type ToastTone = 'info' | 'success' | 'error';
 
@@ -103,11 +104,7 @@ function Toast({ item, onDismiss }: { item: ToastItem; onDismiss: (id: number) =
       <div className="min-w-0 flex-1">
         <p className="font-medium">{item.title}</p>
         {item.description && <p className="mt-1 text-sm text-muted">{item.description}</p>}
-        {item.traceId && (
-          <p className="mt-2 text-sm break-all text-muted">
-            {t('errors.reference')}: <span className="normal-case">{item.traceId}</span>
-          </p>
-        )}
+        {item.traceId && <ReferenceChip traceId={item.traceId} className="mt-2" />}
       </div>
       <button
         type="button"

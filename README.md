@@ -80,9 +80,15 @@ Staff actions (creation, deactivation, reactivation, role changes, customer
 assignment) are recorded in the audit log from this release on.
 
 **Frontend** (`frontend/`) — landing page with the live calculator and an
-API-driven coverage table, validated sign-in and registration, EN / RU / AZ,
-dark and light themes, Ctrl/⌘+K palette; design system in
-[frontend/DESIGN.md](frontend/DESIGN.md).
+API-driven coverage table, validated sign-in and registration, EN / RU / AZ
+(the first visit follows the browser), dark and light themes and a Reduce
+motion switch in one **Settings** dialog, a keyboard-first **Ctrl/⌘+K
+palette** (fuzzy search, recent commands, role-aware pages, settings and
+sign-out actions), designed **error pages** (404, 403, 500, session ended,
+offline, API unreachable, maintenance) behind a route error boundary, errors
+quoted by a short copyable reference, and restrained motion (view
+transitions, count-ups, staggered lists; all off under reduced motion);
+design system in [frontend/DESIGN.md](frontend/DESIGN.md).
 
 **Client cabinet** (`/app`) — sidebar on desktop, bottom bar on phones:
 - **Overview**: active policies, next renewal, insured vehicles, premiums paid
@@ -103,7 +109,8 @@ dark and light themes, Ctrl/⌘+K palette; design system in
   withdraw with a confirmation.
 - **Notifications** panel for claim updates and renewal reminders (unread
   badge, mark as read). Nothing is sent by phone or email, and the UI says so.
-- **Profile and settings** (name, phone, password, language, theme) and
+- **Profile and settings** (name, phone, password, appearance, language,
+  reduce motion) and
   **Help**.
 
 **Staff desks** (`/app` for Agent, Adjuster, Admin) — the same shell, with
@@ -135,7 +142,8 @@ status and top agents. **Staff**: search, role and status filters, create in a
 dialog, role change and deactivation behind a confirm that says what follows.
 **Customers** with an agent filter and assignment. **All policies** with who
 sold them, an agent filter and CSV. **Claims** with incident-date filters.
-**Audit log** filtered by person, type and dates. **Products and rates**,
+**Audit log** searched by email, name, policy or claim number or action
+(in any of the three languages) and filtered by person, type and dates. **Products and rates**,
 read-only. Help has an admin section.
 
 **DateField** — every date in the app is typed as DD.MM.YYYY in every
@@ -344,7 +352,7 @@ instead of `echo` — its redirect writes UTF-16, which Vite does not read.
 dotnet test PolisGo.slnx
 ```
 
-**504 backend tests** (xUnit): domain and service tests on SQLite in-memory
+**507 backend tests** (xUnit; 7 of them need SQL Server): domain and service tests on SQLite in-memory
 and HTTP tests via `WebApplicationFactory` (401/403/404 per role, JSON contract,
 and one client reading, paying, searching, uploading to or withdrawing
 another's policy or claim → 404; a client on every staff endpoint → 403, an
@@ -365,15 +373,18 @@ npx playwright install chromium
 npm run e2e
 ```
 
-The e2e suite needs the stack with the demo data and relaxed sign-in limits
-(one address registers hundreds of test users), from the repository root:
+The e2e suite starts its own dev server with the test-only routes
+(`VITE_E2E_ROUTES=true`); if you already run `npm run dev` on :5173, use
+`E2E_BASE_URL=http://localhost:3000 npm run e2e` to give it its own port.
+It needs the stack with the demo data and relaxed sign-in limits (one
+address registers hundreds of test users), from the repository root:
 
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.demo.yml -f docker-compose.e2e.yml up --build
 ```
 
-**315 frontend unit tests** (Vitest) and **150 end-to-end tests** (Playwright +
-axe-core: 97 at 1440px, plus the 53 cabinet and staff tests again at 390px) against the
+**337 frontend unit tests** (Vitest) and **217 end-to-end tests** (Playwright +
+axe-core: 147 at 1440px, plus the 70 cabinet and staff tests again at 390px) against the
 real API — the e2e suite needs the Docker stack on `:8080`. They cover
 sign-up and sign-in, buying a policy end to end, the certificate download,
 renewal, filing a claim with photos, withdrawing it, the claim timeline after

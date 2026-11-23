@@ -1,4 +1,9 @@
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import {
+  subscribeSystemMotion,
+  systemPrefersReducedMotion,
+  useMotionPreference,
+} from '../settings/motion';
 
 // Compares by serialized value, so a structurally equal object (a fresh form
 // snapshot on every render) doesn't restart the timer.
@@ -14,20 +19,16 @@ export function useDebouncedValue<T>(value: T, delayMs: number): T {
   return debounced;
 }
 
-const REDUCED_MOTION = '(prefers-reduced-motion: reduce)';
-
-function subscribeReducedMotion(callback: () => void) {
-  const media = window.matchMedia(REDUCED_MOTION);
-  media.addEventListener('change', callback);
-  return () => media.removeEventListener('change', callback);
-}
-
+// True when the OS asks for reduced motion or the user turned on "Reduce
+// motion" in Settings; every JS-driven animation checks this.
 export function usePrefersReducedMotion(): boolean {
-  return useSyncExternalStore(
-    subscribeReducedMotion,
-    () => window.matchMedia(REDUCED_MOTION).matches,
+  const preference = useMotionPreference();
+  const system = useSyncExternalStore(
+    subscribeSystemMotion,
+    systemPrefersReducedMotion,
     () => false,
   );
+  return preference === 'reduce' || system;
 }
 
 // Eases a list of numbers toward new targets. Under reduced motion the

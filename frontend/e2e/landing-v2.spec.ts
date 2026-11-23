@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { API_URL, seedPreferences } from './helpers';
+import { API_URL, openMobileMenu, seedPreferences } from './helpers';
 
 interface PolicyType {
   code: string;
@@ -87,19 +87,64 @@ test.describe('Landing v2 sections', () => {
       await page.goto('/');
       const toggle = page.getByRole('button', { name: 'Open menu' });
       await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+      const panel = page.locator(`[id="${(await toggle.getAttribute('aria-controls')) ?? ''}"]`);
 
       await toggle.click();
       await expect(page.getByRole('button', { name: 'Close menu' })).toHaveAttribute(
         'aria-expanded',
         'true',
       );
-      await page.getByRole('banner').getByRole('link', { name: 'Questions' }).click();
+      await panel.getByRole('link', { name: 'Questions' }).click();
 
       await expect(page).toHaveURL(/#faq$/);
       await expect(page.getByRole('button', { name: 'Open menu' })).toHaveAttribute(
         'aria-expanded',
         'false',
       );
+    });
+
+    // The open menu covers the page, so it acts as a modal: the page behind it
+    // (footer included, which has its own Settings button) is inert, out of
+    // the accessibility tree, and Tab wraps inside the header.
+    test('while the menu is open the page behind it is unreachable', async ({ page }) => {
+      await page.goto('/');
+      await page.getByRole('contentinfo').waitFor();
+      const footerSettings = page
+        .getByRole('contentinfo')
+        .getByRole('button', { name: 'Settings' });
+      await expect(footerSettings).toBeVisible();
+
+      const menu = await openMobileMenu(page);
+      await expect(page.locator('main')).toHaveJSProperty('inert', true);
+      await expect(page.getByRole('contentinfo')).toHaveJSProperty('inert', true);
+
+      // Chromium's own tree, as a screen reader gets it: one Settings button.
+      const cdp = await page.context().newCDPSession(page);
+      const { nodes } = await cdp.send('Accessibility.getFullAXTree');
+      const named = nodes.filter(
+        (n) => !n.ignored && n.role?.value === 'button' && n.name?.value === 'Settings',
+      );
+      expect(named).toHaveLength(1);
+
+      const outside: string[] = [];
+      for (let i = 0; i < 30; i++) {
+        await page.keyboard.press('Tab');
+        const where = await page.evaluate(() =>
+          document.activeElement?.closest('header')
+            ? 'header'
+            : (document.activeElement?.tagName ?? 'none'),
+        );
+        if (where !== 'header') outside.push(where);
+      }
+      expect(outside).toEqual([]);
+
+      await menu.getByRole('link', { name: 'Coverage' }).focus();
+      await page.keyboard.press('Escape');
+      await expect(menu).toBeHidden();
+      await expect(page.getByRole('button', { name: 'Open menu' })).toBeFocused();
+      await expect(page.getByRole('contentinfo')).toHaveJSProperty('inert', false);
+      await footerSettings.click();
+      await expect(page.getByRole('dialog', { name: 'Settings' })).toBeVisible();
     });
 
     test('has no horizontal scroll', async ({ page }) => {

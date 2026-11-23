@@ -23,6 +23,12 @@
               ? 'light'
               : 'dark';
         document.documentElement.setAttribute('data-theme', resolved);
+        // "Reduce motion" from Settings (src/settings/motion.ts).
+        try {
+          if (localStorage.getItem('polisgo.motion') === 'reduce') {
+            document.documentElement.setAttribute('data-motion', 'reduce');
+          }
+        } catch (e) {}
       })();
     </script>
   </head>

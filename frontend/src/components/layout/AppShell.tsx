@@ -3,6 +3,8 @@ import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Outlet } from 'react-router';
 import { useCompleteSignOut } from '../../auth/signOut';
+import { PageTransition } from '../../motion/PageTransition';
+import { RouteErrorBoundary } from '../../pages/errors/RouteErrorBoundary';
 import { Footer } from './Footer';
 import { Header } from './Header';
 import { PageSkeleton } from './PageSkeleton';
@@ -33,7 +35,11 @@ export function AppShell() {
         }
       >
         <Main>
-          <Outlet />
+          <RouteErrorBoundary>
+            <PageTransition>
+              <Outlet />
+            </PageTransition>
+          </RouteErrorBoundary>
         </Main>
         <Footer />
       </Suspense>

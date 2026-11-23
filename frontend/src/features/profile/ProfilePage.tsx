@@ -14,12 +14,11 @@ import { ErrorNotice } from '../../components/ui/ErrorNotice';
 import { FormErrorSummary } from '../../components/ui/FormErrorSummary';
 import type { SummaryField } from '../../components/ui/FormErrorSummary';
 import { Input } from '../../components/ui/Input';
-import { LanguageSwitcher } from '../../components/ui/LanguageSwitcher';
 import { Skeleton } from '../../components/ui/Skeleton';
-import { ThemeToggle } from '../../components/ui/ThemeToggle';
 import { useToast } from '../../components/ui/ToastProvider';
 import { useFormatters } from '../../i18n/format';
 import { useExclusive } from '../../lib/hooks';
+import { SettingsFields } from '../../settings/SettingsFields';
 import { applyServerFieldErrors } from '../auth/applyServerErrors';
 import { PasswordField } from '../auth/PasswordField';
 import { PhoneInput } from '../auth/PhoneInput';
@@ -318,16 +317,7 @@ function Preferences() {
       title={t('profile.preferences')}
       lead={t('profile.preferencesLead')}
     >
-      <div className="space-y-6">
-        <div className="space-y-2">
-          <p className="text-sm font-medium">{t('language.label')}</p>
-          <LanguageSwitcher />
-        </div>
-        <div className="space-y-2">
-          <p className="text-sm font-medium">{t('theme.label')}</p>
-          <ThemeToggle />
-        </div>
-      </div>
+      <SettingsFields />
     </Section>
   );
 }

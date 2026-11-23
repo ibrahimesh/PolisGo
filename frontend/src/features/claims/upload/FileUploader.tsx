@@ -10,6 +10,7 @@ import {
   TrashIcon,
   UploadIcon,
 } from '../../../components/ui/icons';
+import { ReferenceChip } from '../../../components/ui/ReferenceChip';
 import { useFormatters } from '../../../i18n/format';
 import { ACCEPT_ATTRIBUTE, CLAIM_RULES } from '../claimRules';
 import type { FileQueue, QueueItem } from './useFileQueue';
@@ -233,14 +234,9 @@ function QueueRow({
             <span className="mt-0.5 shrink-0">
               <AlertIcon />
             </span>
-            <span>
-              {t(item.errorKey)}
-              {item.traceId && (
-                <span className="text-muted">
-                  {' '}
-                  · {t('errors.reference')}: {item.traceId}
-                </span>
-              )}
+            <span className="space-y-1">
+              <span className="block">{t(item.errorKey)}</span>
+              {item.traceId && <ReferenceChip traceId={item.traceId} />}
             </span>
           </p>
         )}

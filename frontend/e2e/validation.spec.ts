@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
-import { API_URL, randomUser, seedPreferences } from './helpers';
+import { API_URL, chooseSetting, randomUser, seedPreferences } from './helpers';
 
 // Negative paths: invalid input must be stopped with a translated, field-level
 // message and must never reach the API.
@@ -159,7 +159,7 @@ test.describe('Register validation', () => {
   });
 
   test('errors are translated (Azerbaijani)', async ({ page }) => {
-    await page.getByRole('radio', { name: 'Azərbaycanca' }).locator('xpath=..').click();
+    await chooseSetting(page, 'Azərbaycanca');
     await page.getByRole('button', { name: 'Hesab yarat' }).click();
     await expect(page.getByTestId('error-summary')).toContainText('7 sahə düzəldilməlidir');
     await expect(page.getByTestId('error-summary')).toContainText(

@@ -7,6 +7,17 @@
    user's explicit choice always wins (System mode resolves it in JS). */
 @custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
 
+/* "Reduce motion" (Settings) counts like the OS setting: motion-reduce:
+   applies under either, so components honour both with one variant. */
+@custom-variant motion-reduce {
+  @media (prefers-reduced-motion: reduce) {
+    @slot;
+  }
+  &:where([data-motion='reduce'], [data-motion='reduce'] *) {
+    @slot;
+  }
+}
+
 /* ---- Colour tokens (see DESIGN.md for contrast measurements) ---- */
 :root,
 :root[data-theme='dark'] {
@@ -95,20 +106,105 @@
   --radius-sm: 2px;
   --radius: 2px;
 
-  --ease-institutional: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --animate-toast-in: toast-in 240ms var(--ease-spring) both;
+  --animate-pop-in: pop-in 200ms var(--ease-spring) both;
+  --animate-page-in: page-in 240ms var(--ease-institutional) both;
+  --animate-bell-ring: bell-ring 400ms var(--ease-emphasized) both;
 
-  --animate-toast-in: toast-in 200ms var(--ease-institutional);
+  /* Popovers (user menu, notifications, More, the calendar) spring open. */
+  @keyframes pop-in {
+    from {
+      opacity: 0;
+      transform: translateY(-4px) scale(0.98);
+    }
+  }
 
-  @keyframes toast-in {
+  /* Route change without View Transitions support. */
+  @keyframes page-in {
     from {
       opacity: 0;
       transform: translateY(8px);
+    }
+  }
+
+  /* A new notification: the bell swings and settles. */
+  @keyframes bell-ring {
+    20% {
+      transform: rotate(14deg);
+    }
+    40% {
+      transform: rotate(-10deg);
+    }
+    60% {
+      transform: rotate(6deg);
+    }
+    80% {
+      transform: rotate(-3deg);
+    }
+  }
+  --animate-notice-in: notice-in 240ms var(--ease-institutional) both;
+  --animate-notice-shake: notice-shake 400ms var(--ease-emphasized) both;
+
+  /* Errors arrive with a short fade and rise; a failed sign-in also shakes
+     sideways a few pixels. Transform and opacity only. */
+  @keyframes notice-in {
+    from {
+      opacity: 0;
+      transform: translateY(-4px);
     }
     to {
       opacity: 1;
       transform: none;
     }
   }
+
+  @keyframes notice-shake {
+    0% {
+      opacity: 0;
+      transform: translateX(0);
+    }
+    20% {
+      opacity: 1;
+      transform: translateX(-6px);
+    }
+    40% {
+      transform: translateX(5px);
+    }
+    60% {
+      transform: translateX(-3px);
+    }
+    80% {
+      transform: translateX(2px);
+    }
+    100% {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  /* Toasts slide in from the right edge they sit on. */
+  @keyframes toast-in {
+    from {
+      opacity: 0;
+      transform: translateX(24px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
+
+/* Motion tokens (DESIGN.md, Motion): 150–400ms, transform and opacity only.
+   Static, so the variables exist even where only arbitrary values such as
+   duration-(--duration-base) use them. */
+@theme static {
+  --ease-institutional: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --ease-emphasized: cubic-bezier(0.3, 0, 0, 1);
+  --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+  --duration-fast: 150ms;
+  --duration-base: 240ms;
+  --duration-slow: 400ms;
 }
 
 @layer base {
@@ -162,8 +258,238 @@
     opacity: 1;
     transform: none;
     transition:
-      opacity 480ms var(--ease-institutional),
-      transform 480ms var(--ease-institutional);
+      opacity var(--duration-slow) var(--ease-institutional),
+      transform var(--duration-slow) var(--ease-institutional);
+  }
+}
+
+/* ---- Motion (DESIGN.md, Motion). Transform and opacity only. ---- */
+
+/* Lists and stat grids: children rise in one after another, 40ms apart. */
+@utility stagger {
+  & > * {
+    animation: item-in 300ms var(--ease-institutional) both;
+  }
+  & > :nth-child(2) {
+    animation-delay: 40ms;
+  }
+  & > :nth-child(3) {
+    animation-delay: 80ms;
+  }
+  & > :nth-child(4) {
+    animation-delay: 120ms;
+  }
+  & > :nth-child(5) {
+    animation-delay: 160ms;
+  }
+  & > :nth-child(6) {
+    animation-delay: 200ms;
+  }
+  & > :nth-child(7) {
+    animation-delay: 240ms;
+  }
+  & > :nth-child(n + 8) {
+    animation-delay: 280ms;
+  }
+}
+
+@keyframes item-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+/* Chart bars grow from the baseline, left to right (--i is the bar index). */
+@utility bar-in {
+  transform-box: fill-box;
+  transform-origin: bottom;
+  animation: bar-in 400ms var(--ease-emphasized) both;
+  animation-delay: calc(min(var(--i, 0), 12) * 20ms);
+}
+
+@keyframes bar-in {
+  from {
+    transform: scaleY(0);
+  }
+}
+
+/* Modal and palette spring in; their backdrop fades. */
+@utility dialog-in {
+  &[open] {
+    animation: dialog-in 240ms var(--ease-spring) both;
+  }
+  &[open]::backdrop {
+    animation: fade-in 200ms var(--ease-institutional) both;
+  }
+}
+
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* Loading: a faint band sweeps across (400ms), then rests; the one motion
+   that repeats, and only while something loads. */
+@utility skeleton {
+  position: relative;
+  overflow: hidden;
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, var(--pg-line), transparent);
+    animation: shimmer 1600ms var(--ease-institutional) infinite;
+  }
+}
+
+@keyframes shimmer {
+  25%,
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* The focus ring draws in: a 2px accent frame scales down onto the control
+   and fades up. The outline stays (transparent) for forced-colours modes. */
+@utility focus-ring {
+  position: relative;
+  &:focus-visible {
+    outline-color: transparent;
+  }
+  &::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border: 2px solid var(--pg-accent);
+    border-radius: 4px;
+    opacity: 0;
+    transform: scale(1.06);
+    transition:
+      opacity var(--duration-fast) var(--ease-institutional),
+      transform var(--duration-fast) var(--ease-institutional);
+    pointer-events: none;
+  }
+  &:focus-visible::after {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Success: the frame fades in, then each stroke of the check grows. */
+.success-check-frame {
+  animation: fade-in 200ms var(--ease-institutional) both;
+}
+.success-check-a,
+.success-check-b {
+  transform-box: fill-box;
+  transform-origin: left center;
+  animation: stroke-grow 200ms var(--ease-institutional) both;
+}
+.success-check-a {
+  animation-delay: 150ms;
+}
+.success-check-b {
+  animation-delay: 320ms;
+}
+
+@keyframes stroke-grow {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+/* Page transitions (View Transitions API): the old page fades out, the new
+   one fades up 8px. Headers and the sidebar keep their own names, so they
+   stay put. A theme change is a plain crossfade of the whole page. */
+::view-transition-old(root) {
+  animation: vt-out var(--duration-fast) var(--ease-institutional) both;
+}
+::view-transition-new(root) {
+  animation: page-in var(--duration-base) var(--ease-institutional) both;
+}
+:root[data-vt='theme']::view-transition-old(root) {
+  animation: vt-out var(--duration-base) var(--ease-institutional) both;
+}
+:root[data-vt='theme']::view-transition-new(root) {
+  animation: fade-in var(--duration-base) var(--ease-institutional) both;
+}
+
+@keyframes vt-out {
+  to {
+    opacity: 0;
+  }
+}
+
+/* Error page glyphs: the accent part settles in once. */
+@layer components {
+  .glyph g,
+  .glyph path,
+  .glyph circle,
+  .glyph rect {
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+  .glyph-slide {
+    animation: glyph-slide 400ms var(--ease-institutional) 120ms both;
+  }
+  .glyph-slide-left {
+    animation: glyph-slide-left 400ms var(--ease-institutional) 120ms both;
+  }
+  .glyph-drop {
+    animation: glyph-drop 400ms var(--ease-spring) 120ms both;
+  }
+  .glyph-turn {
+    transform-origin: bottom center;
+    animation: glyph-turn 400ms var(--ease-emphasized) 120ms both;
+  }
+  .glyph-fade {
+    animation: glyph-fade 300ms var(--ease-institutional) 150ms both;
+  }
+  .glyph-delay {
+    animation-delay: 300ms;
+  }
+  .glyph-delay-2 {
+    animation-delay: 450ms;
+  }
+}
+
+@keyframes glyph-slide {
+  from {
+    opacity: 0;
+    transform: translate(12px, 8px);
+  }
+}
+@keyframes glyph-slide-left {
+  from {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+}
+@keyframes glyph-drop {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+@keyframes glyph-turn {
+  from {
+    opacity: 0;
+    transform: rotate(-90deg);
+  }
+}
+@keyframes glyph-fade {
+  from {
+    opacity: 0;
   }
 }
 
@@ -176,4 +502,16 @@
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+:root[data-motion='reduce'] *,
+:root[data-motion='reduce'] *::before,
+:root[data-motion='reduce'] *::after,
+:root[data-motion='reduce']::view-transition-group(*),
+:root[data-motion='reduce']::view-transition-old(*),
+:root[data-motion='reduce']::view-transition-new(*) {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
 }

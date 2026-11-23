@@ -1,6 +1,7 @@
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import AxeBuilder from '@axe-core/playwright';
 import { expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
 
@@ -29,12 +30,72 @@ export async function seedPreferences(
   );
 }
 
-// Segmented controls are visually hidden radios inside labels; click the
-// label like a user would.
-export async function chooseSegment(page: Page, name: string) {
-  const radio = page.getByRole('radio', { name, exact: true });
+// Language, theme and motion live in the Settings dialog (no header
+// switchers). Public pages open it from the footer; choices are visually
+// hidden radios inside labels, clicked like a user would. Escape closes it.
+export async function chooseSetting(page: Page, name: string) {
+  await page
+    .getByRole('contentinfo')
+    .getByRole('button', { name: /^(Settings|Настройки|Ayarlar)$/ })
+    .click();
+  const dialog = page.getByRole('dialog', { name: /^(Settings|Настройки|Ayarlar)$/ });
+  await expect(dialog).toBeVisible();
+  const radio = dialog.getByRole('radio', { name, exact: true });
   await radio.locator('xpath=..').click();
   await expect(radio).toBeChecked();
+  await page.keyboard.press('Escape');
+  await expect(dialog).toBeHidden();
+}
+
+// axe (WCAG 2.2 AA) on the current page; serious and critical findings fail.
+export async function expectNoAxeViolations(page: Page) {
+  // axe reads computed colours, so a row caught mid-fade (opacity 0.2 of the
+  // text over the page) fails contrast although the settled page passes.
+  await waitForSettled(page);
+  const results = await new AxeBuilder({ page })
+    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
+    .analyze();
+  const blocking = results.violations
+    .filter((v) => v.impact === 'serious' || v.impact === 'critical')
+    .map((v) => ({
+      id: v.id,
+      help: v.help,
+      targets: v.nodes.slice(0, 5).map((n) => `${n.target.join(' ')} — ${n.failureSummary ?? ''}`),
+    }));
+  expect(blocking, JSON.stringify(blocking, null, 2)).toEqual([]);
+}
+
+// Menus are found through their toggle's aria-controls, never by a control's
+// name across the page: "Settings" or "Sign out" also live in the footer, the
+// header bar and the palette, and which of them are rendered at a given moment
+// depends on how fast the route's chunk arrived.
+
+// Opens the phone menu (below lg) and returns its settled panel.
+export async function openMobileMenu(page: Page) {
+  const opener = page
+    .getByRole('banner')
+    .getByRole('button', { name: /^(Open menu|Открыть меню|Menyunu aç)$/ });
+  const panelId = (await opener.getAttribute('aria-controls')) ?? '';
+  // Its name turns into "Close menu" once open; the panel id stays.
+  const toggle = page.locator(`button[aria-controls="${panelId}"]`);
+  const panel = page.locator(`[id="${panelId}"]`);
+  await toggle.click();
+  await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+  await expect(panel).toBeVisible();
+  await waitForSettled(page);
+  return panel;
+}
+
+// Opens the cabinet's account menu and returns its settled panel.
+export async function openUserMenu(page: Page) {
+  const toggle = page.getByRole('button', {
+    name: /, (account menu|меню учётной записи|hesab menyusu)$/,
+  });
+  const panel = page.locator(`[id="${(await toggle.getAttribute('aria-controls')) ?? ''}"]`);
+  await toggle.click();
+  await expect(panel).toBeVisible();
+  await waitForSettled(page);
+  return panel;
 }
 
 export function premiumText(page: Page) {
@@ -412,4 +473,54 @@ export function staffApi(page: Page, session: Session) {
       };
     },
   };
+}
+
+// The page has stopped changing: fonts are loaded, no skeleton or busy region
+// is left (the app's own signal that a query is in flight), no view transition
+// runs, and no finite animation (staggered rows, a dialog's spring) is
+// running. An endless skeleton shimmer doesn't count. The checks must hold on
+// several frames in a row: data that arrives while a dialog is opening only
+// starts its fade-in a frame after the skeleton goes, and a single quiet
+// frame would let axe scan the row at opacity 0.2. Fails with what is still
+// moving instead of hanging until the test times out.
+export async function waitForSettled(page: Page, { timeout = 15_000 } = {}) {
+  await page.evaluate(() => document.fonts.ready);
+  await page.evaluate(
+    ([calmFrames, limit]) =>
+      new Promise<void>((resolve, reject) => {
+        const started = performance.now();
+        let calm = 0;
+        const blockers = () => {
+          const found: string[] = [];
+          const loading = document.querySelector('.skeleton, [aria-busy="true"]:not(button)');
+          if (loading) found.push(`loading: ${loading.tagName.toLowerCase()}.${loading.className}`);
+          if (document.documentElement.dataset.vt) found.push('view transition');
+          for (const a of document.getAnimations()) {
+            if (
+              (a.pending || a.playState === 'running') &&
+              a.effect?.getComputedTiming().iterations !== Infinity
+            ) {
+              const name = a instanceof CSSAnimation ? a.animationName : 'transition';
+              found.push(`animation: ${name}`);
+            }
+          }
+          return found;
+        };
+        const tick = () => {
+          const found = blockers();
+          calm = found.length === 0 ? calm + 1 : 0;
+          if (calm >= calmFrames) {
+            resolve();
+            return;
+          }
+          if (performance.now() - started > limit) {
+            reject(new Error(`page did not settle: ${found.join('; ')}`));
+            return;
+          }
+          requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+      }),
+    [3, timeout] as const,
+  );
 }

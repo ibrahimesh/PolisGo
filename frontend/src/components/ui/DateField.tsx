@@ -257,7 +257,7 @@ function Calendar({
           onClose();
         }
       }}
-      className="absolute top-full left-0 z-40 mt-2 w-[min(21rem,calc(100vw-2rem))] rounded-sm border border-line bg-surface p-4 shadow-[0_24px_64px_-24px_rgb(0_0_0/0.6)]"
+      className="absolute top-full left-0 z-40 mt-2 w-[min(21rem,calc(100vw-2rem))] origin-top-left animate-pop-in rounded-sm border border-line bg-surface p-4 shadow-[0_24px_64px_-24px_rgb(0_0_0/0.6)]"
     >
       <h2 id={titleId} className="sr-only">
         {t('dateField.calendar')}

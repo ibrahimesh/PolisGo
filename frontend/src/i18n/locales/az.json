@@ -12,14 +12,21 @@
     "register": "Hesab aç",
     "workspace": "Kabinet",
     "signOut": "Çıxış",
-    "settings": "Görünüş ayarları",
     "home": "Ana səhifə",
     "pricing": "Qiymət necə hesablanır",
     "coverage": "Təminat",
     "claims": "Sığorta hadisələri",
     "faq": "Suallar",
     "menu": "Menyunu aç",
-    "closeMenu": "Menyunu bağla"
+    "closeMenu": "Menyunu bağla",
+    "more": "Daha çox",
+    "short": {
+      "calculator": "Kalkulyator",
+      "pricing": "Qiymət",
+      "coverage": "Təminat",
+      "claims": "Sığorta hadisələri",
+      "faq": "Suallar"
+    }
   },
   "theme": {
     "label": "Mövzu",
@@ -392,7 +399,11 @@
     "lastAdmin": "Ən azı bir aktiv administrator qalmalıdır.",
     "alreadyInactive": "Bu hesab artıq deaktivdir.",
     "alreadyActive": "Bu hesab artıq aktivdir.",
-    "sameRole": "Hesabın artıq bu rolu var."
+    "sameRole": "Hesabın artıq bu rolu var.",
+    "copyReference": "{{code}} istinad kodunu kopyala",
+    "fullReference": "Tam istinad kodu: {{traceId}}",
+    "copied": "Kopyalandı",
+    "copyFailed": "Kopyalamaq olmadı; kodu əl ilə seçin"
   },
   "validation": {
     "required": "Mütləq doldurulmalıdır.",
@@ -487,20 +498,32 @@
   "palette": {
     "title": "Əmrlər paneli",
     "open": "Axtarış və əmrlər",
-    "placeholder": "Səhifəyə keçin, dili və ya mövzunu dəyişin…",
-    "empty": "Heç nə tapılmadı.",
-    "hint": "↑ ↓ seçim · Enter təsdiq · Esc bağla",
+    "placeholder": "Səhifə və əməliyyat axtarın…",
+    "hint": "Yuxarı və aşağı oxlar seçir, Home və End başa və sona keçir, Page Up və Page Down səkkiz bənd keçir, Enter icra edir, Escape bağlayır.",
     "groups": {
-      "navigation": "Keçid",
       "language": "Dil",
       "theme": "Mövzu",
-      "account": "Hesab",
-      "cabinet": "Şəxsi kabinet"
+      "recent": "Son istifadə",
+      "pages": "Səhifələr",
+      "actions": "Əməliyyatlar"
+    },
+    "emptyTitle": "«{{query}}» üzrə heç nə tapılmadı.",
+    "emptyHint": "Səhifə adını, «mövzu», «dil» və ya «ayarlar» yazın.",
+    "current": "seçilib",
+    "actions": {
+      "settings": "Ayarları aç",
+      "motionOn": "Hərəkəti azalt",
+      "motionOff": "Animasiyanı qaytar"
+    },
+    "keys": {
+      "move": "seçim",
+      "run": "icra",
+      "ends": "əvvəl, son",
+      "close": "bağla"
     }
   },
   "cabinet": {
     "nav": "Şəxsi kabinet",
-    "home": "PolisGo — şəxsi kabinet",
     "backToSite": "Saytın əsas səhifəsinə qayıt",
     "signedInAs": "Daxil olmusunuz:",
     "accountMenu": "hesab menyusu"
@@ -1717,7 +1740,12 @@
         "RoleChanged": "rol: {{from}} → {{to}}",
         "assigned": "{{agent}} agentinə təhkim olunub",
         "released": "{{agent}} agentindən ayrılıb"
-      }
+      },
+      "search": "Axtarış",
+      "searchPlaceholder": "E-poçt, ad, polis və ya iddia nömrəsi, əməliyyat",
+      "searchHint": "Əməliyyatı edəni, polisi və ya iddianı və baş verəni tapır, məsələn «təsdiq» və ya «rol».",
+      "clearSearch": "Axtarışı təmizlə",
+      "noMatchSearch": "Heç bir hadisədə «{{query}}» yoxdur. Yazılışı yoxlayın və ya e-poçt, ad, polis və ya iddia nömrəsi daxil edin."
     },
     "policyTypes": {
       "title": "Məhsullar və tariflər",
@@ -1738,6 +1766,73 @@
       "selected": "Cari seçim",
       "more_one": "{{count}} nəticə; hamısını görmək üçün axtarışı dəqiqləşdirin.",
       "more_other": "{{count}} nəticə; hamısını görmək üçün axtarışı dəqiqləşdirin."
+    }
+  },
+  "settings": {
+    "title": "Ayarlar",
+    "open": "Ayarlar",
+    "appearance": "Görünüş",
+    "language": "Dil",
+    "motion": "Animasiya",
+    "reduceMotion": "Hərəkəti azalt",
+    "reduceMotionHint": "Bu cihazda səhifə keçidlərini, rəqəm animasiyasını və digər effektləri söndürür.",
+    "systemReduces": "Cihazınız artıq hərəkətin azaldılmasını istəyir, ona görə animasiya sönülüdür.",
+    "savedOnDevice": "Bu seçimlər bu cihazda saxlanılır.",
+    "done": "Hazır"
+  },
+  "connection": {
+    "offline": "İnternet bağlantısı yoxdur. Açıq səhifələr işləyir; yeni səhifələr və yadda saxlama bağlantını gözləyəcək."
+  },
+  "errorPages": {
+    "devDetail": "Xəta mətni (yalnız inkişaf rejimində)",
+    "actions": {
+      "back": "Geri",
+      "home": "Ana səhifə",
+      "workspace": "Kabinetə qayıt",
+      "reload": "Yenilə",
+      "retry": "Yenidən cəhd et",
+      "signIn": "Yenidən daxil ol"
+    },
+    "notFound": {
+      "label": "Xəta 404",
+      "title": "Burada heç nə",
+      "accent": "sığortalanmayıb.",
+      "body": "Axtardığınız səhifə yoxdur və ya başqa ünvana köçüb."
+    },
+    "forbidden": {
+      "label": "Xəta 403",
+      "title": "Bu bölmə rolunuz üçün əlçatan deyil",
+      "body": "Hesabınızın bu bölməyə girişi yoxdur."
+    },
+    "server": {
+      "label": "Xəta 500",
+      "title": "Bizim tərəfdə",
+      "accent": "nəsə sındı.",
+      "body": "Səhifədə gözlənilməz xəta baş verdi. Adətən yeniləmək kömək edir; etməsə, aşağıdakı istinad kodunu bildirin."
+    },
+    "sessionExpired": {
+      "label": "Sessiya bitib",
+      "title": "Sessiyanız",
+      "accent": "başa çatıb.",
+      "body": "Təhlükəsizlik üçün sistemdən çıxdınız. Qaldığınız yerdən davam etmək üçün yenidən daxil olun."
+    },
+    "offline": {
+      "label": "Bağlantı yoxdur",
+      "title": "İnternet",
+      "accent": "bağlantısı yoxdur.",
+      "body": "Cihaz şəbəkəyə qoşulmadığı üçün səhifə yüklənmədi. Qoşulun və səhifəni yeniləyin."
+    },
+    "unreachable": {
+      "label": "Xidmət əlçatan deyil",
+      "title": "PolisGo hazırda",
+      "accent": "cavab vermir.",
+      "body": "İnternet işləyir, amma PolisGo xidməti cavab vermədi. Bir azdan yenidən cəhd edin."
+    },
+    "maintenance": {
+      "label": "Texniki xidmət",
+      "title": "Tezliklə",
+      "accent": "qayıdırıq.",
+      "body": "PolisGo yenilənir. Polisləriniz və iddialarınız qorunur; bir neçə dəqiqədən sonra yenidən cəhd edin."
     }
   }
 }

@@ -27,8 +27,10 @@ italic accent, the factor-axes diagram and its animations, hairline grids.
 3. **Structure is visible.** 1px hairlines divide. No shadows except the
    modal and palette; no gradients, glows or blobs.
 4. **One accent, used sparingly.** The primary action and key data only.
-5. **Restrained motion.** Scroll reveal, hover and focus; nothing loops.
-   `prefers-reduced-motion` disables all of it.
+5. **Restrained motion.** Motion explains a change (a page arriving, a
+   number settling, a step done) and then stops; only a loading skeleton
+   repeats. `prefers-reduced-motion` and Settings → Reduce motion disable
+   all of it.
 6. **Original.** No stock illustrations, emoji, icon-in-circle feature
    grids, uniform rounded cards, or resemblance to a real brand or emblem.
 7. **Local by default.** EN / RU / AZ for every string; fonts render
@@ -133,22 +135,76 @@ and polygon while the labels move to the breakdown table directly below (at
 
 ## Motion
 
-- 150–480ms, `cubic-bezier(.2,.7,.2,1)`.
-- Scroll reveal (fade and 16px rise, once), hover colour, focus ring, polygon
-  morph, price tween, toast entry.
-- Content is visible by default; JS opts elements into the reveal only when
-  motion is allowed, so no-JS, reduced-motion and tests see everything.
+A senior designer's motion: few, short, purposeful. **Transform and opacity
+only**, 150–400ms, on shared tokens (CSS variables in `src/styles/index.css`,
+`@theme`), no animation library.
+
+| Token                  | Value                         | Use                                  |
+| ---------------------- | ----------------------------- | ------------------------------------ |
+| `--ease-institutional` | `cubic-bezier(.2,.7,.2,1)`    | Default: reveals, fades, slides      |
+| `--ease-emphasized`    | `cubic-bezier(.3,0,0,1)`      | Chart bars, the bell, the shake      |
+| `--ease-spring`        | `cubic-bezier(.34,1.4,.64,1)` | Dialogs, palette, popovers, toasts   |
+| `--duration-fast`      | 150ms                         | Hover, press, focus ring, page exit  |
+| `--duration-base`      | 240ms                         | Page enter, dialogs, theme crossfade |
+| `--duration-slow`      | 400ms                         | Count-up, chart, scroll reveal       |
+
+| Where                      | What                                                                                                                                    |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| Route change               | View Transitions: old page fades out, new one fades up 8px; header and sidebar stay. CSS fade where unsupported. Pathname changes only. |
+| Theme change               | Whole-page crossfade (View Transitions)                                                                                                 |
+| Lists, stat grids          | `stagger`: rows rise 6px, 40ms apart, at most 280ms of delay                                                                            |
+| Key figures                | `CountUp` from zero, 400ms, tabular figures so nothing shifts                                                                           |
+| Charts                     | `bar-in`: bars grow from the baseline, 20ms apart                                                                                       |
+| Sidebar                    | One accent rule slides to the active item                                                                                               |
+| Buttons                    | Press to 98%; the focus ring draws in (`focus-ring`)                                                                                    |
+| Modal, palette, popovers   | Spring in (`dialog-in`, `animate-pop-in`); backdrop fades                                                                               |
+| Toasts                     | Slide in from the right edge                                                                                                            |
+| Skeletons                  | A faint band sweeps (400ms) then rests; the only repeating motion, while loading                                                        |
+| Purchase and claim success | `SuccessCheck`: frame fades in, each stroke of the check grows                                                                          |
+| Notifications              | The bell swings once when the unread count rises                                                                                        |
+| Errors                     | Notices fade in; a failed sign-in shakes once                                                                                           |
+| Landing                    | Scroll reveal, the factor diagram's polygon morph and price tween (kept)                                                                |
+
+- Content is visible by default and nothing waits on JavaScript to appear;
+  transforms don't move layout (the CLS e2e check stays under 0.1).
+- Reduced motion (OS or Settings) ends every animation at its final frame and
+  skips view transitions and count-ups.
 
 ## Components
 
 `Button` · `Input` · `PhoneInput` · `PasswordField` · `Select` · `Card` ·
 `Badge` · `Tabs` · `Table` · `Modal` · `Toast` · `Skeleton` · `EmptyState` ·
-`FormErrorSummary` · `ThemeToggle` · `LanguageSwitcher` · `CommandPalette` ·
+`FormErrorSummary` · `ErrorNotice` · `ReferenceChip` · `ErrorPage` ·
+`ChoiceChips` · Settings dialog (`SettingsFields`) · `CommandPalette` ·
 `Label` · `PageHeader` · `PolicyStatusBadge` · `ClaimStatusBadge` · `StepNav`
 (both wizards) · `QuoteResult` (full or compact) · `Textarea` (with a live
 count) · `Pagination` · `FileUploader` · `ExportButton` · `Modal`
 (`size="wide"` for document previews) · `DateField` (with `FormDateField`
-and `DateFilterField`) · `StaffPicker` · `BarChart`.
+and `DateFilterField`) · `StaffPicker` · `BarChart` · `ProductIcon` ·
+`CountUp` · `SuccessCheck`.
+
+- **Header.** Logo (always to `/`), the sections, a compact search button
+  (icon and "Ctrl K") and the account area; nothing in it wraps. The first
+  three sections show from lg, the others join at xl and sit under a "More"
+  disclosure in between; below lg everything is in the menu panel. No
+  language or theme controls in any header.
+- **Settings dialog.** Appearance (Light, Dark, System), Language (each
+  named in its own language) and Reduce motion, as choice chips and a
+  checkbox; opened from the user menu, the palette, the footer and the
+  mobile menu, and shown inline on the profile page. Saved on the device.
+- **ErrorNotice.** A `danger` hairline box: alert icon, the translated
+  message, and a Reference chip ("Reference 8F05E497", the first 8
+  characters of the trace id) with a copy button that confirms "Copied". The
+  full id is the chip's tooltip and the copy button's description. Field
+  validation shows no reference; a sign-in failure stays generic.
+- **Error pages.** One layout for 404, 403, 500, session ended, offline,
+  unreachable and maintenance: a 96px hairline document glyph with one accent
+  element that settles once, a label, a serif headline with an italic
+  accent, a plain sentence, the Reference chip when there is a trace id, and
+  Back / Home / Reload. Inside the cabinet it uses the signed-in scale.
+- **Product marks.** 24px line drawings (MTPL two vehicles, CASCO one with an
+  impact mark) in a 40px `line-strong` square, accent stroke. Every sidebar
+  item has its own icon within a role.
 
 - A visible 2px accent focus ring on everything focusable.
 - Every field has a visible label; errors are linked with `aria-describedby`,
@@ -165,8 +221,7 @@ and `DateFilterField`) · `StaffPicker` · `BarChart`.
   at most five sections (`sections.ts` decides which). The active item has an
   accent rule (left edge in the sidebar, top edge in the bar) as well as a
   fill, so state never rests on colour alone. The header holds the palette,
-  the reminders bell (Clients), language and theme (from `xl`; in the user
-  menu below that) and the user menu.
+  the reminders bell (Clients) and the user menu (which opens Settings).
 - **Page scale.** `PageHeader`: a serif h1 at 40px (28px on phones) with an
   optional italic accent, a muted lead and the page's actions. Section titles
   are 28px. The 64–96px sizes stay on the landing page.
@@ -236,8 +291,8 @@ and `DateFilterField`) · `StaffPicker` · `BarChart`.
   3px-high accent bar and the number written out.
 - **Choice chips.** Period presets and queue views are bordered chips that
   wrap (real radios or links); the current one gets the accent border and
-  `surface-2`. Use them instead of `SegmentedControl` when the options may
-  not fit one row at 390px.
+  `surface-2`. `ChoiceChips` is the radio version (Settings uses it); the
+  old segmented control is gone, since chips wrap at 390px.
 - **Empty and loading.** Every list has a real empty state (and a separate
   "nothing matches" state); skeletons mirror the loaded layout. Nothing is
   mocked.
@@ -257,4 +312,5 @@ ink 15.3, muted 7.5, accent 8.1.
 ## Voice
 
 Plain, specific, calm. "Indicative estimate", not "Get your best price!".
-Errors say what to fix and show the server `traceId` when there is one.
+Errors say what to fix and show a short reference (the trace id's first 8
+characters) when the server sent one.

@@ -47,6 +47,13 @@ test.describe('Cabinet account', () => {
 
     // The 60-minute token runs out while the tab is open.
     await page.clock.fastForward('01:01:00');
+    // The page says the session ended (nothing of theirs stays on screen)
+    // and leads to sign-in, which brings the next person back here.
+    await expect(
+      page.getByRole('heading', { level: 1, name: 'Your session has ended.' }),
+    ).toBeVisible();
+    expect(await theirPolicy().count()).toBe(0);
+    await page.getByRole('link', { name: 'Sign in again' }).click();
     await page.waitForURL('**/login');
     await page.clock.setSystemTime(new Date());
 

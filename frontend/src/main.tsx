@@ -3,11 +3,12 @@ import './styles/index.css';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { BrowserRouter } from 'react-router';
 import { isApiError } from './api/errors';
 import { App } from './App';
 import { AuthProvider } from './auth/AuthProvider';
+import { MotionRouter } from './motion/MotionRouter';
 import { ToastProvider } from './components/ui/ToastProvider';
+import { SettingsProvider } from './settings/SettingsProvider';
 import { ThemeProvider } from './theme/ThemeProvider';
 
 const queryClient = new QueryClient({
@@ -28,13 +29,15 @@ createRoot(root).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
-        <BrowserRouter>
-          <ToastProvider>
-            <AuthProvider>
-              <App />
-            </AuthProvider>
-          </ToastProvider>
-        </BrowserRouter>
+        <MotionRouter>
+          <SettingsProvider>
+            <ToastProvider>
+              <AuthProvider>
+                <App />
+              </AuthProvider>
+            </ToastProvider>
+          </SettingsProvider>
+        </MotionRouter>
       </ThemeProvider>
     </QueryClientProvider>
   </StrictMode>,

@@ -200,7 +200,7 @@ function CustomerTable({
             )}
           </Tr>
         </THead>
-        <TBody>
+        <TBody className="stagger">
           {items.map((customer) => (
             <Tr key={customer.id} className="border-line">
               <Td>
@@ -249,7 +249,7 @@ function CustomerCards({
   const { t } = useTranslation();
   const format = useFormatters();
   return (
-    <ul className="divide-y divide-line border-y border-line md:hidden">
+    <ul className="stagger divide-y divide-line border-y border-line md:hidden">
       {items.map((customer) => (
         <li key={customer.id} className="space-y-1 py-4">
           <Link

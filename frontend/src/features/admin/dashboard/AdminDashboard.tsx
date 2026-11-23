@@ -1,3 +1,4 @@
+import { CountUp } from '../../../motion/CountUp';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useSearchParams } from 'react-router';
@@ -203,12 +204,24 @@ function Dashboard({ data }: { data: AdminDashboardResponse }) {
         : t('admin.dashboard.hours', { value: format.factorPlain(hours) });
 
   const tiles = [
-    { id: 'policies', value: format.integer(data.totals.policiesIssued) },
-    { id: 'premium', value: format.money(data.totals.premiumWritten) },
-    { id: 'claims', value: format.integer(data.totals.claimsFiled) },
-    { id: 'decided', value: format.integer(data.totals.claimsDecided) },
+    {
+      id: 'policies',
+      value: <CountUp value={data.totals.policiesIssued} format={format.integer} />,
+    },
+    {
+      id: 'premium',
+      value: <CountUp value={data.totals.premiumWritten} format={(n) => format.money(n)} />,
+    },
+    { id: 'claims', value: <CountUp value={data.totals.claimsFiled} format={format.integer} /> },
+    {
+      id: 'decided',
+      value: <CountUp value={data.totals.claimsDecided} format={format.integer} />,
+    },
     { id: 'resolution', value: resolution },
-    { id: 'paid', value: format.money(data.totals.claimsPaidAmount) },
+    {
+      id: 'paid',
+      value: <CountUp value={data.totals.claimsPaidAmount} format={(n) => format.money(n)} />,
+    },
   ];
 
   return (
@@ -217,7 +230,7 @@ function Dashboard({ data }: { data: AdminDashboardResponse }) {
         <h2 id="dashboard-totals" className="sr-only">
           {t('admin.dashboard.totals')}
         </h2>
-        <dl className="grid gap-px border border-line bg-line sm:grid-cols-2 xl:grid-cols-3">
+        <dl className="grid stagger gap-px border border-line bg-line sm:grid-cols-2 xl:grid-cols-3">
           {tiles.map((tile) => (
             <div key={tile.id} className="space-y-1 bg-bg p-5">
               <dt className="text-sm font-medium text-muted">

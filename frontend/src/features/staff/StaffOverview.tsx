@@ -15,6 +15,7 @@ import { ageInDays } from './queue/queueParams';
 import { writeQueue, DEFAULT_QUEUE } from './queue/queueParams';
 import type { QueueView } from './queue/queueParams';
 import { SalesSummaryTiles } from './sales/SalesSummaryTiles';
+import { CountUp } from '../../motion/CountUp';
 
 // /app for staff: what is waiting on each desk the role works, from
 // GET /api/staff/overview (the same visibility as the lists it links to).
@@ -91,7 +92,7 @@ function ClaimsDesk({ desk }: { desk: ClaimsDeskSummary }) {
         </ButtonLink>
       </div>
 
-      <dl className="grid gap-px border border-line bg-line sm:grid-cols-2 xl:grid-cols-4">
+      <dl className="grid stagger gap-px border border-line bg-line sm:grid-cols-2 xl:grid-cols-4">
         {tiles.map((tile) => (
           <div key={tile.id} className="space-y-1 bg-bg p-5">
             <dt className="text-sm font-medium text-muted">
@@ -103,7 +104,7 @@ function ClaimsDesk({ desk }: { desk: ClaimsDeskSummary }) {
                   to={tile.to}
                   className="underline decoration-line-strong underline-offset-4 hover:decoration-current"
                 >
-                  {format.integer(tile.value)}
+                  <CountUp value={tile.value} format={format.integer} />
                   <span className="sr-only">, {t('staff.overview.openList')}</span>
                 </Link>
               ) : (

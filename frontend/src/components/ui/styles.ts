@@ -6,8 +6,10 @@ import { cx } from './cx';
 export type ButtonVariant = 'primary' | 'secondary' | 'ghost';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
+// Press: a 2% scale while held (transform only); focus: the focus-ring
+// utility draws the ring in. Both off under reduced motion.
 const buttonBase =
-  'inline-flex items-center justify-center gap-2 rounded-sm font-medium whitespace-nowrap transition-[background-color,border-color,color] duration-150 ease-institutional select-none disabled:cursor-not-allowed disabled:opacity-50';
+  'focus-ring inline-flex items-center justify-center gap-2 rounded-sm font-medium whitespace-nowrap transition-[background-color,border-color,color,transform] duration-(--duration-fast) ease-institutional select-none active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100 motion-reduce:active:scale-100';
 
 // The accent fill is reserved for the one primary action in view.
 const buttonVariants: Record<ButtonVariant, string> = {

@@ -1,4 +1,3 @@
-import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 import {
@@ -6,31 +5,19 @@ import {
   cabinetApi,
   claimsApi,
   FILES,
+  expectNoAxeViolations,
   expectNoHorizontalScroll,
   registerSession,
   seedPreferences,
   openSession,
+  openUserMenu,
+  waitForSettled,
 } from './helpers';
 import type { Theme } from './helpers';
 
 // Every cabinet page, in both themes: no serious or critical axe violations,
 // and nothing wider than the viewport (the mobile project runs this at 390px).
 const THEMES: Theme[] = ['dark', 'light'];
-
-async function expectAccessible(page: Page) {
-  await page.evaluate(() => document.fonts.ready);
-  const results = await new AxeBuilder({ page })
-    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
-    .analyze();
-  const blocking = results.violations
-    .filter((v) => v.impact === 'serious' || v.impact === 'critical')
-    .map((v) => ({
-      id: v.id,
-      help: v.help,
-      targets: v.nodes.slice(0, 5).map((n) => `${n.target.join(' ')} — ${n.failureSummary ?? ''}`),
-    }));
-  expect(blocking, JSON.stringify(blocking, null, 2)).toEqual([]);
-}
 
 for (const theme of THEMES) {
   test(`cabinet pages pass axe and fit the viewport (${theme})`, async ({ page }) => {
@@ -93,7 +80,7 @@ for (const theme of THEMES) {
         await page.goto(path);
         await ready(page);
         await expectNoHorizontalScroll(page);
-        await expectAccessible(page);
+        await expectNoAxeViolations(page);
       });
     }
 
@@ -101,7 +88,7 @@ for (const theme of THEMES) {
       await page.goto('/app/buy');
       await page.getByRole('button', { name: 'Continue' }).click();
       await expect(page.getByTestId('error-summary')).toBeVisible();
-      await expectAccessible(page);
+      await expectNoAxeViolations(page);
     });
 
     await test.step('claim wizard with an error summary', async () => {
@@ -111,14 +98,14 @@ for (const theme of THEMES) {
       await page.getByRole('button', { name: 'Continue' }).click();
       await expect(page.getByTestId('error-summary')).toBeVisible();
       await expectNoHorizontalScroll(page);
-      await expectAccessible(page);
+      await expectNoAxeViolations(page);
     });
 
     await test.step('withdraw dialog open', async () => {
       await page.goto(`/app/claims/${claim.id}`);
       await page.getByRole('button', { name: 'Withdraw claim' }).click();
       await expect(page.getByRole('dialog')).toBeVisible();
-      await expectAccessible(page);
+      await expectNoAxeViolations(page);
       await page.keyboard.press('Escape');
     });
 
@@ -127,11 +114,59 @@ for (const theme of THEMES) {
       await page.getByRole('button', { name: /^Notifications/ }).click();
       await expect(page.getByRole('region', { name: 'Updates', exact: true })).toBeVisible();
       await expectNoHorizontalScroll(page);
-      await expectAccessible(page);
+      await expectNoAxeViolations(page);
       await page.keyboard.press('Escape');
-      await page.getByRole('button', { name: /, account menu$/ }).click();
-      await expect(page.getByRole('button', { name: 'Sign out' })).toBeVisible();
-      await expectAccessible(page);
+      const menu = await openUserMenu(page);
+      await expect(menu.getByRole('button', { name: 'Sign out' })).toBeVisible();
+      await expectNoAxeViolations(page);
     });
   });
 }
+
+// The axe helper scans a settled page, not just a quiet one. The overview's
+// data arrives after the bell panel has opened (as on a slow runner): the
+// activity rows start fading in only then, and a scan taken in that fade reads
+// the text at 20% opacity (contrast 1.5). Motion stays ON for this scan; the
+// rows' stagger is the thing being waited for.
+test('axe waits for a late overview and scans it with motion on', async ({ page }) => {
+  const { session } = await registerSession(page);
+  await cabinetApi(page, session).activePolicy(1, 'MTPL');
+  await seedPreferences(page, { theme: 'light', lang: 'en' });
+  await openSession(page, session);
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+
+  let release: () => void = () => {};
+  const held = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await page.route('**/api/me/overview', async (route) => {
+    await held;
+    await route.continue();
+  });
+
+  await page.goto('/app');
+  await page.getByRole('button', { name: /^Notifications/ }).click();
+  await expect(page.getByRole('region', { name: 'Updates', exact: true })).toBeVisible();
+  await expect(page.locator('html')).not.toHaveAttribute('data-motion', 'reduce');
+  // Still a skeleton: nothing but the panel has animated so far.
+  await expect(page.locator('[aria-busy="true"]')).toBeVisible();
+  await expect(page.getByText('Active policies', { exact: true })).toHaveCount(0);
+
+  release();
+  await waitForSettled(page);
+  const row = page.locator('ol.stagger > li').first();
+  await expect(row).toBeVisible();
+  expect(await row.evaluate((el) => getComputedStyle(el).opacity)).toBe('1');
+  expect(
+    await page.evaluate(
+      () =>
+        document
+          .getAnimations()
+          .filter(
+            (a) =>
+              a.playState === 'running' && a.effect?.getComputedTiming().iterations !== Infinity,
+          ).length,
+    ),
+  ).toBe(0);
+  await expectNoAxeViolations(page);
+});

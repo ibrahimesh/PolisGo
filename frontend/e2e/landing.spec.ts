@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { chooseSegment, premiumText, quoteBody, seedPreferences, waitForPremium } from './helpers';
+import { chooseSetting, premiumText, quoteBody, seedPreferences, waitForPremium } from './helpers';
 
 test.describe('Landing', () => {
   test('loads in the dark theme by default', async ({ page }) => {
@@ -14,7 +14,7 @@ test.describe('Landing', () => {
 
   test('switches to light and keeps it after a reload', async ({ page }) => {
     await page.goto('/');
-    await chooseSegment(page, 'Light');
+    await chooseSetting(page, 'Light');
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
     const background = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
     expect(background).toBe('rgb(217, 214, 207)'); // warm stone #D9D6CF
@@ -28,19 +28,19 @@ test.describe('Landing', () => {
     await page.goto('/');
     const h1 = page.getByRole('heading', { level: 1 });
 
-    await chooseSegment(page, 'Русский');
+    await chooseSetting(page, 'Русский');
     await expect(h1).toHaveText('Страхование с открытой ценой.');
     await expect(page.locator('html')).toHaveAttribute('lang', 'ru');
     await expect(page.getByRole('banner').getByRole('link', { name: 'Войти' })).toBeVisible();
 
-    await chooseSegment(page, 'Azərbaycanca');
+    await chooseSetting(page, 'Azərbaycanca');
     await expect(h1).toHaveText('Sığorta, açıq qiymətlə.');
     await expect(page.locator('html')).toHaveAttribute('lang', 'az');
     await expect(page.getByText('Mühərrikin həcmi', { exact: true })).toBeVisible();
     // Azerbaijani uses a decimal comma, even on Chromium's trimmed ICU data.
     await expect(page.getByText(/^Təxmini sığorta haqqı: \d+,\d{2} AZN$/)).toBeAttached();
 
-    await chooseSegment(page, 'English');
+    await chooseSetting(page, 'English');
     await expect(h1).toHaveText('Insurance, priced in the open.');
   });
 

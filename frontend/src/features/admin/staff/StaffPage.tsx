@@ -252,7 +252,7 @@ function StaffTable({
             <Th>{t('admin.staff.columns.actions')}</Th>
           </Tr>
         </THead>
-        <TBody>
+        <TBody className="stagger">
           {items.map((member) => (
             <Tr key={member.id} className="border-line">
               <Td>
@@ -293,7 +293,7 @@ function StaffCards({
 }) {
   const { t } = useTranslation();
   return (
-    <ul className="divide-y divide-line border-y border-line md:hidden">
+    <ul className="stagger divide-y divide-line border-y border-line md:hidden">
       {items.map((member) => (
         <li key={member.id} className="space-y-2 py-4">
           <div className="flex items-start justify-between gap-3">

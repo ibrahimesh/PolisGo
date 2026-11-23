@@ -116,6 +116,8 @@ test.describe('Purchase wizard', () => {
         'is active',
       );
       expect(payments).toHaveLength(1);
+      // The drawn check: decorative, in the success colour.
+      await expect(page.getByTestId('success-check')).toBeVisible();
     });
 
     await test.step('download the certificate', async () => {

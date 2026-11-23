@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { authApi } from '../api/endpoints';
@@ -18,6 +18,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
   const { t } = useTranslation();
   const [session, setSession] = useState(() => tokenStore.get());
+  const [sessionEnded, setSessionEnded] = useState(false);
+  const signingOut = useRef(false);
 
   // A session can end without "Sign out": the token runs out in an open tab,
   // or the API rejects it (deactivation, role change). However it ends, the
@@ -30,17 +32,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (previous !== null && next === null) {
         queryClient.clear();
         void clearAllPendingFiles();
+        if (!signingOut.current) setSessionEnded(true);
+        signingOut.current = false;
       }
+      if (next !== null) setSessionEnded(false);
       previous = next;
     });
   }, [queryClient]);
 
-  // When the API rejects our token (the store is cleared, and the cache with
-  // it, above), tell the user; route guards then redirect to sign-in.
+  // When the API rejects our token on a public page, a toast says so; on a
+  // guarded page the session-ended page does (RequireAuth).
   useEffect(
     () =>
       onUnauthorized(() => {
-        toast({ title: t('auth.sessionExpired'), tone: 'info' });
+        if (!window.location.pathname.startsWith('/app')) {
+          toast({ title: t('auth.sessionExpired'), tone: 'info' });
+        }
       }),
     [toast, t],
   );
@@ -94,6 +101,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const logout = useCallback(() => {
+    signingOut.current = tokenStore.get() !== null;
     tokenStore.clear();
     // Private data must not survive into the next user's session on this tab.
     queryClient.clear();
@@ -106,12 +114,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       status,
       user: status === 'authenticated' ? (me.data ?? null) : null,
       error: me.error,
+      sessionEnded,
       login,
       register,
       logout,
       retry,
     }),
-    [status, me.data, me.error, login, register, logout, retry],
+    [status, me.data, me.error, sessionEnded, login, register, logout, retry],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -1,5 +1,12 @@
 import { expect, test } from '@playwright/test';
-import { chooseSegment, randomUser, registerViaApi, seedPreferences } from './helpers';
+import {
+  chooseSetting,
+  expectNoAxeViolations,
+  openUserMenu,
+  randomUser,
+  registerViaApi,
+  seedPreferences,
+} from './helpers';
 
 test.describe('Auth', () => {
   test.beforeEach(async ({ page }) => {
@@ -48,8 +55,8 @@ test.describe('Auth', () => {
     });
 
     await test.step('sign out', async () => {
-      await page.getByRole('button', { name: `${user.fullName}, account menu` }).click();
-      await page.getByRole('button', { name: 'Sign out' }).click();
+      const menu = await openUserMenu(page);
+      await menu.getByRole('button', { name: 'Sign out' }).click();
       await expect(page).toHaveURL(/\/$/);
       await expect(page.getByText('You have been signed out.')).toBeVisible();
       await page.goto('/app');
@@ -70,7 +77,7 @@ test.describe('Auth', () => {
     await registerViaApi(page, user);
 
     await page.goto('/login');
-    await chooseSegment(page, 'Русский');
+    await chooseSetting(page, 'Русский');
     await page.getByLabel('Эл. почта').fill(user.email);
     await page.getByLabel('Пароль', { exact: true }).fill('Wrong-password-1');
 
@@ -82,7 +89,48 @@ test.describe('Auth', () => {
 
     const alert = page.getByRole('alert');
     await expect(alert).toContainText('Неверная эл. почта или пароль.');
-    await expect(alert).toContainText(`Код обращения: ${traceId}`);
+    // A short reference chip, not the raw trace id; the full id is in the
+    // tooltip, the copy button's description and the clipboard.
+    const short = traceId.split('-')[1]?.slice(0, 8).toUpperCase() ?? '';
+    const chip = alert.getByTestId('reference-chip');
+    await expect(chip).toContainText(`Код обращения ${short}`);
+    await expect(chip).toHaveAttribute('title', traceId);
+    await expect(alert).not.toContainText(traceId, { useInnerText: true });
+    const copy = chip.getByRole('button', { name: `Копировать код обращения ${short}` });
+    await expect(copy).toHaveAccessibleDescription(`Полный код обращения: ${traceId}`);
+    await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
+    await copy.click();
+    await expect(chip.getByRole('status')).toHaveText('Скопировано');
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(traceId);
     await expect(page).toHaveURL(/\/login$/);
+  });
+
+  for (const theme of ['dark', 'light'] as const) {
+    test(`a failed sign-in shakes once and passes axe (${theme})`, async ({ page }) => {
+      await seedPreferences(page, { lang: 'en', theme });
+      await page.goto('/login');
+      await page.getByLabel('Email').fill('nobody@polisgo.test');
+      await page.getByLabel('Password', { exact: true }).fill('Wrong-password-1');
+      await page.getByRole('button', { name: 'Sign in' }).click();
+      const alert = page.getByRole('alert');
+      await expect(alert).toContainText('The email or password is incorrect.');
+      await expect(alert).toHaveCSS('animation-name', 'notice-shake');
+      await expectNoAxeViolations(page);
+    });
+  }
+
+  test('the shake is off when motion is reduced', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await seedPreferences(page, { lang: 'en' });
+    await page.goto('/login');
+    await page.getByLabel('Email').fill('nobody@polisgo.test');
+    await page.getByLabel('Password', { exact: true }).fill('Wrong-password-1');
+    await page.getByRole('button', { name: 'Sign in' }).click();
+    const alert = page.getByRole('alert');
+    await expect(alert).toBeVisible();
+    const duration = await alert.evaluate((el) =>
+      parseFloat(getComputedStyle(el).animationDuration),
+    );
+    expect(duration).toBeLessThan(0.001);
   });
 });

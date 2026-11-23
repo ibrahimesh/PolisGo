@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import { useEffect, useId, useRef, useState } from 'react';
 import type { KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -140,8 +141,9 @@ export function BarChart({
                   {height > 0 && (
                     <path
                       d={`M${x},${barTop + Math.min(2, height)} q0,-2 2,-2 h${barWidth - 4} q2,0 2,2 V${PAD.top + plotHeight} H${x} Z`}
+                      style={{ '--i': index } as CSSProperties}
                       className={cx(
-                        'fill-accent transition-opacity',
+                        'bar-in fill-accent transition-opacity',
                         active !== null && active !== index && 'opacity-40',
                       )}
                     />

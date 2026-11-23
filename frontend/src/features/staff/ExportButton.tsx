@@ -28,9 +28,8 @@ export function ExportButton({
       toast.toast({
         tone: 'error',
         title: t('staff.export.failed'),
-        description: traceId
-          ? `${t(messageKey)} ${t('errors.reference')}: ${traceId}`
-          : t(messageKey),
+        description: t(messageKey),
+        traceId,
       });
     },
   });

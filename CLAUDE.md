@@ -108,7 +108,7 @@ every change in this repo.
 | GET | `/api/staff/overview` | Agent, Adjuster, Admin (a block per desk) |
 | GET | `/api/admin/stats` | Admin (cached 60 s) |
 | GET | `/api/admin/dashboard` (from, to; 24 months max) | Admin (cached 60 s per range) |
-| GET | `/api/admin/audit` (actor, entity type, from, to, paged) | Admin |
+| GET | `/api/admin/audit` (search, actions, actor, entity type, from, to, paged) | Admin |
 | GET | `/health` | Anonymous |
 
 ## Persistence
@@ -266,6 +266,10 @@ React Router, TanStack Query, React Hook Form + Zod, react-i18next.
   layout finishes it (`useCompleteSignOut`). Don't call `logout()` from a
   protected page, or its guard bounces the user to `/login` first.
 - `src/components/ui` — design-system components; `components/layout` — shell.
+  `src/settings` — the Settings dialog (`SettingsProvider`, `useSettings()`)
+  and the Reduce motion store; `src/motion` — page transitions
+  (`MotionRouter`), `CountUp`, `SuccessCheck`; `src/pages/errors` —
+  `ErrorPage`, `RouteErrorBoundary`, `classifyError`.
 - `src/features/<area>` — feature code; `src/pages` — route screens. The
   client cabinet: `cabinet` (shell, sidebar, bottom bar, user menu, private
   queries under the `['cabinet']` key prefix), `overview`, `policies`,
@@ -308,13 +312,45 @@ React Router, TanStack Query, React Hook Form + Zod, react-i18next.
 - 2px radii, 1px hairlines, 1.5px icon strokes, 8pt spacing; the accent is
   for the primary action and key data only. No gradients, glows, emoji or
   icon-in-circle grids.
-- Motion only via `<Reveal>` (scroll), hover and focus; content must stay
-  visible by default and respect `prefers-reduced-motion`.
+- **Motion** (DESIGN.md, Motion): transform and opacity only, 150–400ms,
+  the shared tokens in `index.css` (`ease-institutional`, `--ease-spring`,
+  `--duration-fast|base|slow`), no animation library. Reuse the utilities
+  (`stagger`, `bar-in`, `dialog-in`, `animate-pop-in`, `skeleton`,
+  `focus-ring`, `CountUp`, `SuccessCheck`) rather than new keyframes.
+  `prefers-reduced-motion` and Settings → Reduce motion (`data-motion` on
+  `<html>`) stop everything: use the `motion-reduce:` variant (it covers
+  both) and `usePrefersReducedMotion()` / `motionReduced()` in JS. Page
+  transitions run on pathname changes only (`motion/viewTransitions.ts`).
+  Content must stay visible by default; keep the CLS e2e check under 0.1 and
+  the landing JavaScript budget (report gzip growth against main).
 - Signed-in pages use `PageHeader` (40px serif h1, 28px on phones), not the
   landing's 64–96px headings. Data cards are `Card variant="paper"`; status
   badges on paper use `onPaper`.
 - Landing sections are listed once in `components/layout/navigation.ts`;
   header, mobile menu, command palette (Ctrl/⌘+K) and footer read it.
+- **Header items never wrap**: the public header holds only the logo (to
+  `/`, in every shell), the sections (`PRIMARY_SECTIONS` from lg, the rest
+  under "More" until xl), the compact search button and the account area,
+  with short names (`nav.short.*`) where a language needs them.
+  `header-layout.spec.ts` checks one line per item at 1024–1440px in all
+  three languages; run it after adding anything to a header.
+- **The phone menu is modal while open** (`Header`): the rest of the shell
+  is `inert`, Tab wraps inside the header, Escape returns focus to the
+  toggle, and reaching lg closes it. Dialogs mount outside the shell.
+- **No language or theme controls in headers.** They live in the Settings
+  dialog (user menu, palette, footer, mobile menu) and on the profile page,
+  all through `SettingsFields`; a first visit takes the browser's language.
+- **Command palette** (`CommandPalette`, loaded on first use): commands are
+  grouped (Recent, Pages, Actions, Language, Theme), fuzzy-matched
+  (`fuzzy.ts`), role-aware via `sectionsFor`; keep it a combobox with
+  `aria-activedescendant`, the active option scrolled into view and Esc
+  handled on the input.
+- **Errors**: inline API errors go through `ErrorNotice` (icon, message,
+  `ReferenceChip` with the first 8 characters of the trace id; none for field
+  validation). Whole-page failures use `ErrorPage` (404, 403, 500, session
+  ended, offline, unreachable, maintenance); both shells wrap routes in
+  `RouteErrorBoundary`. Never render stack traces or error text in
+  production.
 - Keep the factor-axes diagram (`features/quote/FactorDiagram.tsx`) and its
   animations — the owner asked for them to stay.
 - Wrap scrolling tables in a positioned container (`relative overflow-x-auto`):
@@ -371,7 +407,8 @@ React Router, TanStack Query, React Hook Form + Zod, react-i18next.
   together (a test fails if the files drift).
 - Zod and form error messages are i18n keys, translated at render.
 - New API validation messages get a mapping in `i18n/apiErrors.ts`; errors
-  are shown through `ErrorNotice`, which includes the server `traceId`.
+  are shown through `ErrorNotice`, whose Reference chip carries the server
+  `traceId` (short code shown, full id in the tooltip and copied).
 - Format numbers with `useFormatters()`, not raw `Intl` — Chromium's ICU
   lacks Azerbaijani separators and the helper fixes that.
 - Check long RU/AZ strings on mobile (390px) before calling UI done.
@@ -417,6 +454,16 @@ Run from `frontend/`:
   docker-compose.demo.yml -f docker-compose.e2e.yml up --build` before
   `npm run e2e`.
 - `npm run e2e:screenshots` — regenerates `frontend/docs/screenshots`
-  (landing full page; cabinet, staff and admin pages first screen, dark and
+  (first screen of the landing, auth, cabinet, staff and admin pages, dark and
   light, desktop and mobile; admin pages need the demo data).
 - First-time e2e setup: `npx playwright install chromium`.
+- The e2e dev server runs with `VITE_E2E_ROUTES=true` (test-only routes such
+  as `/__e2e/crash`, never in a production build). If your own `npm run
+  dev` holds :5173, run the suite on its own server with
+  `E2E_BASE_URL=http://localhost:3000` (the API's other CORS origin).
+  Helpers: `chooseSetting` (Settings dialog), `expectNoAxeViolations` and
+  `waitForSettled` (axe waits for skeletons, view transitions and finite animations),
+  `openMobileMenu` / `openUserMenu` (return the settled panel). Scope clicks to
+  that panel or a landmark: Settings, Sign out and Help exist in more than one
+  place (menu, footer, palette), and a page-wide name matches whichever is
+  rendered at that moment.

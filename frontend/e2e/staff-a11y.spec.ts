@@ -1,4 +1,3 @@
-import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 import {
@@ -6,6 +5,7 @@ import {
   cabinetApi,
   claimsApi,
   clientWithClaim,
+  expectNoAxeViolations,
   expectNoHorizontalScroll,
   FILES,
   isoToday,
@@ -20,26 +20,11 @@ import type { Theme } from './helpers';
 // nothing wider than the viewport (the mobile project runs this at 390px).
 const THEMES: Theme[] = ['dark', 'light'];
 
-async function expectAccessible(page: Page) {
-  await page.evaluate(() => document.fonts.ready);
-  const results = await new AxeBuilder({ page })
-    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
-    .analyze();
-  const blocking = results.violations
-    .filter((v) => v.impact === 'serious' || v.impact === 'critical')
-    .map((v) => ({
-      id: v.id,
-      help: v.help,
-      targets: v.nodes.slice(0, 5).map((n) => `${n.target.join(' ')} — ${n.failureSummary ?? ''}`),
-    }));
-  expect(blocking, JSON.stringify(blocking, null, 2)).toEqual([]);
-}
-
 async function check(page: Page, path: string, ready: (p: Page) => Promise<void>) {
   await page.goto(path);
   await ready(page);
   await expectNoHorizontalScroll(page);
-  await expectAccessible(page);
+  await expectNoAxeViolations(page);
 }
 
 for (const theme of THEMES) {
@@ -68,14 +53,14 @@ for (const theme of THEMES) {
       await page.getByRole('radio', { name: 'Reject' }).check();
       await page.getByRole('button', { name: 'Reject the claim' }).click();
       await expect(page.getByTestId('error-summary')).toBeVisible();
-      await expectAccessible(page);
+      await expectNoAxeViolations(page);
     });
 
     await test.step('document preview open', async () => {
       await page.getByRole('button', { name: /^View/ }).click();
       await expect(page.getByRole('dialog').getByRole('img')).toBeVisible();
       await expectNoHorizontalScroll(page);
-      await expectAccessible(page);
+      await expectNoAxeViolations(page);
       await page.keyboard.press('Escape');
       await expect(page.getByRole('dialog')).toBeHidden();
     });
@@ -142,7 +127,7 @@ for (const theme of THEMES) {
     );
     await test.step('a chart with its table open', async () => {
       await page.getByText('Show the numbers as a table').first().click();
-      await expectAccessible(page);
+      await expectNoAxeViolations(page);
     });
     await check(page, '/app/admin/staff', (p) =>
       expect(p.getByText(/^\d+ accounts?$/)).toBeVisible(),
@@ -152,7 +137,7 @@ for (const theme of THEMES) {
       await page.getByRole('button', { name: 'Create the account' }).click();
       await expect(page.getByRole('dialog').getByTestId('error-summary')).toBeVisible();
       await expectNoHorizontalScroll(page);
-      await expectAccessible(page);
+      await expectNoAxeViolations(page);
       await page.keyboard.press('Escape');
     });
     await check(page, '/app/customers', (p) =>
@@ -174,7 +159,7 @@ for (const theme of THEMES) {
       await page.getByRole('button', { name: 'Open calendar' }).first().click();
       await expect(page.getByRole('dialog', { name: 'Choose a date' })).toBeVisible();
       await expectNoHorizontalScroll(page);
-      await expectAccessible(page);
+      await expectNoAxeViolations(page);
       await page.keyboard.press('Escape');
     });
     await check(page, '/app/admin/policy-types', (p) =>
