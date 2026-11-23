@@ -500,7 +500,6 @@
   },
   "cabinet": {
     "nav": "Your account",
-    "home": "PolisGo — your account",
     "backToSite": "Back to the main site",
     "signedInAs": "Signed in as",
     "accountMenu": "account menu"

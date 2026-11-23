@@ -1,10 +1,9 @@
 import type { ReactNode } from 'react';
 import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router';
 import { CommandPalette } from '../../components/layout/CommandPalette';
 import { isMac, usePaletteShortcut } from '../../components/layout/usePaletteShortcut';
-import { Wordmark } from '../../components/layout/Wordmark';
+import { LogoLink } from '../../components/layout/Wordmark';
 import { SearchIcon } from '../../components/ui/icons';
 import { LanguageSwitcher } from '../../components/ui/LanguageSwitcher';
 import { ThemeToggle } from '../../components/ui/ThemeToggle';
@@ -20,9 +19,7 @@ export function CabinetHeader({ notifications }: { notifications?: ReactNode }) 
   return (
     <header className="sticky top-0 z-30 border-b border-line bg-bg">
       <div className="flex h-16 items-center gap-2 px-4 sm:px-6 lg:px-10">
-        <Link to="/app" aria-label={t('cabinet.home')} className="shrink-0 rounded-sm lg:hidden">
-          <Wordmark />
-        </Link>
+        <LogoLink className="lg:hidden" />
 
         <div className="ml-auto flex items-center gap-2">
           <button

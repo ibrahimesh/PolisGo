@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { Link, NavLink } from 'react-router';
-import { Wordmark } from '../../components/layout/Wordmark';
+import { LogoLink } from '../../components/layout/Wordmark';
 import { cx } from '../../components/ui/cx';
 import { ArrowLeftIcon } from '../../components/ui/icons';
 import type { WORKSPACE_SECTIONS } from '../workspace/sections';
@@ -16,9 +16,7 @@ export function Sidebar({ sections }: { sections: readonly Section[] }) {
   return (
     <aside className="sticky top-0 hidden h-dvh flex-col border-r border-line lg:flex">
       <div className="flex h-16 shrink-0 items-center border-b border-line px-6">
-        <Link to="/app" aria-label={t('cabinet.home')} className="rounded-sm">
-          <Wordmark />
-        </Link>
+        <LogoLink />
       </div>
 
       <nav aria-label={t('cabinet.nav')} className="flex-1 overflow-y-auto px-3 py-6">

@@ -11,7 +11,7 @@ import { ThemeToggle } from '../ui/ThemeToggle';
 import { CommandPalette } from './CommandPalette';
 import { LANDING_SECTIONS } from './navigation';
 import { isMac, usePaletteShortcut } from './usePaletteShortcut';
-import { Wordmark } from './Wordmark';
+import { LogoLink } from './Wordmark';
 
 export function Header() {
   const { t } = useTranslation();
@@ -47,9 +47,7 @@ export function Header() {
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-bg">
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 sm:px-6 lg:px-8">
-        <Link to="/" aria-label={t('app.home')} className="mr-4 shrink-0 rounded-sm">
-          <Wordmark />
-        </Link>
+        <LogoLink className="mr-4" />
 
         <nav aria-label={t('nav.primary')} className="hidden items-center gap-1 lg:flex">
           {sectionLinks}
