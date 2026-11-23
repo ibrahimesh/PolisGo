@@ -49,9 +49,9 @@ export async function chooseSetting(page: Page, name: string) {
 
 // axe (WCAG 2.2 AA) on the current page; serious and critical findings fail.
 export async function expectNoAxeViolations(page: Page) {
-  // Colours caught mid-animation (a theme switch, a fading row) aren't the
-  // real contrast.
-  await waitForAnimations(page);
+  // axe reads computed colours, so a row caught mid-fade (opacity 0.2 of the
+  // text over the page) fails contrast although the settled page passes.
+  await waitForSettled(page);
   const results = await new AxeBuilder({ page })
     .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
     .analyze();
@@ -442,15 +442,52 @@ export function staffApi(page: Page, session: Session) {
   };
 }
 
-// Finite animations (staggered rows, a theme crossfade) have finished, so
-// axe and screenshots see the settled page. A skeleton's endless shimmer
-// doesn't count.
-export async function waitForAnimations(page: Page) {
-  await page.waitForFunction(() =>
-    document
-      .getAnimations()
-      .every(
-        (a) => a.playState !== 'running' || a.effect?.getComputedTiming().iterations === Infinity,
-      ),
+// The page has stopped changing: fonts are loaded, no skeleton or busy region
+// is left (the app's own signal that a query is in flight), no view transition
+// runs, and no finite animation (staggered rows, a dialog's spring) is
+// running. An endless skeleton shimmer doesn't count. The checks must hold on
+// several frames in a row: data that arrives while a dialog is opening only
+// starts its fade-in a frame after the skeleton goes, and a single quiet
+// frame would let axe scan the row at opacity 0.2. Fails with what is still
+// moving instead of hanging until the test times out.
+export async function waitForSettled(page: Page, { timeout = 15_000 } = {}) {
+  await page.evaluate(() => document.fonts.ready);
+  await page.evaluate(
+    ([calmFrames, limit]) =>
+      new Promise<void>((resolve, reject) => {
+        const started = performance.now();
+        let calm = 0;
+        const blockers = () => {
+          const found: string[] = [];
+          const loading = document.querySelector('.skeleton, [aria-busy="true"]:not(button)');
+          if (loading) found.push(`loading: ${loading.tagName.toLowerCase()}.${loading.className}`);
+          if (document.documentElement.dataset.vt) found.push('view transition');
+          for (const a of document.getAnimations()) {
+            if (
+              (a.pending || a.playState === 'running') &&
+              a.effect?.getComputedTiming().iterations !== Infinity
+            ) {
+              const name = a instanceof CSSAnimation ? a.animationName : 'transition';
+              found.push(`animation: ${name}`);
+            }
+          }
+          return found;
+        };
+        const tick = () => {
+          const found = blockers();
+          calm = found.length === 0 ? calm + 1 : 0;
+          if (calm >= calmFrames) {
+            resolve();
+            return;
+          }
+          if (performance.now() - started > limit) {
+            reject(new Error(`page did not settle: ${found.join('; ')}`));
+            return;
+          }
+          requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+      }),
+    [3, timeout] as const,
   );
 }

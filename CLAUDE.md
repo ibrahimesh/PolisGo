@@ -459,4 +459,4 @@ Run from `frontend/`:
   dev` holds :5173, run the suite on its own server with
   `E2E_BASE_URL=http://localhost:3000` (the API's other CORS origin).
   Helpers: `chooseSetting` (Settings dialog), `expectNoAxeViolations` and
-  `waitForAnimations` (axe and screenshots wait for finite animations).
+  `waitForSettled` (axe waits for skeletons, view transitions and finite animations).
