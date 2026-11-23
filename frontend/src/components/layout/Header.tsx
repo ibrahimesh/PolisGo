@@ -1,4 +1,5 @@
-import { useCallback, useId, useState } from 'react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
+import type { RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useLocation } from 'react-router';
 import { useAuth } from '../../auth/AuthContext';
@@ -31,6 +32,10 @@ export function Header() {
   const { pathname, hash } = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuId = useId();
+  const headerRef = useRef<HTMLElement>(null);
+  const toggleRef = useRef<HTMLButtonElement>(null);
+  const closeMenu = useCallback(() => setMenuOpen(false), []);
+  useMenuModality(headerRef, toggleRef, menuOpen, closeMenu);
 
   // Any navigation closes the mobile menu.
   const [lastLocation, setLastLocation] = useState(pathname + hash);
@@ -42,14 +47,23 @@ export function Header() {
   // Escape closes the mobile menu (the palette shortcut hook forwards it).
   usePaletteShortcut(
     undefined,
-    useCallback(() => setMenuOpen(false), []),
+    useCallback(() => {
+      // Focus inside the panel would fall to <body> when it hides.
+      if (headerRef.current?.querySelector(`[id="${menuId}"]`)?.contains(document.activeElement)) {
+        toggleRef.current?.focus();
+      }
+      setMenuOpen(false);
+    }, [menuId]),
   );
 
   const authed = status === 'authenticated' && user;
   const shortLabel = (section: LandingSection) => t(`nav.short.${section}`);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-bg [view-transition-name:site-header]">
+    <header
+      ref={headerRef}
+      className="sticky top-0 z-40 border-b border-line bg-bg [view-transition-name:site-header]"
+    >
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 sm:px-6 lg:px-8">
         <LogoLink className="mr-2 xl:mr-4" />
 
@@ -93,6 +107,7 @@ export function Header() {
           </div>
 
           <button
+            ref={toggleRef}
             type="button"
             onClick={() => setMenuOpen((open) => !open)}
             aria-expanded={menuOpen}
@@ -151,6 +166,64 @@ export function Header() {
       </div>
     </header>
   );
+}
+
+// The open menu covers the page below the header, so it behaves as a modal:
+// the rest of the shell is inert (out of the Tab order and the accessibility
+// tree; dialogs mount outside the shell and stay usable), Tab wraps inside the
+// header, and reaching lg, where the panel is hidden, closes it so the page is
+// never left inert behind nothing.
+function useMenuModality(
+  headerRef: RefObject<HTMLElement | null>,
+  toggleRef: RefObject<HTMLButtonElement | null>,
+  open: boolean,
+  close: () => void,
+) {
+  useEffect(() => {
+    const header = headerRef.current;
+    const shell = header?.parentElement;
+    if (!open || !header || !shell) return;
+
+    const wide = window.matchMedia('(min-width: 64rem)');
+    if (wide.matches) {
+      close();
+      return;
+    }
+    wide.addEventListener('change', close);
+
+    const others = Array.from(shell.children).filter(
+      (el): el is HTMLElement => el !== header && el instanceof HTMLElement && !el.inert,
+    );
+    for (const el of others) el.inert = true;
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      // A dialog opened from the menu (Settings, the palette) keeps its own Tab order.
+      if (event.key !== 'Tab' || document.activeElement?.closest('dialog')) return;
+      const focusable = Array.from(
+        header.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), input, select'),
+      ).filter((el) => el.getClientRects().length > 0);
+      const first = focusable.at(0);
+      const last = focusable.at(-1);
+      if (!first || !last) return;
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      } else if (!header.contains(document.activeElement)) {
+        event.preventDefault();
+        (toggleRef.current ?? first).focus();
+      }
+    };
+    document.addEventListener('keydown', onKeyDown);
+
+    return () => {
+      wide.removeEventListener('change', close);
+      for (const el of others) el.inert = false;
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [headerRef, toggleRef, open, close]);
 }
 
 // lg–xl: the secondary sections behind a disclosure (not a menu: ordinary

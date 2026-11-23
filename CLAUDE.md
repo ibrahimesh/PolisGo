@@ -334,6 +334,9 @@ React Router, TanStack Query, React Hook Form + Zod, react-i18next.
   with short names (`nav.short.*`) where a language needs them.
   `header-layout.spec.ts` checks one line per item at 1024–1440px in all
   three languages; run it after adding anything to a header.
+- **The phone menu is modal while open** (`Header`): the rest of the shell
+  is `inert`, Tab wraps inside the header, Escape returns focus to the
+  toggle, and reaching lg closes it. Dialogs mount outside the shell.
 - **No language or theme controls in headers.** They live in the Settings
   dialog (user menu, palette, footer, mobile menu) and on the profile page,
   all through `SettingsFields`; a first visit takes the browser's language.

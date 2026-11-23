@@ -383,8 +383,8 @@ address registers hundreds of test users), from the repository root:
 docker compose -f docker-compose.yml -f docker-compose.demo.yml -f docker-compose.e2e.yml up --build
 ```
 
-**337 frontend unit tests** (Vitest) and **216 end-to-end tests** (Playwright +
-axe-core: 146 at 1440px, plus the 70 cabinet and staff tests again at 390px) against the
+**337 frontend unit tests** (Vitest) and **217 end-to-end tests** (Playwright +
+axe-core: 147 at 1440px, plus the 70 cabinet and staff tests again at 390px) against the
 real API — the e2e suite needs the Docker stack on `:8080`. They cover
 sign-up and sign-in, buying a policy end to end, the certificate download,
 renewal, filing a claim with photos, withdrawing it, the claim timeline after
