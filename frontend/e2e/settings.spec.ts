@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { expectNoAxeViolations, seedPreferences } from './helpers';
+import { expectNoAxeViolations, openMobileMenu, seedPreferences } from './helpers';
 
 // Language, theme and motion moved from the header into one Settings dialog.
 test.describe('Settings', () => {
@@ -65,8 +65,8 @@ test.describe('Settings', () => {
     test('the mobile menu opens Settings and the dialog fits', async ({ page }) => {
       await seedPreferences(page, { lang: 'ru' });
       await page.goto('/');
-      await page.getByRole('button', { name: 'Открыть меню' }).click();
-      await page.getByRole('button', { name: 'Настройки' }).click();
+      const menu = await openMobileMenu(page);
+      await menu.getByRole('button', { name: 'Настройки' }).click();
       const dialog = page.getByRole('dialog', { name: 'Настройки' });
       await expect(dialog).toBeVisible();
       await dialog.getByText('Azərbaycanca').click();

@@ -1,5 +1,11 @@
 import { expect, test } from '@playwright/test';
-import { expectNoAxeViolations, openSession, registerSession, seedPreferences } from './helpers';
+import {
+  expectNoAxeViolations,
+  openSession,
+  openUserMenu,
+  registerSession,
+  seedPreferences,
+} from './helpers';
 
 // In the cabinet, Settings opens from the user menu; the profile page shows
 // the same fields, so a choice made in one place shows in the other.
@@ -13,8 +19,9 @@ test('the user menu and the profile page share one set of settings', async ({ pa
   // The cabinet header carries no switchers either.
   await expect(page.getByRole('banner').getByRole('radio')).toHaveCount(0);
 
-  await page.getByRole('button', { name: `${user.fullName}, account menu` }).click();
-  await page.getByRole('button', { name: 'Settings' }).click();
+  await expect(page.getByRole('button', { name: `${user.fullName}, account menu` })).toBeVisible();
+  const menu = await openUserMenu(page);
+  await menu.getByRole('button', { name: 'Settings' }).click();
   // Its title follows the language chosen inside it.
   const dialog = page.getByRole('dialog', { name: /^(Settings|Настройки)$/ });
   await expect(dialog).toBeVisible();

@@ -65,6 +65,39 @@ export async function expectNoAxeViolations(page: Page) {
   expect(blocking, JSON.stringify(blocking, null, 2)).toEqual([]);
 }
 
+// Menus are found through their toggle's aria-controls, never by a control's
+// name across the page: "Settings" or "Sign out" also live in the footer, the
+// header bar and the palette, and which of them are rendered at a given moment
+// depends on how fast the route's chunk arrived.
+
+// Opens the phone menu (below lg) and returns its settled panel.
+export async function openMobileMenu(page: Page) {
+  const opener = page
+    .getByRole('banner')
+    .getByRole('button', { name: /^(Open menu|Открыть меню|Menyunu aç)$/ });
+  const panelId = (await opener.getAttribute('aria-controls')) ?? '';
+  // Its name turns into "Close menu" once open; the panel id stays.
+  const toggle = page.locator(`button[aria-controls="${panelId}"]`);
+  const panel = page.locator(`[id="${panelId}"]`);
+  await toggle.click();
+  await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+  await expect(panel).toBeVisible();
+  await waitForSettled(page);
+  return panel;
+}
+
+// Opens the cabinet's account menu and returns its settled panel.
+export async function openUserMenu(page: Page) {
+  const toggle = page.getByRole('button', {
+    name: /, (account menu|меню учётной записи|hesab menyusu)$/,
+  });
+  const panel = page.locator(`[id="${(await toggle.getAttribute('aria-controls')) ?? ''}"]`);
+  await toggle.click();
+  await expect(panel).toBeVisible();
+  await waitForSettled(page);
+  return panel;
+}
+
 export function premiumText(page: Page) {
   return page.getByText(/^Indicative premium: [\d.,\s]+ AZN$/);
 }

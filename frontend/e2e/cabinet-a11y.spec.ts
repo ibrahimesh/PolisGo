@@ -10,6 +10,7 @@ import {
   registerSession,
   seedPreferences,
   openSession,
+  openUserMenu,
   waitForSettled,
 } from './helpers';
 import type { Theme } from './helpers';
@@ -115,8 +116,8 @@ for (const theme of THEMES) {
       await expectNoHorizontalScroll(page);
       await expectNoAxeViolations(page);
       await page.keyboard.press('Escape');
-      await page.getByRole('button', { name: /, account menu$/ }).click();
-      await expect(page.getByRole('button', { name: 'Sign out' })).toBeVisible();
+      const menu = await openUserMenu(page);
+      await expect(menu.getByRole('button', { name: 'Sign out' })).toBeVisible();
       await expectNoAxeViolations(page);
     });
   });

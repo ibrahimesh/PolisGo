@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test';
 import {
   chooseSetting,
   expectNoAxeViolations,
+  openUserMenu,
   randomUser,
   registerViaApi,
   seedPreferences,
@@ -54,8 +55,8 @@ test.describe('Auth', () => {
     });
 
     await test.step('sign out', async () => {
-      await page.getByRole('button', { name: `${user.fullName}, account menu` }).click();
-      await page.getByRole('button', { name: 'Sign out' }).click();
+      const menu = await openUserMenu(page);
+      await menu.getByRole('button', { name: 'Sign out' }).click();
       await expect(page).toHaveURL(/\/$/);
       await expect(page.getByText('You have been signed out.')).toBeVisible();
       await page.goto('/app');

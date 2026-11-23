@@ -459,4 +459,8 @@ Run from `frontend/`:
   dev` holds :5173, run the suite on its own server with
   `E2E_BASE_URL=http://localhost:3000` (the API's other CORS origin).
   Helpers: `chooseSetting` (Settings dialog), `expectNoAxeViolations` and
-  `waitForSettled` (axe waits for skeletons, view transitions and finite animations).
+  `waitForSettled` (axe waits for skeletons, view transitions and finite animations),
+  `openMobileMenu` / `openUserMenu` (return the settled panel). Scope clicks to
+  that panel or a landmark: Settings, Sign out and Help exist in more than one
+  place (menu, footer, palette), and a page-wide name matches whichever is
+  rendered at that moment.
