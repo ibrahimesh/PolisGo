@@ -265,6 +265,13 @@ export const SettingsIcon = () => (
   </Icon>
 );
 
+export const CopyIcon = () => (
+  <Icon>
+    <rect x="5.5" y="5.5" width="8" height="8" rx="0.5" />
+    <path d="M10.5 3V2.5a.5.5 0 0 0-.5-.5H3a.5.5 0 0 0-.5.5V10a.5.5 0 0 0 .5.5h.5" />
+  </Icon>
+);
+
 export const CalendarIcon = () => (
   <Icon>
     <rect x="2.5" y="3.5" width="11" height="10" rx="0.5" />

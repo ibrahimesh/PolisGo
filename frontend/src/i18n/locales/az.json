@@ -399,7 +399,11 @@
     "lastAdmin": "Ən azı bir aktiv administrator qalmalıdır.",
     "alreadyInactive": "Bu hesab artıq deaktivdir.",
     "alreadyActive": "Bu hesab artıq aktivdir.",
-    "sameRole": "Hesabın artıq bu rolu var."
+    "sameRole": "Hesabın artıq bu rolu var.",
+    "copyReference": "{{code}} istinad kodunu kopyala",
+    "fullReference": "Tam istinad kodu: {{traceId}}",
+    "copied": "Kopyalandı",
+    "copyFailed": "Kopyalamaq olmadı; kodu əl ilə seçin"
   },
   "validation": {
     "required": "Mütləq doldurulmalıdır.",

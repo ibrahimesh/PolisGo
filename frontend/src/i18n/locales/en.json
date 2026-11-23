@@ -399,7 +399,11 @@
     "lastAdmin": "At least one active administrator must remain.",
     "alreadyInactive": "This account is already deactivated.",
     "alreadyActive": "This account is already active.",
-    "sameRole": "The account already has this role."
+    "sameRole": "The account already has this role.",
+    "copyReference": "Copy reference {{code}}",
+    "fullReference": "Full reference: {{traceId}}",
+    "copied": "Copied",
+    "copyFailed": "Couldn’t copy; select the code instead"
   },
   "validation": {
     "required": "Required.",
