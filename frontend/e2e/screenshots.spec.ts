@@ -48,15 +48,14 @@ for (const size of SIZES) {
 
     for (const shot of SHOTS) {
       test(`${shot.file}-${size.label}`, async ({ page }) => {
-        // A full-page capture never scrolls, so the scroll reveal would leave
-        // lower sections blank; reduced motion shows everything at once.
+        // First screen only, like every other shot; reduced motion shows the
+        // page at rest (no reveal, count-up or page transition mid-way).
         await page.emulateMedia({ reducedMotion: 'reduce' });
         await seedPreferences(page, { theme: shot.theme, lang: 'en' });
         await page.goto(shot.path);
         await settle(page, shot.path);
         await page.screenshot({
           path: `docs/screenshots/${shot.file}-${size.label}.png`,
-          fullPage: true,
           animations: 'disabled',
         });
       });
