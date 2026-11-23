@@ -494,15 +494,28 @@
   "palette": {
     "title": "Command palette",
     "open": "Search and commands",
-    "placeholder": "Go to a page, change language or theme…",
-    "empty": "Nothing matches.",
-    "hint": "↑ ↓ to move · Enter to choose · Esc to close",
+    "placeholder": "Search pages and actions…",
+    "hint": "Up and down arrows move, Home and End jump to the ends, Page Up and Page Down move by eight, Enter runs, Escape closes.",
     "groups": {
-      "navigation": "Go to",
       "language": "Language",
       "theme": "Theme",
-      "account": "Account",
-      "cabinet": "Your account"
+      "recent": "Recent",
+      "pages": "Pages",
+      "actions": "Actions"
+    },
+    "emptyTitle": "Nothing matches “{{query}}”.",
+    "emptyHint": "Try a page name, “theme”, “language” or “settings”.",
+    "current": "current",
+    "actions": {
+      "settings": "Open settings",
+      "motionOn": "Reduce motion",
+      "motionOff": "Allow motion again"
+    },
+    "keys": {
+      "move": "move",
+      "run": "run",
+      "ends": "first, last",
+      "close": "close"
     }
   },
   "cabinet": {

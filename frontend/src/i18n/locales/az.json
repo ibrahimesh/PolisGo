@@ -494,15 +494,28 @@
   "palette": {
     "title": "Əmrlər paneli",
     "open": "Axtarış və əmrlər",
-    "placeholder": "Səhifəyə keçin, dili və ya mövzunu dəyişin…",
-    "empty": "Heç nə tapılmadı.",
-    "hint": "↑ ↓ seçim · Enter təsdiq · Esc bağla",
+    "placeholder": "Səhifə və əməliyyat axtarın…",
+    "hint": "Yuxarı və aşağı oxlar seçir, Home və End başa və sona keçir, Page Up və Page Down səkkiz bənd keçir, Enter icra edir, Escape bağlayır.",
     "groups": {
-      "navigation": "Keçid",
       "language": "Dil",
       "theme": "Mövzu",
-      "account": "Hesab",
-      "cabinet": "Şəxsi kabinet"
+      "recent": "Son istifadə",
+      "pages": "Səhifələr",
+      "actions": "Əməliyyatlar"
+    },
+    "emptyTitle": "«{{query}}» üzrə heç nə tapılmadı.",
+    "emptyHint": "Səhifə adını, «mövzu», «dil» və ya «ayarlar» yazın.",
+    "current": "seçilib",
+    "actions": {
+      "settings": "Ayarları aç",
+      "motionOn": "Hərəkəti azalt",
+      "motionOff": "Animasiyanı qaytar"
+    },
+    "keys": {
+      "move": "seçim",
+      "run": "icra",
+      "ends": "əvvəl, son",
+      "close": "bağla"
     }
   },
   "cabinet": {
