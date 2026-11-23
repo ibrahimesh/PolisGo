@@ -227,6 +227,69 @@
   }
 }
 
+/* Error page glyphs: the accent part settles in once. */
+@layer components {
+  .glyph g,
+  .glyph path,
+  .glyph circle,
+  .glyph rect {
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+  .glyph-slide {
+    animation: glyph-slide 400ms var(--ease-institutional) 120ms both;
+  }
+  .glyph-slide-left {
+    animation: glyph-slide-left 400ms var(--ease-institutional) 120ms both;
+  }
+  .glyph-drop {
+    animation: glyph-drop 400ms var(--ease-spring) 120ms both;
+  }
+  .glyph-turn {
+    transform-origin: bottom center;
+    animation: glyph-turn 400ms var(--ease-emphasized) 120ms both;
+  }
+  .glyph-fade {
+    animation: glyph-fade 300ms var(--ease-institutional) 150ms both;
+  }
+  .glyph-delay {
+    animation-delay: 300ms;
+  }
+  .glyph-delay-2 {
+    animation-delay: 450ms;
+  }
+}
+
+@keyframes glyph-slide {
+  from {
+    opacity: 0;
+    transform: translate(12px, 8px);
+  }
+}
+@keyframes glyph-slide-left {
+  from {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+}
+@keyframes glyph-drop {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+@keyframes glyph-turn {
+  from {
+    opacity: 0;
+    transform: rotate(-90deg);
+  }
+}
+@keyframes glyph-fade {
+  from {
+    opacity: 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

@@ -1779,5 +1779,60 @@
     "systemReduces": "Cihazınız artıq hərəkətin azaldılmasını istəyir, ona görə animasiya sönülüdür.",
     "savedOnDevice": "Bu seçimlər bu cihazda saxlanılır.",
     "done": "Hazır"
+  },
+  "connection": {
+    "offline": "İnternet bağlantısı yoxdur. Açıq səhifələr işləyir; yeni səhifələr və yadda saxlama bağlantını gözləyəcək."
+  },
+  "errorPages": {
+    "devDetail": "Xəta mətni (yalnız inkişaf rejimində)",
+    "actions": {
+      "back": "Geri",
+      "home": "Ana səhifə",
+      "workspace": "Kabinetə qayıt",
+      "reload": "Yenilə",
+      "retry": "Yenidən cəhd et",
+      "signIn": "Yenidən daxil ol"
+    },
+    "notFound": {
+      "label": "Xəta 404",
+      "title": "Burada heç nə",
+      "accent": "sığortalanmayıb.",
+      "body": "Axtardığınız səhifə yoxdur və ya başqa ünvana köçüb."
+    },
+    "forbidden": {
+      "label": "Xəta 403",
+      "title": "Bu bölmə rolunuz üçün əlçatan deyil",
+      "body": "Hesabınızın bu bölməyə girişi yoxdur."
+    },
+    "server": {
+      "label": "Xəta 500",
+      "title": "Bizim tərəfdə",
+      "accent": "nəsə sındı.",
+      "body": "Səhifədə gözlənilməz xəta baş verdi. Adətən yeniləmək kömək edir; etməsə, aşağıdakı istinad kodunu bildirin."
+    },
+    "sessionExpired": {
+      "label": "Sessiya bitib",
+      "title": "Sessiyanız",
+      "accent": "başa çatıb.",
+      "body": "Təhlükəsizlik üçün sistemdən çıxdınız. Qaldığınız yerdən davam etmək üçün yenidən daxil olun."
+    },
+    "offline": {
+      "label": "Bağlantı yoxdur",
+      "title": "İnternet",
+      "accent": "bağlantısı yoxdur.",
+      "body": "Cihaz şəbəkəyə qoşulmadığı üçün səhifə yüklənmədi. Qoşulun və səhifəni yeniləyin."
+    },
+    "unreachable": {
+      "label": "Xidmət əlçatan deyil",
+      "title": "PolisGo hazırda",
+      "accent": "cavab vermir.",
+      "body": "İnternet işləyir, amma PolisGo xidməti cavab vermədi. Bir azdan yenidən cəhd edin."
+    },
+    "maintenance": {
+      "label": "Texniki xidmət",
+      "title": "Tezliklə",
+      "accent": "qayıdırıq.",
+      "body": "PolisGo yenilənir. Polisləriniz və iddialarınız qorunur; bir neçə dəqiqədən sonra yenidən cəhd edin."
+    }
   }
 }

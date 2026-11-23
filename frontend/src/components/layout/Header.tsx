@@ -8,6 +8,7 @@ import { Button, ButtonLink } from '../ui/Button';
 import { cx } from '../ui/cx';
 import { ChevronDownIcon, CloseIcon, MenuIcon, SettingsIcon } from '../ui/icons';
 import { usePopover } from '../ui/usePopover';
+import { ConnectionBanner } from './ConnectionBanner';
 import { LANDING_SECTIONS, PRIMARY_SECTIONS, SECONDARY_SECTIONS } from './navigation';
 import type { LandingSection } from './navigation';
 import { PaletteLauncher } from './PaletteLauncher';
@@ -103,6 +104,8 @@ export function Header() {
           </button>
         </div>
       </div>
+
+      <ConnectionBanner />
 
       {/* Below lg: every section (full names), settings and the account. */}
       <div

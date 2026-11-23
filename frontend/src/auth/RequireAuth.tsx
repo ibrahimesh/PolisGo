@@ -2,9 +2,9 @@ import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Navigate, Outlet, useLocation } from 'react-router';
 import type { UserRole } from '../api/types';
-import { Button } from '../components/ui/Button';
-import { ErrorNotice } from '../components/ui/ErrorNotice';
 import { Skeleton } from '../components/ui/Skeleton';
+import { classifyError } from '../pages/errors/errorKind';
+import { ErrorPage } from '../pages/errors/ErrorPage';
 import { ForbiddenPage } from '../pages/ForbiddenPage';
 import { useAuth } from './AuthContext';
 
@@ -22,7 +22,7 @@ export interface LoginRedirectState {
 // UI-only: the API enforces the same roles with [Authorize(Roles = ...)], so
 // this guard exists for UX, not for security.
 export function RequireAuth({ roles, children }: RequireAuthProps) {
-  const { status, user, error, retry } = useAuth();
+  const { status, user, error, retry, sessionEnded } = useAuth();
   const location = useLocation();
   const { t } = useTranslation();
 
@@ -37,19 +37,23 @@ export function RequireAuth({ roles, children }: RequireAuthProps) {
     );
   }
 
+  // /me failed for a reason other than 401: the API is down, unreachable,
+  // in maintenance or broke. The designed page says which, with a retry.
   if (status === 'error') {
+    const { kind, traceId } = classifyError(error);
     return (
-      <div className="mx-auto max-w-2xl px-6 py-16">
-        <ErrorNotice
-          error={error}
-          title={t('errors.title')}
-          action={
-            <Button variant="secondary" size="sm" onClick={retry}>
-              {t('calculator.retry')}
-            </Button>
-          }
-        />
-      </div>
+      <main id="main">
+        <ErrorPage kind={kind} traceId={traceId} onRetry={retry} standalone />
+      </main>
+    );
+  }
+
+  // The session ran out (or was ended by the API) while the user was here.
+  if ((status === 'anonymous' || !user) && sessionEnded) {
+    return (
+      <main id="main">
+        <ErrorPage kind="sessionExpired" standalone />
+      </main>
     );
   }
 

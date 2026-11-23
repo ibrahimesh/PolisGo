@@ -1771,5 +1771,60 @@
     "systemReduces": "Your device already asks for reduced motion, so animations stay off.",
     "savedOnDevice": "These choices are saved on this device.",
     "done": "Done"
+  },
+  "connection": {
+    "offline": "You’re offline. Open pages keep working; new pages and saves wait for the connection."
+  },
+  "errorPages": {
+    "devDetail": "Error message (development only)",
+    "actions": {
+      "back": "Back",
+      "home": "Home page",
+      "workspace": "Back to workspace",
+      "reload": "Reload",
+      "retry": "Try again",
+      "signIn": "Sign in again"
+    },
+    "notFound": {
+      "label": "Error 404",
+      "title": "Nothing is",
+      "accent": "insured here.",
+      "body": "The page you were looking for doesn’t exist or has moved."
+    },
+    "forbidden": {
+      "label": "Error 403",
+      "title": "This area isn't available for your role",
+      "body": "Your account doesn’t have access to this section."
+    },
+    "server": {
+      "label": "Error 500",
+      "title": "Something broke",
+      "accent": "on our side.",
+      "body": "The page ran into an unexpected problem. Reloading usually helps; if it doesn’t, quote the reference below."
+    },
+    "sessionExpired": {
+      "label": "Session ended",
+      "title": "Your session",
+      "accent": "has ended.",
+      "body": "For your security you were signed out. Sign in again to carry on where you left off."
+    },
+    "offline": {
+      "label": "No connection",
+      "title": "You’re",
+      "accent": "offline.",
+      "body": "This page couldn’t load because the device isn’t connected. Reconnect, then reload."
+    },
+    "unreachable": {
+      "label": "Service unreachable",
+      "title": "PolisGo can’t be",
+      "accent": "reached right now.",
+      "body": "Your connection works, but the PolisGo service didn’t answer. Try again in a moment."
+    },
+    "maintenance": {
+      "label": "Maintenance",
+      "title": "Back",
+      "accent": "shortly.",
+      "body": "PolisGo is being updated. Your policies and claims are safe; try again in a few minutes."
+    }
   }
 }

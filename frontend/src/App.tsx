@@ -15,6 +15,7 @@ const LoginPage = lazy(() => import('./pages/LoginPage').then((m) => ({ default:
 const RegisterPage = lazy(() =>
   import('./pages/RegisterPage').then((m) => ({ default: m.RegisterPage })),
 );
+const CrashPage = lazy(() => import('./pages/CrashPage').then((m) => ({ default: m.CrashPage })));
 const NotFoundPage = lazy(() =>
   import('./pages/NotFoundPage').then((m) => ({ default: m.NotFoundPage })),
 );
@@ -69,6 +70,10 @@ const PolicyTypesPage = lazy(() =>
   import('./features/admin/PolicyTypesPage').then((m) => ({ default: m.PolicyTypesPage })),
 );
 
+// Routes that exist only for the e2e suite (set at build time; never in a
+// production build).
+const E2E_ROUTES = import.meta.env.VITE_E2E_ROUTES === 'true';
+
 // Same roles as the sidebar and the API's [Authorize(Roles = ...)].
 const guard = (id: WorkspaceSectionId) => <RequireAuth roles={rolesFor(id)} />;
 
@@ -79,6 +84,7 @@ export function App() {
         <Route index element={<LandingPage />} />
         <Route path="login" element={<LoginPage />} />
         <Route path="register" element={<RegisterPage />} />
+        {E2E_ROUTES && <Route path="__e2e/crash" element={<CrashPage />} />}
         <Route path="*" element={<NotFoundPage />} />
       </Route>
 
@@ -136,6 +142,7 @@ export function App() {
             <Route path="policy-types" element={<PolicyTypesPage />} />
           </Route>
 
+          {E2E_ROUTES && <Route path="__e2e/crash" element={<CrashPage />} />}
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Route>

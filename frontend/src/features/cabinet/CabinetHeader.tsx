@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { ConnectionBanner } from '../../components/layout/ConnectionBanner';
 import { PaletteLauncher } from '../../components/layout/PaletteLauncher';
 import { LogoLink } from '../../components/layout/Wordmark';
 import { UserMenu } from './UserMenu';
@@ -18,6 +19,7 @@ export function CabinetHeader({ notifications }: { notifications?: ReactNode }) 
           <UserMenu />
         </div>
       </div>
+      <ConnectionBanner />
     </header>
   );
 }

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Outlet, useLocation } from 'react-router';
 import { useAuth } from '../../auth/AuthContext';
 import { useScrollOnNavigate } from '../../components/layout/useScrollOnNavigate';
+import { RouteErrorBoundary } from '../../pages/errors/RouteErrorBoundary';
 import { NotificationsButton } from '../reminders/NotificationsButton';
 import { mobileSectionsFor, sectionsFor } from '../workspace/sections';
 import { BottomNav } from './BottomNav';
@@ -46,9 +47,11 @@ export function CabinetShell() {
           className="flex-1 px-4 pt-8 pb-28 outline-none sm:px-6 lg:px-10 lg:pt-12 lg:pb-16"
         >
           <div className="mx-auto max-w-6xl">
-            <Suspense fallback={<CabinetSkeleton />}>
-              <Outlet />
-            </Suspense>
+            <RouteErrorBoundary>
+              <Suspense fallback={<CabinetSkeleton />}>
+                <Outlet />
+              </Suspense>
+            </RouteErrorBoundary>
           </div>
         </main>
       </div>
