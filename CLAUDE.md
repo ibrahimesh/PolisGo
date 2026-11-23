@@ -179,6 +179,28 @@ every change in this repo.
   `chore:`, `test:`, `docs:`.
 - Keep subject under 72 characters. Body (optional) explains the why.
 
+## Dependency policy
+
+- Dependabot (`.github/dependabot.yml`) checks NuGet, npm (`/frontend`),
+  Actions, the API Dockerfile and docker-compose weekly. Minor and patch
+  updates come as one grouped PR per ecosystem (`nuget-minor-patch`,
+  `npm-minor-patch`, `docker-minor-patch`, `docker-compose-minor-patch`,
+  `actions`), majors one PR each, at most 3 open per ecosystem.
+- **Majors taken by hand** (ignored there): `Microsoft.*`, `System.*` and
+  EF Core (the stack stays on .NET 10 LTS, the Microsoft 10.0.x packages on
+  one patch level, see `SupplyChainConfigurationTests`),
+  `Swashbuckle.AspNetCore` (9.x until the owner decides), the `dotnet/sdk`
+  and `dotnet/aspnet` images (10.0) and `mssql/server` (2022). New digests
+  of those tags still come.
+- A platform major is one deliberate change: all those packages, both
+  images, `<TargetFramework>` and CI's `dotnet-version` together, lifting the
+  ignore rule in the same commit. CI's SQL Server service image (`ci.yml`)
+  isn't watched by Dependabot; keep its digest equal to docker-compose's.
+- Ignore rules use `update-types`, never `versions`, each with a comment
+  saying why: security updates (a repository setting; keep it on) skip
+  update-type rules, so a vulnerability is still fixed across a major,
+  while a `versions` range would block that fix too.
+
 ## Demo data
 
 - `DemoDataSeeder` (Infrastructure) runs when `Demo:SeedData=true`
