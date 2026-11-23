@@ -243,6 +243,57 @@ public class AdminPanelEndpointTests : IClassFixture<ApiFactory>
         await AssertProblem(await admin.GetAsync("/api/admin/audit?from=2025-03-11&to=2025-03-10"), HttpStatusCode.BadRequest);
     }
 
+    // Typing an email in the audit search used to list every event: the API
+    // had no search. It now narrows by actor email and name, claim number
+    // and status code, and the SPA's translated codes.
+    [Fact]
+    public async Task The_audit_search_narrows_by_email_name_number_and_action()
+    {
+        var admin = _factory.ClientAs(UserRole.Admin);
+        var unique = Guid.NewGuid().ToString("N")[..8];
+        var email = $"audit.search.{unique}@polisgo.test";
+        var (claimNumber, adjusterId) = _factory.WithDb(db =>
+        {
+            var data = new TestData(db);
+            var adjuster = data.User(UserRole.Adjuster, email: email);
+            adjuster.FullName = $"Zəhra Findable{unique}";
+            db.SaveChanges();
+            var other = data.User(UserRole.Adjuster);
+            var customer = data.Customer();
+            var policy = data.Policy(customer, data.Vehicle(customer.Id));
+            var claim = data.Claim(policy, ClaimStatus.Approved, adjusterId: adjuster.Id,
+                history:
+                [
+                    (ClaimStatus.UnderReview, new DateTime(2025, 4, 1, 9, 0, 0, DateTimeKind.Utc), adjuster.Id),
+                    (ClaimStatus.Approved, new DateTime(2025, 4, 2, 9, 0, 0, DateTimeKind.Utc), adjuster.Id)
+                ]);
+            data.Claim(policy, ClaimStatus.UnderReview, adjusterId: other.Id,
+                history: (ClaimStatus.UnderReview, new DateTime(2025, 4, 1, 9, 0, 0, DateTimeKind.Utc), other.Id));
+            return (claim.ClaimNumber, adjuster.Id);
+        });
+
+        async Task<int> Total(string query) =>
+            (await Json(await admin.GetAsync($"/api/admin/audit?{query}"))).GetProperty("totalCount").GetInt32();
+
+        Assert.Equal(2, await Total($"search={Uri.EscapeDataString(email.ToUpperInvariant())}"));
+        Assert.Equal(2, await Total($"search=findable{unique}"));
+        Assert.Equal(2, await Total($"search={claimNumber}"));
+        Assert.Equal(1, await Total($"search=findable{unique}&entityType=Claim&from=2025-04-02"));
+        // Status code by name, and codes the SPA sends from RU/AZ labels.
+        Assert.Equal(1, await Total($"actorId={adjusterId}&search=approved"));
+        Assert.Equal(1, await Total($"actorId={adjusterId}&actions=Approved"));
+        Assert.Equal(2, await Total($"actorId={adjusterId}&actions=Approved&actions=UnderReview&actions=Bogus"));
+        Assert.Equal(0, await Total($"search=no-such-person-{unique}"));
+
+        var page = await Json(await admin.GetAsync($"/api/admin/audit?search={Uri.EscapeDataString(email)}"));
+        Assert.All(page.GetProperty("items").EnumerateArray(),
+            e => Assert.Equal(claimNumber, e.GetProperty("entityLabel").GetString()));
+
+        var tooLong = await admin.GetAsync($"/api/admin/audit?search={new string('x', 101)}");
+        await AssertProblem(tooLong, HttpStatusCode.BadRequest, null);
+        Assert.True((await Json(tooLong)).GetProperty("errors").TryGetProperty("search", out _));
+    }
+
     // Dates at the ends of the calendar broke the date arithmetic (a 500);
     // they are a field error now.
     [Theory]

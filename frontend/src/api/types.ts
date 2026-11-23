@@ -630,6 +630,10 @@ export interface AuditLogQuery {
   entityType?: AuditEntityType;
   from?: IsoDate;
   to?: IsoDate;
+  // Actor name or email, claim or policy number, action text (max 100).
+  search?: string;
+  // Status/action codes whose translated label matched the search.
+  actions?: readonly string[];
   page?: number;
   pageSize?: number;
 }

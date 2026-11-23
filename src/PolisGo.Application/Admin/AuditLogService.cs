@@ -45,6 +45,7 @@ public class AuditLogService : IAuditLogService
         DateTime? before = query.To is { } toDay ? BusinessCalendar.StartOfDayUtc(toDay.AddDays(1)) : null;
         var take = page * pageSize;
         var wants = (AuditEntityType type) => query.EntityType is null || query.EntityType == type;
+        var search = AuditSearch.From(query.Search, query.Actions);
 
         var rows = new List<AuditEventResponse>();
         var total = 0;
@@ -55,6 +56,17 @@ public class AuditLogService : IAuditLogService
             if (query.ActorId is { } actor) claims = claims.Where(h => h.ChangedByUserId == actor);
             if (from is not null) claims = claims.Where(h => h.ChangedAt >= from);
             if (before is not null) claims = claims.Where(h => h.ChangedAt < before);
+            if (search is not null)
+            {
+                var needle = search.Needle;
+                var statuses = search.Matching<ClaimStatus>();
+                claims = needle is null
+                    ? claims.Where(h => statuses.Contains(h.ToStatus))
+                    : claims.Where(h => statuses.Contains(h.ToStatus)
+                        || h.Claim.ClaimNumber.ToUpper().Contains(needle)
+                        || h.ChangedByUser.FullName.ToUpper().Contains(needle)
+                        || h.ChangedByUser.Email.ToUpper().Contains(needle));
+            }
             total += await claims.CountAsync(cancellationToken);
             var found = await claims
                 .OrderByDescending(h => h.ChangedAt).ThenBy(h => h.Id)
@@ -76,6 +88,17 @@ public class AuditLogService : IAuditLogService
             if (query.ActorId is { } actor) policies = policies.Where(h => h.ChangedByUserId == actor);
             if (from is not null) policies = policies.Where(h => h.ChangedAt >= from);
             if (before is not null) policies = policies.Where(h => h.ChangedAt < before);
+            if (search is not null)
+            {
+                var needle = search.Needle;
+                var statuses = search.Matching<PolicyStatus>();
+                policies = needle is null
+                    ? policies.Where(h => statuses.Contains(h.ToStatus))
+                    : policies.Where(h => statuses.Contains(h.ToStatus)
+                        || h.Policy.PolicyNumber.ToUpper().Contains(needle)
+                        || _db.Users.Any(u => u.Id == h.ChangedByUserId
+                            && (u.FullName.ToUpper().Contains(needle) || u.Email.ToUpper().Contains(needle))));
+            }
             total += await policies.CountAsync(cancellationToken);
             var found = await policies
                 .OrderByDescending(h => h.ChangedAt).ThenBy(h => h.Id)
@@ -106,6 +129,20 @@ public class AuditLogService : IAuditLogService
             if (query.ActorId is { } actor) entries = entries.Where(a => a.ActorUserId == actor);
             if (from is not null) entries = entries.Where(a => a.OccurredAt >= from);
             if (before is not null) entries = entries.Where(a => a.OccurredAt < before);
+            if (search is not null)
+            {
+                var needle = search.Needle;
+                var actions = search.Matching<AuditAction>();
+                // The values hold role names and the assigned agent's name.
+                entries = needle is null
+                    ? entries.Where(a => actions.Contains(a.Action))
+                    : entries.Where(a => actions.Contains(a.Action)
+                        || a.SubjectLabel.ToUpper().Contains(needle)
+                        || (a.FromValue != null && a.FromValue.ToUpper().Contains(needle))
+                        || (a.ToValue != null && a.ToValue.ToUpper().Contains(needle))
+                        || a.Actor.FullName.ToUpper().Contains(needle)
+                        || a.Actor.Email.ToUpper().Contains(needle));
+            }
             total += await entries.CountAsync(cancellationToken);
             var found = await entries
                 .OrderByDescending(a => a.OccurredAt).ThenBy(a => a.Id)
@@ -129,4 +166,45 @@ public class AuditLogService : IAuditLogService
             .ToList();
         return new PagedResult<AuditEventResponse>(items, page, pageSize, total);
     }
+}
+
+// The audit feed's text search. Matching is upper-cased Contains (portable:
+// upper() on SQLite and SQL Server, like the staff search). Status and action
+// codes match when their name contains the text or the SPA sent them in
+// Actions; the enum values are resolved here, so SQL sees a plain IN list.
+internal sealed class AuditSearch
+{
+    private readonly HashSet<string> _codes;
+
+    private AuditSearch(string? needle, HashSet<string> codes)
+    {
+        Needle = needle;
+        _codes = codes;
+    }
+
+    public string? Needle { get; }
+
+    public static AuditSearch? From(string? search, IReadOnlyCollection<string>? actions)
+    {
+        var term = search?.Trim();
+        if (term is { Length: > AdminValidation.MaxSearchLength })
+        {
+            throw new ValidationException("search", M.SearchTooLong);
+        }
+        var codes = new HashSet<string>(
+            (actions ?? []).Where(a => !string.IsNullOrWhiteSpace(a)).Select(a => a.Trim()),
+            StringComparer.OrdinalIgnoreCase);
+        if (string.IsNullOrEmpty(term) && codes.Count == 0) return null;
+        return new AuditSearch(string.IsNullOrEmpty(term) ? null : term.ToUpperInvariant(), codes);
+    }
+
+    public List<T> Matching<T>() where T : struct, Enum =>
+        Enum.GetValues<T>()
+            .Where(value =>
+            {
+                var name = value.ToString();
+                return _codes.Contains(name)
+                    || (Needle is not null && name.ToUpperInvariant().Contains(Needle, StringComparison.Ordinal));
+            })
+            .ToList();
 }

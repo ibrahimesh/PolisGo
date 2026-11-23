@@ -9,6 +9,7 @@ export const AUDIT_PAGE_SIZE = 25;
 const GUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export interface AuditState {
+  q: string;
   actor: string;
   type: AuditEntityType | '';
   from: string;
@@ -16,7 +17,8 @@ export interface AuditState {
   page: number;
 }
 
-export const DEFAULT_AUDIT: AuditState = { actor: '', type: '', from: '', to: '', page: 1 };
+export const DEFAULT_AUDIT: AuditState = { q: '', actor: '', type: '', from: '', to: '', page: 1 };
+export const AUDIT_SEARCH_MAX = 100;
 
 export function readAudit(params: URLSearchParams): AuditState {
   const actor = params.get('actor') ?? '';
@@ -28,6 +30,7 @@ export function readAudit(params: URLSearchParams): AuditState {
   if (from && to && from > to) [from, to] = ['', ''];
   const page = Number.parseInt(params.get('page') ?? '', 10);
   return {
+    q: (params.get('q') ?? '').slice(0, AUDIT_SEARCH_MAX),
     actor: GUID.test(actor) ? actor : '',
     type: (AUDIT_ENTITY_TYPES as readonly string[]).includes(type) ? (type as AuditEntityType) : '',
     from,
@@ -38,6 +41,7 @@ export function readAudit(params: URLSearchParams): AuditState {
 
 export function writeAudit(state: AuditState): URLSearchParams {
   const params = new URLSearchParams();
+  if (state.q.trim()) params.set('q', state.q);
   if (state.actor) params.set('actor', state.actor);
   if (state.type) params.set('type', state.type);
   if (state.from) params.set('from', state.from);
@@ -46,8 +50,11 @@ export function writeAudit(state: AuditState): URLSearchParams {
   return params;
 }
 
-export function toAuditQuery(state: AuditState): AuditLogQuery {
+export function toAuditQuery(state: AuditState, actions: readonly string[] = []): AuditLogQuery {
+  const search = state.q.trim();
   return {
+    ...(search ? { search } : {}),
+    ...(actions.length ? { actions } : {}),
     ...(state.actor ? { actorId: state.actor } : {}),
     ...(state.type ? { entityType: state.type } : {}),
     ...(state.from ? { from: state.from } : {}),
@@ -58,5 +65,5 @@ export function toAuditQuery(state: AuditState): AuditLogQuery {
 }
 
 export function hasAuditFilters(state: AuditState): boolean {
-  return Boolean(state.actor || state.type || state.from || state.to);
+  return Boolean(state.q.trim() || state.actor || state.type || state.from || state.to);
 }

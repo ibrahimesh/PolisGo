@@ -54,7 +54,13 @@ public record AuditLogQuery(
     DateOnly? From = null,
     DateOnly? To = null,
     int Page = 1,
-    int PageSize = 20
+    int PageSize = 20,
+    // Free text: the actor's name or email, the claim or policy number, the
+    // staff action's subject and values, or a status/action code.
+    string? Search = null,
+    // Status or action codes the SPA matched from its translated labels
+    // ("одобрен" → Approved), so the feed can be searched in RU and AZ too.
+    IReadOnlyCollection<string>? Actions = null
 );
 
 // One recorded event. Claim and policy rows come from their status history,

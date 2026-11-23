@@ -6,7 +6,8 @@ export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? 'http://localh
   '',
 );
 
-type QueryValue = string | number | boolean | null | undefined;
+// Arrays repeat the key (actions=a&actions=b), as ASP.NET binds string[].
+type QueryValue = string | number | boolean | null | undefined | readonly string[];
 
 export interface RequestOptions {
   method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
@@ -32,7 +33,11 @@ export function onUnauthorized(listener: UnauthorizedListener): () => void {
 function buildUrl(path: string, query?: Record<string, QueryValue>): string {
   const url = new URL(API_BASE_URL + path);
   for (const [key, value] of Object.entries(query ?? {})) {
-    if (value !== undefined && value !== null) url.searchParams.set(key, String(value));
+    if (Array.isArray(value)) {
+      for (const item of value as readonly string[]) url.searchParams.append(key, item);
+    } else if (value !== undefined && value !== null) {
+      url.searchParams.set(key, String(value));
+    }
   }
   return url.toString();
 }

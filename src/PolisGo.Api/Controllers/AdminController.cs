@@ -55,6 +55,10 @@ public class AdminController : ControllerBase
     /// <param name="entityType">Claim, Policy, User (staff accounts) or Customer (assignments).</param>
     /// <param name="from">First day (Baku date), inclusive.</param>
     /// <param name="to">Last day (Baku date), inclusive.</param>
+    /// <param name="search">Text in the actor's name or email, the claim or policy number, a staff
+    /// action's subject or values, or a status or action code; at most 100 characters.</param>
+    /// <param name="actions">Status or action codes to include as matches (repeatable); the SPA sends
+    /// the codes whose translated label contains the search text. Unknown codes are ignored.</param>
     /// <param name="page">1-based page number, at most 200.</param>
     /// <param name="pageSize">Items per page; capped at 50.</param>
     /// <param name="cancellationToken">Request cancellation.</param>
@@ -64,7 +68,7 @@ public class AdminController : ControllerBase
     /// changes, customer assignment). Earlier staff actions were not recorded.
     /// </remarks>
     /// <response code="200">A page of events.</response>
-    /// <response code="400">Invalid filter, or from after to.</response>
+    /// <response code="400">Invalid filter, from after to, or a search over 100 characters.</response>
     /// <response code="401">No or invalid bearer token.</response>
     /// <response code="403">The caller is not an Admin.</response>
     [HttpGet("audit")]
@@ -77,12 +81,14 @@ public class AdminController : ControllerBase
         [FromQuery] AuditEntityType? entityType,
         [FromQuery] DateOnly? from,
         [FromQuery] DateOnly? to,
+        [FromQuery] string? search,
+        [FromQuery] string[]? actions,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
         CancellationToken cancellationToken = default)
     {
         return Ok(await _audit.ListAsync(
-            new AuditLogQuery(actorId, entityType, from, to, page, pageSize), cancellationToken));
+            new AuditLogQuery(actorId, entityType, from, to, page, pageSize, search, actions), cancellationToken));
     }
 
     /// <summary>

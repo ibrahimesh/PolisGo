@@ -1728,7 +1728,12 @@
         "RoleChanged": "role {{from}} → {{to}}",
         "assigned": "assigned to {{agent}}",
         "released": "released from {{agent}}"
-      }
+      },
+      "search": "Search",
+      "searchPlaceholder": "Email, name, policy or claim number, action",
+      "searchHint": "Finds the person who acted, the policy or claim, and what happened, such as “approved” or “role”.",
+      "clearSearch": "Clear search",
+      "noMatchSearch": "No event mentions “{{query}}”. Check the spelling, or try an email, a name, or a policy or claim number."
     },
     "policyTypes": {
       "title": "Products and rates",

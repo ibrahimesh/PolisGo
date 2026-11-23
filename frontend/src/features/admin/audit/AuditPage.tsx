@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useSearchParams } from 'react-router';
 import { AUDIT_ENTITY_TYPES } from '../../../api/types';
@@ -7,6 +8,8 @@ import { Button } from '../../../components/ui/Button';
 import { DateFilterField } from '../../../components/ui/DateFilterField';
 import { EmptyState } from '../../../components/ui/EmptyState';
 import { ErrorNotice } from '../../../components/ui/ErrorNotice';
+import { CloseIcon, SearchIcon } from '../../../components/ui/icons';
+import { Input } from '../../../components/ui/Input';
 import { Pagination } from '../../../components/ui/Pagination';
 import { Select } from '../../../components/ui/Select';
 import { useFormatters } from '../../../i18n/format';
@@ -16,6 +19,7 @@ import { useAudit } from '../queries';
 import { StaffPicker } from '../StaffPicker';
 import {
   AUDIT_PAGE_SIZE,
+  AUDIT_SEARCH_MAX,
   DEFAULT_AUDIT,
   hasAuditFilters,
   readAudit,
@@ -23,6 +27,7 @@ import {
   writeAudit,
 } from './auditParams';
 import type { AuditState } from './auditParams';
+import { matchAuditCodes } from './auditSearch';
 
 // Everything recorded, newest first: claim and policy status changes and the
 // staff actions logged since the admin panel shipped. Nothing is inferred.
@@ -30,7 +35,7 @@ export function AuditPage() {
   const { t } = useTranslation();
   const [params, setParams] = useSearchParams();
   const state = readAudit(params);
-  const audit = useAudit(toAuditQuery(state));
+  const audit = useAudit(toAuditQuery(state, matchAuditCodes(state.q, t)));
   const data = audit.data;
   const pages = data
     ? Math.max(1, Math.ceil(Math.min(data.totalCount, 200 * AUDIT_PAGE_SIZE) / AUDIT_PAGE_SIZE))
@@ -49,6 +54,7 @@ export function AuditPage() {
         onSubmit={(event) => event.preventDefault()}
         className="grid gap-4 md:grid-cols-2 xl:grid-cols-4"
       >
+        <SearchField value={state.q} onCommit={(q) => update({ q })} />
         <StaffPicker
           label={t('admin.audit.actor')}
           value={state.actor}
@@ -118,7 +124,13 @@ export function AuditPage() {
           <EmptyState
             headingLevel="h3"
             title={filtered ? t('admin.audit.noMatchTitle') : t('admin.audit.emptyTitle')}
-            body={filtered ? t('admin.audit.noMatchBody') : t('admin.audit.emptyBody')}
+            body={
+              state.q.trim()
+                ? t('admin.audit.noMatchSearch', { query: state.q.trim() })
+                : filtered
+                  ? t('admin.audit.noMatchBody')
+                  : t('admin.audit.emptyBody')
+            }
           />
         ) : (
           <ol
@@ -144,6 +156,79 @@ export function AuditPage() {
           />
         )}
       </section>
+    </div>
+  );
+}
+
+// Free-text search over the feed. Typing is debounced (300ms) before it
+// reaches the URL and the API; the URL stays the source of truth, so Back,
+// a shared link and "Clear filters" all update the box.
+function SearchField({ value, onCommit }: { value: string; onCommit: (q: string) => void }) {
+  const { t } = useTranslation();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [draft, setDraft] = useState(value);
+  const [committed, setCommitted] = useState(value);
+  // The URL changed from elsewhere (Back, Clear filters): follow it.
+  if (value !== committed) {
+    setCommitted(value);
+    setDraft(value);
+  }
+  const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  useEffect(() => () => clearTimeout(timer.current), []);
+
+  const change = (next: string) => {
+    setDraft(next);
+    clearTimeout(timer.current);
+    timer.current = setTimeout(() => {
+      setCommitted(next);
+      onCommit(next);
+    }, 300);
+  };
+
+  const clear = () => {
+    clearTimeout(timer.current);
+    setDraft('');
+    setCommitted('');
+    onCommit('');
+    inputRef.current?.focus();
+  };
+
+  return (
+    <div className="md:col-span-2 xl:col-span-4">
+      <Input
+        ref={inputRef}
+        id="audit-search"
+        type="search"
+        label={t('admin.audit.search')}
+        hint={t('admin.audit.searchHint')}
+        placeholder={t('admin.audit.searchPlaceholder')}
+        value={draft}
+        maxLength={AUDIT_SEARCH_MAX}
+        autoComplete="off"
+        onChange={(event) => change(event.target.value)}
+        onKeyDown={(event) => {
+          if (event.key === 'Escape' && draft) {
+            event.preventDefault();
+            clear();
+          }
+        }}
+        trailing={
+          draft ? (
+            <button
+              type="button"
+              onClick={clear}
+              aria-label={t('admin.audit.clearSearch')}
+              className="grid size-10 place-items-center rounded-sm text-muted transition-colors duration-(--duration-fast) hover:text-text"
+            >
+              <CloseIcon />
+            </button>
+          ) : (
+            <span className="grid size-10 place-items-center text-muted" aria-hidden="true">
+              <SearchIcon />
+            </span>
+          )
+        }
+      />
     </div>
   );
 }

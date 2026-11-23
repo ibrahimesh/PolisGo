@@ -108,7 +108,7 @@ every change in this repo.
 | GET | `/api/staff/overview` | Agent, Adjuster, Admin (a block per desk) |
 | GET | `/api/admin/stats` | Admin (cached 60 s) |
 | GET | `/api/admin/dashboard` (from, to; 24 months max) | Admin (cached 60 s per range) |
-| GET | `/api/admin/audit` (actor, entity type, from, to, paged) | Admin |
+| GET | `/api/admin/audit` (search, actions, actor, entity type, from, to, paged) | Admin |
 | GET | `/health` | Anonymous |
 
 ## Persistence

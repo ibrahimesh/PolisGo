@@ -1736,7 +1736,12 @@
         "RoleChanged": "rol: {{from}} → {{to}}",
         "assigned": "{{agent}} agentinə təhkim olunub",
         "released": "{{agent}} agentindən ayrılıb"
-      }
+      },
+      "search": "Axtarış",
+      "searchPlaceholder": "E-poçt, ad, polis və ya iddia nömrəsi, əməliyyat",
+      "searchHint": "Əməliyyatı edəni, polisi və ya iddianı və baş verəni tapır, məsələn «təsdiq» və ya «rol».",
+      "clearSearch": "Axtarışı təmizlə",
+      "noMatchSearch": "Heç bir hadisədə «{{query}}» yoxdur. Yazılışı yoxlayın və ya e-poçt, ad, polis və ya iddia nömrəsi daxil edin."
     },
     "policyTypes": {
       "title": "Məhsullar və tariflər",
