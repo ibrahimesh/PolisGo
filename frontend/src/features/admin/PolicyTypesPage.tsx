@@ -7,6 +7,7 @@ import { Skeleton } from '../../components/ui/Skeleton';
 import { Caption, Table, TBody, Td, Th, THead, Tr } from '../../components/ui/Table';
 import { useFormatters } from '../../i18n/format';
 import { usePolicyTypes } from '../landing/usePolicyTypes';
+import { ProductBadge } from '../policies/ProductIcon';
 import { useProductName } from '../policies/useProductName';
 
 // The catalogue as the API serves it (GET /api/policy-types). Read-only:
@@ -48,14 +49,17 @@ export function PolicyTypesPage() {
         <>
           <ul className="divide-y divide-line border-y border-line md:hidden">
             {types.data.map((type) => (
-              <li key={type.code} className="space-y-1 py-4">
-                <p className="font-medium">
-                  {product.name(type.code)} <span className="text-muted">· {type.code}</span>
-                </p>
-                <p className="text-sm text-muted">{product.hint(type.code)}</p>
-                <p className="font-serif text-xl tabular">
-                  {format.money(type.baseRate, type.currency)}
-                </p>
+              <li key={type.code} className="flex gap-4 py-4">
+                <ProductBadge code={type.code} />
+                <div className="min-w-0 space-y-1">
+                  <p className="font-medium">
+                    {product.name(type.code)} <span className="text-muted">· {type.code}</span>
+                  </p>
+                  <p className="text-sm text-muted">{product.hint(type.code)}</p>
+                  <p className="font-serif text-xl tabular">
+                    {format.money(type.baseRate, type.currency)}
+                  </p>
+                </div>
               </li>
             ))}
           </ul>
@@ -73,7 +77,12 @@ export function PolicyTypesPage() {
               <TBody>
                 {types.data.map((type) => (
                   <Tr key={type.code} className="border-line">
-                    <Td className="font-medium">{product.name(type.code)}</Td>
+                    <Td className="font-medium">
+                      <span className="flex items-center gap-3">
+                        <ProductBadge code={type.code} />
+                        {product.name(type.code)}
+                      </span>
+                    </Td>
                     <Td className="tabular">{type.code}</Td>
                     <Td className="text-sm text-muted">{product.hint(type.code)}</Td>
                     <Td className="text-right whitespace-nowrap">

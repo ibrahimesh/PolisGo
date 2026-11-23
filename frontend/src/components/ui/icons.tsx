@@ -156,9 +156,35 @@ export const ClipboardIcon = () => (
   </Icon>
 );
 
-export const GaugeIcon = () => (
+// An inbox tray: the claims queue (work arriving), not a document.
+export const InboxIcon = () => (
   <Icon>
-    <path d="M2.25 11.5a5.75 5.75 0 1 1 11.5 0M8 11.5l2.5-3.5" />
+    <path d="M2 9.5 3.75 3h8.5L14 9.5V13H2Z" />
+    <path d="M2 9.5h3.5l1 1.5h3l1-1.5H14" />
+  </Icon>
+);
+
+// A stack of documents: every policy, as opposed to one (PolicyIcon).
+export const StackIcon = () => (
+  <Icon>
+    <path d="M5.5 1.75h5.75l2 2v8h-7.75Z" />
+    <path d="M3 4.25v10h7.75" />
+  </Icon>
+);
+
+// A clock turning back: the audit log's history of actions.
+export const HistoryIcon = () => (
+  <Icon>
+    <path d="M2.75 8a5.25 5.25 0 1 0 1.6-3.75" />
+    <path d="M2.5 2.25v2.5H5M8 5v3l2 1.5" />
+  </Icon>
+);
+
+// A price tag: products and their rates.
+export const TagIcon = () => (
+  <Icon>
+    <path d="M2.25 8.75 8.25 2.75h5v5l-6 6Z" />
+    <circle cx="10.75" cy="5.25" r="1" />
   </Icon>
 );
 
