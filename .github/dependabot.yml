@@ -1,48 +1,115 @@
 version: 2
+
+# Weekly version updates: minor and patch releases arrive as one grouped PR
+# per ecosystem, majors one PR each, except the ones ignored below, which are
+# taken by hand. Security updates are a repository setting, not this file;
+# the groups and PR limits below apply to version updates only (security
+# updates have their own limit of 10 open PRs).
+#
+# Every ignore rule uses `update-types`, never `versions`: Dependabot drops
+# update-type rules for security updates, so a vulnerability is still fixed
+# across a major, whereas a `versions` range would block the fix too.
 updates:
   # NuGet packages across all .csproj files.
   - package-ecosystem: "nuget"
     directory: "/"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 3
     labels:
       - "dependencies"
       - "nuget"
+    groups:
+      # One PR also keeps the Microsoft 10.0.x packages on one patch level,
+      # which SupplyChainConfigurationTests requires.
+      nuget-minor-patch:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+    ignore:
+      # The stack stays on .NET 10 LTS: ASP.NET Core and Microsoft.Extensions.*
+      # ship with the runtime and must stay on its major, all together. This
+      # also holds Microsoft.NET.Test.Sdk; take its majors by hand.
+      - dependency-name: "Microsoft.*"
+        update-types: ["version-update:semver-major"]
+      # System.* packages version with the .NET runtime as well.
+      - dependency-name: "System.*"
+        update-types: ["version-update:semver-major"]
+      # EF Core, its SQL Server/SQLite providers and the design-time tools
+      # move with the runtime and with the migrations' model snapshot. Already
+      # covered by Microsoft.*; named so narrowing that rule can't free it.
+      - dependency-name: "Microsoft.EntityFrameworkCore*"
+        update-types: ["version-update:semver-major"]
+      # Held on 9.x until the owner decides on the upgrade: a major can change
+      # the OpenAPI model the Swagger setup in Program.cs is written against.
+      - dependency-name: "Swashbuckle.AspNetCore"
+        update-types: ["version-update:semver-major"]
 
   # The SPA's npm packages (lockfile in frontend/).
   - package-ecosystem: "npm"
     directory: "/frontend"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 3
     labels:
       - "dependencies"
       - "npm"
+    groups:
+      npm-minor-patch:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
 
-  # Base images, pinned by digest: the API Dockerfile and docker-compose.
+  # Base images of the API Dockerfile, pinned by digest. A new digest for the
+  # same tag (a servicing release) is not a major and still comes.
   - package-ecosystem: "docker"
     directory: "/src/PolisGo.Api"
     schedule:
       interval: "weekly"
+    open-pull-requests-limit: 3
     labels:
       - "dependencies"
       - "docker"
+    groups:
+      # The sdk and aspnet images are serviced together; one PR moves both.
+      docker-minor-patch:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+    ignore:
+      # The build image stays on 10.0: the projects target net10.0 (LTS).
+      - dependency-name: "dotnet/sdk"
+        update-types: ["version-update:semver-major"]
+      # The runtime image stays on 10.0, the runtime the API is built for.
+      - dependency-name: "dotnet/aspnet"
+        update-types: ["version-update:semver-major"]
 
+  # SQL Server in docker-compose.yml, pinned by digest.
   - package-ecosystem: "docker-compose"
     directory: "/"
     schedule:
       interval: "weekly"
+    open-pull-requests-limit: 3
     labels:
       - "dependencies"
       - "docker"
+    groups:
+      docker-compose-minor-patch:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+    ignore:
+      # Stays on 2022 (new 2022-latest digests still come): the migrations and
+      # the SQL Server tests run on it, and CI's service container pins 2022.
+      - dependency-name: "mssql/server"
+        update-types: ["version-update:semver-major"]
 
   # GitHub Actions in .github/workflows, pinned by commit SHA.
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 3
     labels:
       - "dependencies"
       - "ci"
+    groups:
+      actions:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]

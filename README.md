@@ -416,8 +416,13 @@ requests to `main`:
   database built by the migrations.
 - **Docker build** — builds the API image with Buildx (not pushed).
 
-Actions are pinned by commit SHA and base images by digest; Dependabot
-updates NuGet, npm, Docker, docker-compose and Actions weekly.
+Actions are pinned by commit SHA and base images by digest. Dependabot
+checks NuGet, npm, Docker, docker-compose and Actions weekly: minor and patch
+updates arrive as one grouped PR per ecosystem, majors one at a time (at
+most three open per ecosystem). Platform majors — `Microsoft.*`, `System.*`,
+EF Core, the `dotnet/sdk` and `dotnet/aspnet` images, SQL Server 2022 — and
+Swashbuckle are held and taken by hand; security updates still come for
+them. The reasons are in [`.github/dependabot.yml`](.github/dependabot.yml).
 
 ## API overview
 
