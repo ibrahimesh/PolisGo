@@ -1,8 +1,10 @@
 import { useMutation } from '@tanstack/react-query';
+import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { cabinetApi } from '../../api/endpoints';
 import { Button } from '../../components/ui/Button';
+import { cx } from '../../components/ui/cx';
 import { ErrorNotice } from '../../components/ui/ErrorNotice';
 import { BellIcon } from '../../components/ui/icons';
 import { Skeleton } from '../../components/ui/Skeleton';
@@ -30,6 +32,15 @@ export function NotificationsButton() {
   const unreadReminders = reminders.data?.filter((r) => r.readAt === null).length ?? 0;
   const unreadUpdates = updates.data?.filter((u) => u.readAt === null).length ?? 0;
   const unread = unreadReminders + unreadUpdates;
+  // A new reminder or claim update (the count rises after the first load)
+  // rings the bell once.
+  const [seenUnread, setSeenUnread] = useState<number | null>(null);
+  const [rings, setRings] = useState(0);
+  const loaded = reminders.data !== undefined && updates.data !== undefined;
+  if (loaded && unread !== seenUnread) {
+    if (seenUnread !== null && unread > seenUnread) setRings(rings + 1);
+    setSeenUnread(unread);
+  }
 
   return (
     <div className="relative">
@@ -39,7 +50,13 @@ export function NotificationsButton() {
         onClick={popover.toggle}
         className="relative grid size-9 place-items-center rounded-sm border border-line text-muted transition-colors hover:text-text"
       >
-        <BellIcon />
+        <span
+          key={rings}
+          data-rings={rings}
+          className={cx('grid origin-top', rings > 0 && 'animate-bell-ring')}
+        >
+          <BellIcon />
+        </span>
         <span className="sr-only">{t('notifications.button', { count: unread })}</span>
         {unread > 0 && (
           <span
@@ -55,7 +72,7 @@ export function NotificationsButton() {
         {...popover.panelProps}
         role="region"
         aria-labelledby="notifications-title"
-        className="fixed inset-x-4 top-16 z-50 mt-2 max-h-[calc(100dvh-6rem)] overflow-y-auto rounded-sm border border-line-strong bg-surface sm:absolute sm:inset-x-auto sm:top-full sm:right-0 sm:w-96"
+        className="fixed inset-x-4 top-16 z-50 mt-2 max-h-[calc(100dvh-6rem)] origin-top-right animate-pop-in overflow-y-auto rounded-sm border border-line-strong bg-surface sm:absolute sm:inset-x-auto sm:top-full sm:right-0 sm:w-96"
       >
         <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-3">
           <h2 id="notifications-title" className="font-sans text-base font-medium">

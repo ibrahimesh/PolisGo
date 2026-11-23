@@ -3,10 +3,10 @@ import './styles/index.css';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { BrowserRouter } from 'react-router';
 import { isApiError } from './api/errors';
 import { App } from './App';
 import { AuthProvider } from './auth/AuthProvider';
+import { MotionRouter } from './motion/MotionRouter';
 import { ToastProvider } from './components/ui/ToastProvider';
 import { SettingsProvider } from './settings/SettingsProvider';
 import { ThemeProvider } from './theme/ThemeProvider';
@@ -29,7 +29,7 @@ createRoot(root).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
-        <BrowserRouter>
+        <MotionRouter>
           <SettingsProvider>
             <ToastProvider>
               <AuthProvider>
@@ -37,7 +37,7 @@ createRoot(root).render(
               </AuthProvider>
             </ToastProvider>
           </SettingsProvider>
-        </BrowserRouter>
+        </MotionRouter>
       </ThemeProvider>
     </QueryClientProvider>
   </StrictMode>,

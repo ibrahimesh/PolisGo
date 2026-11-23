@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
-import { seedPreferences, waitForPremium } from './helpers';
+import { seedPreferences, waitForPremium, waitForAnimations } from './helpers';
 import type { Theme } from './helpers';
 
 const PAGES = [
@@ -17,6 +17,8 @@ for (const { name, path } of PAGES) {
       await page.goto(path);
       if (path === '/') await waitForPremium(page);
       await page.evaluate(() => document.fonts.ready);
+
+      await waitForAnimations(page);
 
       const results = await new AxeBuilder({ page })
         .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])

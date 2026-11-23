@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
+import { SuccessCheck } from '../../motion/SuccessCheck';
 import { Button, ButtonLink } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
-import { CheckIcon } from '../../components/ui/icons';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { useFormatters } from '../../i18n/format';
 import { usePolicy } from '../cabinet/queries';
@@ -20,12 +20,12 @@ export function DoneStep() {
 
   return (
     <div className="max-w-3xl space-y-8">
-      <p role="status" className="flex items-start gap-3 text-lg">
-        <span className="mt-1 text-success">
-          <CheckIcon />
-        </span>
-        {t('wizard.done.lead', { number: draft.policyNumber })}
-      </p>
+      <div className="flex items-center gap-4">
+        <SuccessCheck />
+        <p role="status" className="text-lg">
+          {t('wizard.done.lead', { number: draft.policyNumber })}
+        </p>
+      </div>
 
       <Card variant="paper" className="p-6 sm:p-8">
         <dl className="grid gap-x-8 gap-y-5 sm:grid-cols-2">

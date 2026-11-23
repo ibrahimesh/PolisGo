@@ -9,7 +9,7 @@ import { UserMenu } from './UserMenu';
 // in Settings (user menu), not here.
 export function CabinetHeader({ notifications }: { notifications?: ReactNode }) {
   return (
-    <header className="sticky top-0 z-30 border-b border-line bg-bg">
+    <header className="sticky top-0 z-30 border-b border-line bg-bg [view-transition-name:site-header]">
       <div className="flex h-16 items-center gap-2 px-4 sm:px-6 lg:px-10">
         <LogoLink className="lg:hidden" />
 

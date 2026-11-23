@@ -49,7 +49,7 @@ export function Header() {
   const shortLabel = (section: LandingSection) => t(`nav.short.${section}`);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-bg">
+    <header className="sticky top-0 z-40 border-b border-line bg-bg [view-transition-name:site-header]">
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 sm:px-6 lg:px-8">
         <LogoLink className="mr-2 xl:mr-4" />
 
@@ -171,7 +171,7 @@ function MoreMenu() {
       </button>
       <div
         {...popover.panelProps}
-        className="absolute top-full left-0 z-50 mt-2 min-w-56 rounded-sm border border-line-strong bg-surface p-2"
+        className="absolute top-full left-0 z-50 mt-2 min-w-56 origin-top-left animate-pop-in rounded-sm border border-line-strong bg-surface p-2"
       >
         <ul>
           {SECONDARY_SECTIONS.map((section) => (

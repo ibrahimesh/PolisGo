@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
+import { withThemeTransition } from '../motion/viewTransitions';
 
 export const THEME_PREFERENCES = ['dark', 'light', 'system'] as const;
 export type ThemePreference = (typeof THEME_PREFERENCES)[number];
@@ -53,7 +54,12 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }, [resolved]);
 
   const setPreference = useCallback((next: ThemePreference) => {
-    setPreferenceState(next);
+    // Crossfade old and new snapshots (View Transitions; instant without).
+    withThemeTransition(() => {
+      const resolvedNext = next === 'system' ? systemTheme() : next;
+      document.documentElement.dataset.theme = resolvedNext;
+      setPreferenceState(next);
+    });
     try {
       localStorage.setItem(STORAGE_KEY, next);
     } catch {

@@ -120,6 +120,7 @@ test.describe('Cabinet claims', () => {
       timeout: 15_000,
     });
     await expect(page.getByText('2 documents attached.')).toBeVisible();
+    await expect(page.getByTestId('success-check')).toBeVisible();
     expect(submits).toHaveLength(1);
     await expectNoHorizontalScroll(page);
 

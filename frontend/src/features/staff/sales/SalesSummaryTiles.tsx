@@ -3,6 +3,7 @@ import { ErrorNotice } from '../../../components/ui/ErrorNotice';
 import { Skeleton } from '../../../components/ui/Skeleton';
 import { useFormatters } from '../../../i18n/format';
 import { useStaffOverview } from '../queries';
+import { CountUp } from '../../../motion/CountUp';
 
 // The sales block of GET /api/staff/overview: the same policies as the list
 // below, so a tile and the list behind it agree.
@@ -15,7 +16,7 @@ export function SalesSummaryTiles() {
     return (
       <div
         aria-busy="true"
-        className="grid gap-px border border-line bg-line sm:grid-cols-2 xl:grid-cols-4"
+        className="grid stagger gap-px border border-line bg-line sm:grid-cols-2 xl:grid-cols-4"
       >
         <span className="sr-only" role="status">
           {t('common.loading')}
@@ -38,19 +39,23 @@ export function SalesSummaryTiles() {
     {
       id: 'written',
       label: t('staff.sales.tiles.written'),
-      value: format.money(sales.premiumWritten),
+      value: <CountUp value={sales.premiumWritten} format={(n) => format.money(n)} />,
     },
     {
       id: 'recent',
       label: t('staff.sales.tiles.recent'),
-      value: format.money(sales.premiumLast30Days),
+      value: <CountUp value={sales.premiumLast30Days} format={(n) => format.money(n)} />,
       note: t('staff.sales.tiles.soldRecently', { count: sales.policiesSoldLast30Days }),
     },
-    { id: 'active', label: t('staff.sales.tiles.active'), value: format.integer(active) },
+    {
+      id: 'active',
+      label: t('staff.sales.tiles.active'),
+      value: <CountUp value={active} format={format.integer} />,
+    },
     {
       id: 'customers',
       label: t('staff.sales.tiles.customers'),
-      value: format.integer(sales.customers),
+      value: <CountUp value={sales.customers} format={format.integer} />,
       note: t('staff.sales.tiles.openClaims', { count: sales.openClaims }),
     },
   ];
@@ -60,7 +65,7 @@ export function SalesSummaryTiles() {
       <h2 id="sales-summary-title" className="sr-only">
         {t('staff.sales.summary')}
       </h2>
-      <dl className="grid gap-px border border-line bg-line sm:grid-cols-2 xl:grid-cols-4">
+      <dl className="grid stagger gap-px border border-line bg-line sm:grid-cols-2 xl:grid-cols-4">
         {tiles.map((tile) => (
           <div key={tile.id} className="space-y-1 bg-bg p-5">
             <dt className="text-sm font-medium text-muted">{tile.label}</dt>

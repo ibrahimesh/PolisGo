@@ -48,7 +48,7 @@ export function UserMenu() {
 
       <div
         {...popover.panelProps}
-        className="absolute top-full right-0 z-50 mt-2 w-[min(20rem,calc(100vw-2rem))] rounded-sm border border-line-strong bg-surface"
+        className="absolute top-full right-0 z-50 mt-2 w-[min(20rem,calc(100vw-2rem))] origin-top-right animate-pop-in rounded-sm border border-line-strong bg-surface"
       >
         <div className="space-y-2 border-b border-line px-4 py-4">
           <p className="text-sm text-muted">{t('cabinet.signedInAs')}</p>

@@ -49,10 +49,9 @@ export async function chooseSetting(page: Page, name: string) {
 
 // axe (WCAG 2.2 AA) on the current page; serious and critical findings fail.
 export async function expectNoAxeViolations(page: Page) {
-  // Colours caught mid-transition (a theme switch) aren't the real contrast.
-  await page.waitForFunction(() =>
-    document.getAnimations().every((a) => a.playState !== 'running'),
-  );
+  // Colours caught mid-animation (a theme switch, a fading row) aren't the
+  // real contrast.
+  await waitForAnimations(page);
   const results = await new AxeBuilder({ page })
     .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
     .analyze();
@@ -441,4 +440,17 @@ export function staffApi(page: Page, session: Session) {
       };
     },
   };
+}
+
+// Finite animations (staggered rows, a theme crossfade) have finished, so
+// axe and screenshots see the settled page. A skeleton's endless shimmer
+// doesn't count.
+export async function waitForAnimations(page: Page) {
+  await page.waitForFunction(() =>
+    document
+      .getAnimations()
+      .every(
+        (a) => a.playState !== 'running' || a.effect?.getComputedTiming().iterations === Infinity,
+      ),
+  );
 }

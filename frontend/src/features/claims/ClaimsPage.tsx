@@ -194,7 +194,7 @@ function ClaimTable({ items }: { items: readonly ClaimResponse[] }) {
             <Th>{t('claims.columns.status')}</Th>
           </Tr>
         </THead>
-        <TBody>
+        <TBody className="stagger">
           {items.map((claim) => (
             <Tr key={claim.id} className="border-line">
               <Td>
@@ -242,7 +242,7 @@ function ClaimCards({ items }: { items: readonly ClaimResponse[] }) {
   const format = useFormatters();
   const product = useProductName();
   return (
-    <ul className="divide-y divide-line border-y border-line md:hidden">
+    <ul className="stagger divide-y divide-line border-y border-line md:hidden">
       {items.map((claim) => (
         <li key={claim.id} className="space-y-2 py-4">
           <div className="flex items-start justify-between gap-3">

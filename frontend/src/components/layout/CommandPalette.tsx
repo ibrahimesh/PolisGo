@@ -210,7 +210,7 @@ export function CommandPalette({ open, onClose, returnFocusTo }: CommandPaletteP
       onClick={(event) => {
         if (event.target === event.currentTarget) close();
       }}
-      className="palette mx-auto mt-[12vh] w-[min(40rem,calc(100vw-2rem))] rounded-sm border border-line-strong bg-surface p-0 text-text shadow-[0_24px_64px_-24px_rgb(0_0_0/0.6)] backdrop:bg-overlay"
+      className="mx-auto mt-[12vh] w-[min(40rem,calc(100vw-2rem))] dialog-in rounded-sm border border-line-strong bg-surface p-0 text-text shadow-[0_24px_64px_-24px_rgb(0_0_0/0.6)] backdrop:bg-overlay"
     >
       <div className="flex items-center gap-3 border-b border-line px-4">
         <span className="text-muted">

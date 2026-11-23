@@ -14,6 +14,7 @@ import { todayIso } from '../../lib/dates';
 import { firstName } from '../../lib/names';
 import { useOverview, useReminders } from '../cabinet/queries';
 import { ReminderList } from '../reminders/ReminderList';
+import { CountUp } from '../../motion/CountUp';
 
 export function ClientOverview() {
   const { t } = useTranslation();
@@ -109,7 +110,7 @@ function OverviewContent({ data }: { data: ClientOverviewResponse }) {
         <dl className="grid grid-cols-1 gap-px rounded-sm border border-line bg-line sm:grid-cols-2 xl:grid-cols-4">
           <Stat
             label={t('overview.stats.active')}
-            value={format.integer(data.activePolicies)}
+            value={<CountUp value={data.activePolicies} format={format.integer} />}
             hint={
               data.awaitingPayment > 0
                 ? t('overview.stats.awaiting', { count: data.awaitingPayment })
@@ -145,7 +146,12 @@ function OverviewContent({ data }: { data: ClientOverviewResponse }) {
           />
           <Stat
             label={t('overview.stats.paid')}
-            value={format.money(data.paidLast12Months, data.currency)}
+            value={
+              <CountUp
+                value={data.paidLast12Months}
+                format={(n) => format.money(n, data.currency)}
+              />
+            }
             hint={t('overview.stats.paidHint')}
           />
         </dl>
@@ -159,7 +165,7 @@ function OverviewContent({ data }: { data: ClientOverviewResponse }) {
           {data.recentActivity.length === 0 ? (
             <p className="text-muted">{t('overview.activity.empty')}</p>
           ) : (
-            <ol className="divide-y divide-line border-y border-line">
+            <ol className="stagger divide-y divide-line border-y border-line">
               {data.recentActivity.map((entry) => (
                 <ActivityItem key={`${entry.kind}-${entry.subjectId}-${entry.at}`} entry={entry} />
               ))}

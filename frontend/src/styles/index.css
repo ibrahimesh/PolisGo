@@ -106,7 +106,42 @@
   --radius-sm: 2px;
   --radius: 2px;
 
-  --animate-toast-in: toast-in 200ms var(--ease-institutional);
+  --animate-toast-in: toast-in 240ms var(--ease-spring) both;
+  --animate-pop-in: pop-in 200ms var(--ease-spring) both;
+  --animate-page-in: page-in 240ms var(--ease-institutional) both;
+  --animate-bell-ring: bell-ring 400ms var(--ease-emphasized) both;
+
+  /* Popovers (user menu, notifications, More, the calendar) spring open. */
+  @keyframes pop-in {
+    from {
+      opacity: 0;
+      transform: translateY(-4px) scale(0.98);
+    }
+  }
+
+  /* Route change without View Transitions support. */
+  @keyframes page-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+  }
+
+  /* A new notification: the bell swings and settles. */
+  @keyframes bell-ring {
+    20% {
+      transform: rotate(14deg);
+    }
+    40% {
+      transform: rotate(-10deg);
+    }
+    60% {
+      transform: rotate(6deg);
+    }
+    80% {
+      transform: rotate(-3deg);
+    }
+  }
   --animate-notice-in: notice-in 240ms var(--ease-institutional) both;
   --animate-notice-shake: notice-shake 400ms var(--ease-emphasized) both;
 
@@ -147,10 +182,11 @@
     }
   }
 
+  /* Toasts slide in from the right edge they sit on. */
   @keyframes toast-in {
     from {
       opacity: 0;
-      transform: translateY(8px);
+      transform: translateX(24px);
     }
     to {
       opacity: 1;
@@ -222,8 +258,175 @@
     opacity: 1;
     transform: none;
     transition:
-      opacity 480ms var(--ease-institutional),
-      transform 480ms var(--ease-institutional);
+      opacity var(--duration-slow) var(--ease-institutional),
+      transform var(--duration-slow) var(--ease-institutional);
+  }
+}
+
+/* ---- Motion (DESIGN.md, Motion). Transform and opacity only. ---- */
+
+/* Lists and stat grids: children rise in one after another, 40ms apart. */
+@utility stagger {
+  & > * {
+    animation: item-in 300ms var(--ease-institutional) both;
+  }
+  & > :nth-child(2) {
+    animation-delay: 40ms;
+  }
+  & > :nth-child(3) {
+    animation-delay: 80ms;
+  }
+  & > :nth-child(4) {
+    animation-delay: 120ms;
+  }
+  & > :nth-child(5) {
+    animation-delay: 160ms;
+  }
+  & > :nth-child(6) {
+    animation-delay: 200ms;
+  }
+  & > :nth-child(7) {
+    animation-delay: 240ms;
+  }
+  & > :nth-child(n + 8) {
+    animation-delay: 280ms;
+  }
+}
+
+@keyframes item-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+/* Chart bars grow from the baseline, left to right (--i is the bar index). */
+@utility bar-in {
+  transform-box: fill-box;
+  transform-origin: bottom;
+  animation: bar-in 400ms var(--ease-emphasized) both;
+  animation-delay: calc(min(var(--i, 0), 12) * 20ms);
+}
+
+@keyframes bar-in {
+  from {
+    transform: scaleY(0);
+  }
+}
+
+/* Modal and palette spring in; their backdrop fades. */
+@utility dialog-in {
+  &[open] {
+    animation: dialog-in 240ms var(--ease-spring) both;
+  }
+  &[open]::backdrop {
+    animation: fade-in 200ms var(--ease-institutional) both;
+  }
+}
+
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* Loading: a faint band sweeps across (400ms), then rests; the one motion
+   that repeats, and only while something loads. */
+@utility skeleton {
+  position: relative;
+  overflow: hidden;
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, var(--pg-line), transparent);
+    animation: shimmer 1600ms var(--ease-institutional) infinite;
+  }
+}
+
+@keyframes shimmer {
+  25%,
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* The focus ring draws in: a 2px accent frame scales down onto the control
+   and fades up. The outline stays (transparent) for forced-colours modes. */
+@utility focus-ring {
+  position: relative;
+  &:focus-visible {
+    outline-color: transparent;
+  }
+  &::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border: 2px solid var(--pg-accent);
+    border-radius: 4px;
+    opacity: 0;
+    transform: scale(1.06);
+    transition:
+      opacity var(--duration-fast) var(--ease-institutional),
+      transform var(--duration-fast) var(--ease-institutional);
+    pointer-events: none;
+  }
+  &:focus-visible::after {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Success: the frame fades in, then each stroke of the check grows. */
+.success-check-frame {
+  animation: fade-in 200ms var(--ease-institutional) both;
+}
+.success-check-a,
+.success-check-b {
+  transform-box: fill-box;
+  transform-origin: left center;
+  animation: stroke-grow 200ms var(--ease-institutional) both;
+}
+.success-check-a {
+  animation-delay: 150ms;
+}
+.success-check-b {
+  animation-delay: 320ms;
+}
+
+@keyframes stroke-grow {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+/* Page transitions (View Transitions API): the old page fades out, the new
+   one fades up 8px. Headers and the sidebar keep their own names, so they
+   stay put. A theme change is a plain crossfade of the whole page. */
+::view-transition-old(root) {
+  animation: vt-out var(--duration-fast) var(--ease-institutional) both;
+}
+::view-transition-new(root) {
+  animation: page-in var(--duration-base) var(--ease-institutional) both;
+}
+:root[data-vt='theme']::view-transition-old(root) {
+  animation: vt-out var(--duration-base) var(--ease-institutional) both;
+}
+:root[data-vt='theme']::view-transition-new(root) {
+  animation: fade-in var(--duration-base) var(--ease-institutional) both;
+}
+
+@keyframes vt-out {
+  to {
+    opacity: 0;
   }
 }
 
@@ -303,7 +506,10 @@
 
 :root[data-motion='reduce'] *,
 :root[data-motion='reduce'] *::before,
-:root[data-motion='reduce'] *::after {
+:root[data-motion='reduce'] *::after,
+:root[data-motion='reduce']::view-transition-group(*),
+:root[data-motion='reduce']::view-transition-old(*),
+:root[data-motion='reduce']::view-transition-new(*) {
   animation-duration: 0.01ms !important;
   animation-iteration-count: 1 !important;
   transition-duration: 0.01ms !important;

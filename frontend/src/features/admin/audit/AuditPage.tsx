@@ -137,8 +137,8 @@ export function AuditPage() {
             aria-busy={audit.isFetching}
             className={
               audit.isFetching
-                ? 'divide-y divide-line border-y border-line opacity-60'
-                : 'divide-y divide-line border-y border-line'
+                ? 'stagger divide-y divide-line border-y border-line opacity-60'
+                : 'stagger divide-y divide-line border-y border-line'
             }
           >
             {audit.data.items.map((event) => (

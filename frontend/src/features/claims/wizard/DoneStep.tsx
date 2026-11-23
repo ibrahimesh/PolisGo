@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { SuccessCheck } from '../../../motion/SuccessCheck';
 import { Button, ButtonLink } from '../../../components/ui/Button';
 import { Card } from '../../../components/ui/Card';
 import { CheckIcon } from '../../../components/ui/icons';
@@ -13,6 +14,7 @@ export function DoneStep() {
 
   return (
     <div className="max-w-3xl space-y-8">
+      <SuccessCheck />
       <Card variant="paper" className="space-y-4 p-6 sm:p-8">
         <p className="flex items-center gap-2 font-medium text-paper-accent">
           <CheckIcon />

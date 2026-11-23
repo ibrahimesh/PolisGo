@@ -10,6 +10,7 @@ import {
   registerSession,
   seedPreferences,
   openSession,
+  waitForAnimations,
 } from './helpers';
 import type { Theme } from './helpers';
 
@@ -19,6 +20,7 @@ const THEMES: Theme[] = ['dark', 'light'];
 
 async function expectAccessible(page: Page) {
   await page.evaluate(() => document.fonts.ready);
+  await waitForAnimations(page);
   const results = await new AxeBuilder({ page })
     .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
     .analyze();

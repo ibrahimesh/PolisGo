@@ -212,7 +212,7 @@ function PolicyTable({ items }: { items: readonly PolicyResponse[] }) {
             <Th>{t('policies.columns.status')}</Th>
           </Tr>
         </THead>
-        <TBody>
+        <TBody className="stagger">
           {items.map((policy) => (
             <Tr key={policy.id} className="border-line">
               <Td>
@@ -254,7 +254,7 @@ function PolicyCards({ items }: { items: readonly PolicyResponse[] }) {
   const format = useFormatters();
   const product = useProductName();
   return (
-    <ul className="divide-y divide-line border-y border-line md:hidden">
+    <ul className="stagger divide-y divide-line border-y border-line md:hidden">
       {items.map((policy) => (
         <li key={policy.id} className="space-y-2 py-4">
           <div className="flex items-start justify-between gap-3">

@@ -49,7 +49,7 @@ export function Modal({ open, onClose, title, children, footer, size = 'default'
         if (event.target === event.currentTarget) onClose();
       }}
       className={cx(
-        'm-auto rounded-sm border border-line bg-surface p-0 text-text shadow-[0_24px_64px_-24px_rgb(0_0_0/0.6)] backdrop:bg-overlay',
+        'm-auto dialog-in rounded-sm border border-line bg-surface p-0 text-text shadow-[0_24px_64px_-24px_rgb(0_0_0/0.6)] backdrop:bg-overlay',
         size === 'wide' ? 'w-[min(64rem,calc(100vw-2rem))]' : 'w-[min(36rem,calc(100vw-2rem))]',
       )}
     >
