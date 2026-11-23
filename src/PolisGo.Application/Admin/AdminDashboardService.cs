@@ -16,7 +16,7 @@ public interface IAdminDashboardService
     Task<AdminDashboardResponse> GetAsync(DateOnly? from, DateOnly? to, CancellationToken cancellationToken = default);
 }
 
-// The admin dashboard for a date range (inclusive days, UTC). Every figure is
+// The admin dashboard for a date range (inclusive Baku days). Every figure is
 // a database aggregate; months are grouped by Year/Month parts, which both
 // providers translate. One snapshot per range is cached briefly and shared by
 // all admins, like /api/admin/stats.
@@ -40,8 +40,11 @@ public class AdminDashboardService : IAdminDashboardService
     public async Task<AdminDashboardResponse> GetAsync(
         DateOnly? from, DateOnly? to, CancellationToken cancellationToken = default)
     {
+        AdminValidation.EnsureInRange(from, to);
         var now = _clock.GetUtcNow().UtcDateTime;
-        var today = DateOnly.FromDateTime(now);
+        // The default period ends on today's business date (Baku); the
+        // figures themselves are grouped by their UTC timestamps.
+        var today = BusinessCalendar.Today(_clock);
         var end = to ?? today;
         // Default: the last twelve calendar months, this one included.
         var start = from ?? new DateOnly(end.Year, end.Month, 1).AddMonths(-(DefaultMonths - 1));
@@ -64,8 +67,10 @@ public class AdminDashboardService : IAdminDashboardService
     private async Task<AdminDashboardResponse> ComputeAsync(
         DateOnly start, DateOnly end, DateTime now, CancellationToken ct)
     {
-        var from = start.ToDateTime(TimeOnly.MinValue);
-        var before = end.AddDays(1).ToDateTime(TimeOnly.MinValue);
+        // The range is in Baku days; the monthly buckets below still group by
+        // the timestamps' UTC month (a 4-hour difference at month ends).
+        var from = BusinessCalendar.StartOfDayUtc(start);
+        var before = BusinessCalendar.StartOfDayUtc(end.AddDays(1));
 
         var policies = _db.Policies.AsNoTracking().Where(p => p.CreatedAt >= from && p.CreatedAt < before);
         var payments = _db.Payments.AsNoTracking()

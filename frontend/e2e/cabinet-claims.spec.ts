@@ -168,9 +168,9 @@ test.describe('Cabinet claims', () => {
     await expect(page.getByLabel('Date of the incident')).toHaveAccessibleDescription(
       "The incident date can't be in the future.",
     );
-    await fillIncident(page, { date: isoToday(-3) });
+    await fillIncident(page, { date: isoToday(-10) });
     await page.getByRole('button', { name: 'Continue' }).click();
-    // The policy started today: three days ago is outside the cover.
+    // The policy started a week ago: ten days ago is outside the cover.
     await expect(page.getByLabel('Date of the incident')).toHaveAccessibleDescription(
       "The incident date must be within the policy's period of cover.",
     );

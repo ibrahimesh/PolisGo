@@ -7,8 +7,10 @@ import { addDays } from '../policies/policyDates';
 export const START_HORIZON_DAYS = 60;
 export const TERMS = [1, 3, 6, 12] as const;
 
+// Cover starts tomorrow at the earliest: a same-day start would pay for an
+// accident that happened before the purchase.
 export function startDateBounds(today: string = todayIso()) {
-  return { min: today, max: addDays(today, START_HORIZON_DAYS) };
+  return { min: addDays(today, 1), max: addDays(today, START_HORIZON_DAYS) };
 }
 
 export function createCoverSchema(today: string = todayIso()) {
@@ -25,7 +27,7 @@ export function createCoverSchema(today: string = todayIso()) {
         : !isValidIsoDate(value)
           ? 'validation.date'
           : value < min
-            ? 'validation.startDatePast'
+            ? 'validation.startDateTooEarly'
             : value > max
               ? 'validation.startDateTooFar'
               : null;

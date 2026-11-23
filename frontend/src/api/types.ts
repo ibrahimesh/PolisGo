@@ -339,6 +339,7 @@ export const CLAIM_ACTION_BLOCKS = [
   'AlreadyPaid',
   'Withdrawn',
   'Closed',
+  'OutsideYourBook',
 ] as const;
 export type ClaimActionBlock = (typeof CLAIM_ACTION_BLOCKS)[number];
 

@@ -1,4 +1,5 @@
 import { Suspense } from 'react';
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Outlet } from 'react-router';
 import { useCompleteSignOut } from '../../auth/signOut';
@@ -21,13 +22,29 @@ export function AppShell() {
         {t('nav.skipToContent')}
       </a>
       <Header />
-      <main id="main" tabIndex={-1} className="flex-1 outline-none">
-        {/* Routes are lazy chunks; the shell stays put while one loads. */}
-        <Suspense fallback={<PageSkeleton />}>
+      {/* Routes are lazy chunks. The footer arrives with the page: shown
+          under the short placeholder, it would jump away when the page
+          lands (a layout shift of ~0.5 on the landing page). */}
+      <Suspense
+        fallback={
+          <Main>
+            <PageSkeleton />
+          </Main>
+        }
+      >
+        <Main>
           <Outlet />
-        </Suspense>
-      </main>
-      <Footer />
+        </Main>
+        <Footer />
+      </Suspense>
     </div>
+  );
+}
+
+function Main({ children }: { children: ReactNode }) {
+  return (
+    <main id="main" tabIndex={-1} className="flex-1 outline-none">
+      {children}
+    </main>
   );
 }

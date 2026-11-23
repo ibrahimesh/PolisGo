@@ -50,7 +50,7 @@ public enum AuditEntityType
 public record AuditLogQuery(
     Guid? ActorId = null,
     AuditEntityType? EntityType = null,
-    // Inclusive calendar days, UTC.
+    // Inclusive calendar days in Baku (BusinessCalendar).
     DateOnly? From = null,
     DateOnly? To = null,
     int Page = 1,

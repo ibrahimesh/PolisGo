@@ -73,7 +73,7 @@ public class StaffAdminService : IStaffAdminService
 
         var total = await staff.CountAsync(cancellationToken);
         var items = await Project(staff.OrderBy(u => u.FullName).ThenBy(u => u.Id)
-                .Skip((page - 1) * pageSize).Take(pageSize))
+                .Skip(Paging.Skip(page, pageSize)).Take(pageSize))
             .ToListAsync(cancellationToken);
         return new PagedResult<StaffMemberResponse>(items, page, pageSize, total);
     }
@@ -115,6 +115,9 @@ public class StaffAdminService : IStaffAdminService
 
     public async Task<StaffMemberResponse> DeactivateAsync(Guid userId, CancellationToken cancellationToken = default)
     {
+        // The last-admin check and the write hold together: two admins
+        // retiring each other at once can't both pass the check.
+        await using var transaction = await _db.BeginSerializableTransactionAsync(cancellationToken);
         var user = await LoadStaffAsync(userId, cancellationToken);
         if (!user.IsActive) throw new ConflictException(M.AlreadyInactive);
         // The caller is an active admin, so this can only bite when the only
@@ -125,6 +128,7 @@ public class StaffAdminService : IStaffAdminService
         user.Deactivate(UtcNow);
         Record(AuditAction.StaffDeactivated, user, null, null);
         await _db.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
         return await ProjectOneAsync(user.Id, cancellationToken);
     }
 
@@ -147,6 +151,7 @@ public class StaffAdminService : IStaffAdminService
             throw new ValidationException("role", M.RoleInvalid);
         }
 
+        await using var transaction = await _db.BeginSerializableTransactionAsync(cancellationToken);
         var user = await LoadStaffAsync(userId, cancellationToken);
         if (user.Role == role) throw new ConflictException(M.SameRole);
         if (user.Role == UserRole.Admin && user.IsActive) await EnsureAnotherActiveAdminAsync(user.Id, cancellationToken);
@@ -179,6 +184,7 @@ public class StaffAdminService : IStaffAdminService
         }
 
         await _db.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
         return await ProjectOneAsync(user.Id, cancellationToken);
     }
 

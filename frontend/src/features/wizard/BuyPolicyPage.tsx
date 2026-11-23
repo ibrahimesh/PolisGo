@@ -10,7 +10,7 @@ import { PageHeader } from '../../components/layout/PageHeader';
 import { ButtonLink } from '../../components/ui/Button';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { ErrorNotice } from '../../components/ui/ErrorNotice';
-import { todayIso } from '../../lib/dates';
+import { todayIso, tomorrowIso } from '../../lib/dates';
 import { CabinetSkeleton } from '../cabinet/CabinetSkeleton';
 import { cabinetKeys, useInvalidateCabinet, useVehicles } from '../cabinet/queries';
 import { addDays, termMonths } from '../policies/policyDates';
@@ -103,7 +103,9 @@ function prefillState(detail: PolicyDetailResponse, mode: 'renew' | 'draft'): Wi
     startDate: policy.startDate,
   };
   if (mode === 'draft') {
-    if (policy.status !== 'Draft' || policy.startDate < todayIso()) return null;
+    // A draft whose start date has come can no longer be paid (cover starts
+    // tomorrow at the earliest).
+    if (policy.status !== 'Draft' || policy.startDate <= todayIso()) return null;
     return {
       ...initialState(values),
       step: 'payment',
@@ -116,9 +118,11 @@ function prefillState(detail: PolicyDetailResponse, mode: 'renew' | 'draft'): Wi
       },
     };
   }
-  // Renewal: same car and cover, starting the day after the old one ends.
+  // Renewal: same car and cover, starting the day after the old one ends,
+  // and never before tomorrow.
   const nextDay = addDays(policy.endDate, 1);
-  return initialState({ ...values, startDate: nextDay > todayIso() ? nextDay : todayIso() });
+  const tomorrow = tomorrowIso();
+  return initialState({ ...values, startDate: nextDay > tomorrow ? nextDay : tomorrow });
 }
 
 function Wizard({ userId }: { userId: string }) {

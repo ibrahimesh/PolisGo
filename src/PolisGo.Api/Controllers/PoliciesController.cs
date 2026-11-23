@@ -9,8 +9,9 @@ using PolisGo.Domain.Enums;
 namespace PolisGo.Api.Controllers;
 
 // Rows are scoped by PolicyAccess inside the service: Clients see their own,
-// Agents the ones they sold, Adjusters and Admins all. A policy outside the
-// caller's scope is a 404, never a 403, so its existence isn't leaked.
+// Agents the ones they sold, Adjusters those with a claim in their reach,
+// Admins all. A policy outside the caller's scope is a 404, never a 403, so
+// its existence isn't leaked.
 [ApiController]
 [Route("api/policies")]
 [Authorize]
@@ -199,11 +200,14 @@ public class PoliciesController : ControllerBase
     /// </summary>
     /// <response code="200">The cancelled policy.</response>
     /// <response code="401">No or invalid bearer token.</response>
+    /// <response code="403">The caller is an Adjuster.</response>
     /// <response code="404">No such policy, or one the caller can't see.</response>
     /// <response code="409">Already cancelled or expired.</response>
     [HttpPost("{id:guid}/cancel")]
+    [Authorize(Roles = "Client,Agent,Admin")]
     [ProducesResponseType<PolicyResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
     public async Task<ActionResult<PolicyResponse>> Cancel(

@@ -103,6 +103,9 @@ namespace PolisGo.Infrastructure.Persistence.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
+                    b.Property<DateTime?>("PayoutRequestedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<Guid>("PolicyId")
                         .HasColumnType("uniqueidentifier");
 
@@ -311,6 +314,11 @@ namespace PolisGo.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("PolicyId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Payments_PolicyId_Completed")
+                        .HasFilter("[Status] = 'Completed'");
+
                     b.HasIndex("PolicyId", "PaidAt");
 
                     b.ToTable("Payments");
@@ -344,6 +352,10 @@ namespace PolisGo.Infrastructure.Persistence.Migrations
 
                     b.Property<decimal>("Premium")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid>("RowVersion")
+                        .IsConcurrencyToken()
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("datetime2");
@@ -721,25 +733,25 @@ namespace PolisGo.Infrastructure.Persistence.Migrations
                                 .HasColumnType("decimal(18,2)");
 
                             b1.Property<decimal>("BonusMalusFactor")
-                                .HasColumnType("decimal(9,4)");
+                                .HasColumnType("decimal(18,10)");
 
                             b1.Property<decimal>("DriverAgeFactor")
-                                .HasColumnType("decimal(9,4)");
+                                .HasColumnType("decimal(18,10)");
 
                             b1.Property<decimal>("EngineFactor")
-                                .HasColumnType("decimal(9,4)");
+                                .HasColumnType("decimal(18,10)");
 
                             b1.Property<decimal>("ExperienceFactor")
-                                .HasColumnType("decimal(9,4)");
+                                .HasColumnType("decimal(18,10)");
 
                             b1.Property<decimal>("TermFactor")
-                                .HasColumnType("decimal(9,4)");
+                                .HasColumnType("decimal(18,10)");
 
                             b1.Property<decimal>("TotalFactor")
-                                .HasColumnType("decimal(9,4)");
+                                .HasColumnType("decimal(18,10)");
 
                             b1.Property<decimal>("VehicleAgeFactor")
-                                .HasColumnType("decimal(9,4)");
+                                .HasColumnType("decimal(18,10)");
 
                             b1.HasKey("PolicyId");
 

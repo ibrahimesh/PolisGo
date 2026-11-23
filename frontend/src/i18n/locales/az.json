@@ -370,10 +370,11 @@
       "503": "Xidmət müvəqqəti olaraq əlçatan deyil."
     },
     "invalidCredentials": "E-poçt və ya şifrə yanlışdır.",
+    "tooManyAttempts": "Həddən artıq cəhd edildi. Bir neçə dəqiqə gözləyin və yenidən cəhd edin.",
     "emailTaken": "Bu e-poçtla hesab artıq mövcuddur.",
     "unknownProduct": "Bu sığorta məhsulu mövcud deyil.",
     "policyOverlap": "Bu avtomobilin həmin tarixlər üçün bu növdə qaralama və ya qüvvədə olan polisi artıq var.",
-    "draftStartPassed": "Bu qaralamanın başlama tarixi keçib. Yeni tarix seçmək üçün alışı yenidən başladın.",
+    "draftStartPassed": "Bu qaralama artıq öz tarixində başlaya bilməz: sığorta ən tezi sabahdan başlayır. Yeni tarix seçmək üçün alışı yenidən başladın.",
     "policyExpired": "Bu polisin müddəti artıq bitib.",
     "plateTaken": "Bu dövlət nömrə nişanı ilə avtomobil artıq qeydiyyatdadır.",
     "claimDuplicate": "Bu polis, tarix və məbləğ üzrə bildiriş artıq var.",
@@ -437,7 +438,7 @@
     "vinRequired": "VIN kodunu daxil edin.",
     "vinInvalid": "VIN 17 simvoldan ibarətdir: rəqəmlər və I, O, Q-dan başqa latın hərfləri.",
     "vehicleYearRange": "Buraxılış ili 1950-ci ildən gələn ilə qədər olmalıdır.",
-    "startDatePast": "Başlama tarixi keçmişdə ola bilməz.",
+    "startDateTooEarly": "Sığorta ən tezi sabahdan başlaya bilər.",
     "startDateTooFar": "Növbəti 60 gün ərzində başlama tarixi seçin.",
     "policyTypeRequired": "Sığorta növünü seçin.",
     "vehicleRequired": "Avtomobili seçin.",
@@ -467,6 +468,7 @@
     "rejectionReasonRequired": "Rədd səbəbini yazın — müştəri onu görəcək.",
     "staffRoleRequired": "Agent, tənzimləyici və ya administrator seçin.",
     "rangeOrder": "Başlanğıc sondan gec ola bilməz.",
+    "dateOutOfRange": "Tarixlər 1 yanvar 2000 ilə 31 dekabr 2100 arasında olmalıdır.",
     "rangeTooLong": "Ən çox 24 ay seçin.",
     "dateOutsideRange": "Bu tarix icazə verilən müddətdən kənardadır."
   },
@@ -751,7 +753,7 @@
     "fields": {
       "type": "Sığorta növü",
       "startDate": "Başlama tarixi",
-      "startDateHint": "Bu gün və ya növbəti 60 gün ərzində",
+      "startDateHint": "Sabahdan 60 gün irəliyə qədər",
       "term": "Müddət",
       "vehicle": "Avtomobil"
     },
@@ -1279,7 +1281,8 @@
         "NotApproved": "Yalnız təsdiqlənmiş zərərlər ödənilir.",
         "AlreadyPaid": "Zərər artıq ödənilib.",
         "Withdrawn": "Müştəri zərəri geri götürüb.",
-        "Closed": "Zərər bağlanıb."
+        "Closed": "Zərər bağlanıb.",
+        "OutsideYourBook": "Müştəri indi başqa agentə təhkim olunub; onun adından yalnız həmin agent iş görə bilər."
       },
       "conflict": {
         "title": "Siz baxarkən bu zərəri başqası dəyişdi",

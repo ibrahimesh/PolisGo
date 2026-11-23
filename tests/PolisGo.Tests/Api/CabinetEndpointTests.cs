@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.Json;
+using PolisGo.Application.Common;
 using PolisGo.Domain.Entities;
 using PolisGo.Domain.Enums;
 using PolisGo.Tests.Infrastructure;
@@ -16,7 +17,7 @@ public class CabinetEndpointTests : IClassFixture<ApiFactory>
 
     // TestData policies run a year from createdAt, so this makes the last
     // covered day `daysLeft` days from today.
-    private static DateTime CreatedForDaysLeft(int daysLeft) => DateTime.UtcNow.Date.AddYears(-1).AddDays(daysLeft + 1);
+    private static DateTime CreatedForDaysLeft(int daysLeft) => TestDates.TodayStart.AddYears(-1).AddDays(daysLeft + 1);
 
     private sealed record Seeded(HttpClient Client, Customer Customer, Vehicle Vehicle);
 
@@ -31,8 +32,10 @@ public class CabinetEndpointTests : IClassFixture<ApiFactory>
         return new Seeded(client, customer, vehicle);
     }
 
-    private Policy Seed(Seeded s, PolicyStatus status, DateTime createdAt, bool casco = false, Vehicle? vehicle = null) =>
-        _factory.WithDb(db => new TestData(db).Policy(s.Customer, vehicle ?? s.Vehicle, status, createdAt, cascoType: casco));
+    private Policy Seed(Seeded s, PolicyStatus status, DateTime createdAt, bool casco = false, Vehicle? vehicle = null,
+        DateTime? startDate = null) =>
+        _factory.WithDb(db => new TestData(db).Policy(s.Customer, vehicle ?? s.Vehicle, status, createdAt, cascoType: casco,
+            startDate: startDate));
 
     private static async Task<JsonElement> Json(HttpResponseMessage response)
     {
@@ -147,7 +150,8 @@ public class CabinetEndpointTests : IClassFixture<ApiFactory>
         var spare = _factory.WithDb(db => new TestData(db).Vehicle(s.Customer.Id));
         var active = Seed(s, PolicyStatus.Active, CreatedForDaysLeft(40));
         Seed(s, PolicyStatus.Active, CreatedForDaysLeft(-3), casco: true);         // lapsed: not active
-        Seed(s, PolicyStatus.Draft, DateTime.UtcNow, vehicle: spare);               // payable draft
+        Seed(s, PolicyStatus.Draft, DateTime.UtcNow, vehicle: spare,
+            startDate: BusinessCalendar.Today(TimeProvider.System).AddDays(1).ToDateTime(TimeOnly.MinValue)); // payable: starts tomorrow
         Seed(s, PolicyStatus.Draft, DateTime.UtcNow.AddDays(-5), casco: true, vehicle: spare); // stale draft
         _factory.WithDb(db =>
         {

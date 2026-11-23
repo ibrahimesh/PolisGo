@@ -7,6 +7,7 @@ using Microsoft.OpenApi.Models;
 using PolisGo.Api.Auth;
 using PolisGo.Api.Middleware;
 using PolisGo.Application;
+using PolisGo.Application.Common;
 using PolisGo.Infrastructure;
 using PolisGo.Infrastructure.Auth;
 using PolisGo.Infrastructure.Persistence;
@@ -68,8 +69,18 @@ public class Program
         builder.Services.AddAuthorization();
 
         builder.Services.AddCors(options => ConfigureFrontendCors(options, builder.Configuration));
+        builder.Services.AddPolisGoRateLimits(builder.Configuration);
 
         var app = builder.Build();
+
+        // Business dates are Baku dates. Resolving the zone here stops the
+        // API at startup when the image lacks time zone data, instead of on
+        // the first request.
+        app.Logger.LogInformation("Business dates use {TimeZone} (UTC+{Offset}).",
+            BusinessCalendar.TimeZoneId, BusinessCalendar.Zone.BaseUtcOffset.ToString(@"hh\:mm"));
+
+        // Outermost, so every response (errors included) gets the headers.
+        app.UseMiddleware<SecurityHeadersMiddleware>();
 
         // Runs first so every downstream exception hits ProblemDetails formatting.
         app.UseMiddleware<ExceptionHandlingMiddleware>();
@@ -108,6 +119,9 @@ public class Program
         app.UseAuthentication();
         app.UseAuthorization();
 
+        // After authentication: the password-change limit is per account.
+        app.UseRateLimiter();
+
         // Health probe stays anonymous even though [Authorize] is applied at
         // controller level.
         app.MapHealthChecks("/health").AllowAnonymous();
@@ -118,7 +132,7 @@ public class Program
     }
 
     // Demo:SeedData=true fills an empty system with demo accounts and
-    // history (docker-compose.demo.yml). Refused in Production.
+    // history (docker-compose.demo.yml). Only in Development.
     private static async Task SeedDemoDataIfEnabledAsync(WebApplication app)
     {
         if (!app.Configuration.GetValue<bool>("Demo:SeedData")) return;
@@ -134,9 +148,14 @@ public class Program
             services.GetRequiredService<PolisGo.Application.Pricing.IPremiumCalculator>(),
             services.GetRequiredService<TimeProvider>());
 
-        if (result == DemoSeedResult.RefusedInProduction)
+        if (result == DemoSeedResult.RefusedOutsideDevelopment)
         {
-            logger.LogCritical("Demo:SeedData is set in Production; demo data was NOT seeded.");
+            logger.LogCritical("Demo:SeedData is set outside Development ({Environment}); demo data was NOT seeded.",
+                app.Environment.EnvironmentName);
+        }
+        else if (result == DemoSeedResult.MissingPassword)
+        {
+            logger.LogError("Demo:SeedData is set but Demo:Password is empty; demo data was NOT seeded.");
         }
         else
         {

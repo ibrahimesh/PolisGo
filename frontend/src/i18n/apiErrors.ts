@@ -31,6 +31,8 @@ const SERVER_MESSAGE_KEYS: Record<string, string> = {
   'Current password is required.': 'validation.currentPasswordRequired',
   'Current password is incorrect.': 'validation.currentPasswordIncorrect',
   'New password must be different from the current one.': 'validation.passwordUnchanged',
+  // The sign-in, registration and password-change limits (429, RateLimiting.cs).
+  'Too many attempts. Wait a few minutes and try again.': 'errors.tooManyAttempts',
   'Staff accounts have no phone on file.': 'validation.phoneNotApplicable',
   // Vehicle rules — VehicleValidation.Messages (same contract test).
   'Make is required.': 'validation.makeRequired',
@@ -44,14 +46,14 @@ const SERVER_MESSAGE_KEYS: Record<string, string> = {
   'Model year must be between 1950 and next year.': 'validation.vehicleYearRange',
   'Engine capacity must be 10000 cc or less.': 'validation.engineCapacityMax',
   // Purchase rules — PolicyValidation.Messages (same contract test).
-  'Start date cannot be in the past.': 'validation.startDatePast',
+  'Cover can start tomorrow at the earliest.': 'validation.startDateTooEarly',
   'Start date cannot be more than 60 days in the future.': 'validation.startDateTooFar',
   'Policy type is required.': 'validation.policyTypeRequired',
   'Vehicle is required.': 'validation.vehicleRequired',
   'Search must be at most 100 characters.': 'validation.searchTooLong',
   'An active or draft policy of this type already covers the vehicle in the chosen period.':
     'errors.policyOverlap',
-  'The start date of this draft has passed. Start a new purchase to choose a new date.':
+  'This draft can no longer start on its date: cover starts tomorrow at the earliest. Start a new purchase to choose a new date.':
     'errors.draftStartPassed',
   'This policy has already expired.': 'errors.policyExpired',
   'A vehicle with this plate number is already registered.': 'errors.plateTaken',
@@ -92,6 +94,7 @@ const SERVER_MESSAGE_KEYS: Record<string, string> = {
   'The account already has this role.': 'errors.sameRole',
   'The start of the range must be on or before its end.': 'validation.rangeOrder',
   'The range can be at most 24 months.': 'validation.rangeTooLong',
+  'Dates must be between 1 January 2000 and 31 December 2100.': 'validation.dateOutOfRange',
 };
 
 export function serverMessageKey(message: string | undefined): string | undefined {

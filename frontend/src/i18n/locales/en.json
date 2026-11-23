@@ -370,10 +370,11 @@
       "503": "The service is temporarily unavailable."
     },
     "invalidCredentials": "The email or password is incorrect.",
+    "tooManyAttempts": "Too many attempts. Wait a few minutes and try again.",
     "emailTaken": "An account with this email already exists.",
     "unknownProduct": "This insurance product isn't available.",
     "policyOverlap": "This vehicle already has a draft or active policy of this type for those dates.",
-    "draftStartPassed": "The start date of this draft has passed. Start a new purchase to choose a new date.",
+    "draftStartPassed": "This draft can no longer start on its date: cover starts tomorrow at the earliest. Start a new purchase to choose a new date.",
     "policyExpired": "This policy has already expired.",
     "plateTaken": "A vehicle with this plate is already registered.",
     "claimDuplicate": "A claim for this policy, date and amount is already on file.",
@@ -437,7 +438,7 @@
     "vinRequired": "Enter the VIN.",
     "vinInvalid": "A VIN has 17 characters: digits and letters except I, O and Q.",
     "vehicleYearRange": "Model year must be between 1950 and next year.",
-    "startDatePast": "The start date can’t be in the past.",
+    "startDateTooEarly": "Cover can start tomorrow at the earliest.",
     "startDateTooFar": "Choose a start date within the next 60 days.",
     "policyTypeRequired": "Choose a type of cover.",
     "vehicleRequired": "Choose a vehicle.",
@@ -467,6 +468,7 @@
     "rejectionReasonRequired": "Give the reason for the rejection; the customer will read it.",
     "staffRoleRequired": "Choose Agent, Adjuster or Admin.",
     "rangeOrder": "The start must be on or before the end.",
+    "dateOutOfRange": "Dates must be between 1 January 2000 and 31 December 2100.",
     "rangeTooLong": "Choose at most 24 months.",
     "dateOutsideRange": "This date is outside the allowed range."
   },
@@ -751,7 +753,7 @@
     "fields": {
       "type": "Type of cover",
       "startDate": "Cover starts on",
-      "startDateHint": "Today or within the next 60 days",
+      "startDateHint": "From tomorrow up to 60 days ahead",
       "term": "Term",
       "vehicle": "Vehicle"
     },
@@ -1279,7 +1281,8 @@
         "NotApproved": "Only approved claims are paid out.",
         "AlreadyPaid": "The claim is already paid out.",
         "Withdrawn": "The customer withdrew the claim.",
-        "Closed": "The claim is closed."
+        "Closed": "The claim is closed.",
+        "OutsideYourBook": "The customer is now in another agent’s book; only that agent can act for them."
       },
       "conflict": {
         "title": "Someone else changed this claim while you had it open",

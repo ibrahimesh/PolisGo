@@ -26,8 +26,26 @@ public class DemoDataSeederTests
         using var fixture = new SqliteTestDb();
 
         Assert.Equal(DemoSeedResult.Disabled, await Seed(fixture, Config()));
-        Assert.Equal(DemoSeedResult.RefusedInProduction,
+        Assert.Equal(DemoSeedResult.RefusedOutsideDevelopment,
             await Seed(fixture, Config(("Demo:SeedData", "true")), "Production"));
+        Assert.False(await fixture.Db.Users.AnyAsync(u => u.Email.EndsWith(DemoDataSeeder.Domain)));
+    }
+
+    // An allow-list, not a deny-list: any environment but Development (a
+    // "Staging", a misspelt "prod") would get staff accounts sharing a
+    // documented password.
+    [Theory]
+    [InlineData("Production")]
+    [InlineData("Staging")]
+    [InlineData("prod")]
+    public async Task Refused_outside_development(string environment)
+    {
+        using var fixture = new SqliteTestDb();
+        var config = Config(("Demo:SeedData", "true"), ("Demo:Password", "Configured-Passw0rd"));
+
+        var result = await Seed(fixture, config, environment);
+
+        Assert.NotEqual(DemoSeedResult.Seeded, result);
         Assert.False(await fixture.Db.Users.AnyAsync(u => u.Email.EndsWith(DemoDataSeeder.Domain)));
     }
 
@@ -75,13 +93,16 @@ public class DemoDataSeederTests
         Assert.Equal(7, await fixture.Db.Customers.CountAsync(c => c.AgentId != null));
     }
 
+    // No built-in password: demo staff accounts with a password printed in
+    // the README would be a usable default secret.
     [Fact]
-    public async Task Without_a_configured_password_uses_the_documented_demo_one()
+    public async Task Without_a_configured_password_nothing_is_seeded()
     {
         using var fixture = new SqliteTestDb();
-        await Seed(fixture, Config(("Demo:SeedData", "true")));
 
-        var agent = await fixture.Db.Users.SingleAsync(u => u.Email == DemoDataSeeder.MarkerEmail);
-        Assert.True(new BcryptPasswordHasher().Verify(DemoDataSeeder.DefaultPassword, agent.PasswordHash));
+        var result = await Seed(fixture, Config(("Demo:SeedData", "true")));
+
+        Assert.Equal(DemoSeedResult.MissingPassword, result);
+        Assert.False(await fixture.Db.Users.AnyAsync(u => u.Email.EndsWith(DemoDataSeeder.Domain)));
     }
 }

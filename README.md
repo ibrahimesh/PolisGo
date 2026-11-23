@@ -34,7 +34,8 @@ product catalogue (`/api/policy-types`); health check.
   18+) and sign in; JWT-based session.
 - Register vehicles; buy a policy for one — the premium is recalculated on the
   server from stored data, including approved or paid claims of the last three
-  years; start date within 60 days; no overlapping policy of the same type.
+  years; cover starts tomorrow at the earliest and within 60 days; no
+  overlapping policy of the same type.
 - Live quote from stored data (`POST /api/policies/quote`): the same calculation
   as issuing, so the quoted premium is the charged premium.
 - Pay a policy (Draft → Active) or cancel it; file claims on own active
@@ -53,25 +54,28 @@ product catalogue (`/api/policy-types`); health check.
 
 **Agent** — works their own book: the customers an Admin assigned to them
 (`Customer.AgentId`), never another agent's (404). Registers vehicles for
-them, sells and takes payment for policies, files claims on policies they sold;
-sees only those policies and the claims on them; sales figures and a CSV
-export of their policies.
+them, sells and takes payment for policies, files and withdraws claims; reads
+every policy and claim of their book's customers, whoever sold it, and keeps
+read-only sight of what they sold to customers since moved to another agent
+(only the current agent acts for a customer). Sales figures and a CSV export
+of their own sales.
 
 **Adjuster** — claims queue (unassigned and own); start review (assigns the
 claim), approve an amount up to the claimed sum (two decimals), reject with a
 required reason, pay out. Only the assigned adjuster (or an Admin) can decide.
 Decisions carry the claim's `rowVersion`: a decision made on a version
 someone else has changed is a 409 "Concurrent update". The claim detail lists
-every action with the reason it is unavailable. Sees customers only through
-claims in reach, not the agents' books. CSV export of the queue.
+every action with the reason it is unavailable. Sees customers and policies
+only through claims in reach, not the agents' books, and cannot cancel a
+policy. CSV export of the queue.
 
 **Admin** — all of the above; manages staff accounts (create Agent,
 Adjuster or Admin with the registration rules; deactivate, reactivate;
 change role), never their own account and never the last active admin;
 assigns customers to agents; reads the dashboard for any period up to 24
 months and the audit log. Every staff account carries a security stamp in its
-token, checked on each request: deactivation or a role change ends that
-person's open sessions at once, and a deactivated account can't sign in.
+token, checked on each request: deactivation, a role change or a password change
+ends that person's open sessions at once, and a deactivated account can't sign in.
 Staff actions (creation, deactivation, reactivation, role changes, customer
 assignment) are recorded in the audit log from this release on.
 
@@ -197,8 +201,14 @@ frontend/                  React SPA, Playwright e2e, DESIGN.md
 - **Expiry is derived, not scheduled.** An Active policy past its inclusive
   end date reads and filters as Expired
   ([PolicyStatusFilter.cs](src/PolisGo.Application/Policies/PolicyStatusFilter.cs)),
-  and a Draft whose start date has passed can no longer be paid (no backdated
-  cover).
+  and a Draft whose start date has come can no longer be paid: cover starts
+  tomorrow at the earliest, so it never covers the hours before a purchase.
+- **Business dates are Baku dates.** Start and end dates, incident dates,
+  ages and "today" use the `Asia/Baku` date on the server
+  ([BusinessCalendar.cs](src/PolisGo.Application/Common/BusinessCalendar.cs),
+  from the injected `TimeProvider`) and in the SPA (`todayIso`), not UTC:
+  between 00:00 and 04:00 in Baku the UTC date is still yesterday. Timestamps
+  stay UTC; the API refuses to start without time zone data.
 - **Certificates rendered in the browser** with pdf-lib + fontkit (MIT) and
   the app's own fonts (OFL), so they come out in the user's language with no
   server-side translation. The code loads only on Download.
@@ -223,6 +233,12 @@ frontend/                  React SPA, Playwright e2e, DESIGN.md
   header ([Program.cs](src/PolisGo.Api/Program.cs)).
 - **Pricing as a pure function** of its input, including the as-of date;
   coefficients live in one place ([Tariff.cs](src/PolisGo.Application/Pricing/Tariff.cs)).
+- **Brute-force limits.** Sign-in and registration are limited per IP
+  address and password changes per account (fixed windows, `RateLimits` in
+  [appsettings.json](src/PolisGo.Api/appsettings.json)); over the limit is a
+  429 with `Retry-After`, translated in the SPA. An unknown email costs the
+  same password-hash check as a wrong password, so timing doesn't reveal
+  accounts.
 - **Validation enforced twice**: in the browser and in
   [AuthValidation.cs](src/PolisGo.Application/Auth/AuthValidation.cs); a
   frontend test fails if a server message has no translation.
@@ -235,16 +251,19 @@ Requires Docker with Compose and, for the frontend, Node.js 22+.
 cp .env.example .env
 ```
 
-Edit `.env`: `SQL_SA_PASSWORD` needs 8+ characters with three of upper case,
-lower case, digit, symbol; `JWT_SECRET_KEY` needs 32+ characters or the API
-refuses to start (`openssl rand -base64 48`); `SEED_ADMIN_EMAIL` and
-`SEED_ADMIN_PASSWORD` define the admin created on first start.
+Fill in `.env` — the secrets are empty on purpose, and compose refuses to
+start until each is set: `SQL_SA_PASSWORD` needs 8+ characters with three of
+upper case, lower case, digit, symbol; `JWT_SECRET_KEY` needs 32+ characters
+or the API refuses to start (`openssl rand -base64 48`); `SEED_ADMIN_EMAIL`
+and `SEED_ADMIN_PASSWORD` define the admin created on first start.
+`DEMO_PASSWORD` is only needed for the demo data below.
 
 ```bash
 docker compose up --build
 ```
 
-API http://localhost:8080 (no page at `/`) · Swagger
+SQL Server (`1433`) and the API (`8080`) listen on `127.0.0.1` only, not on
+the network. API http://localhost:8080 (no page at `/`) · Swagger
 http://localhost:8080/swagger (sign in with `POST /api/auth/login`, then
 **Authorize**) · health http://localhost:8080/health
 
@@ -271,11 +290,12 @@ docker compose -f docker-compose.yml -f docker-compose.demo.yml up --build
 On first start the API adds demo agents, adjusters and clients, their
 vehicles, policies started months ago with their payments, and claims in every
 status with their history. It runs once per database (a marker account), and
-**refuses to run when `ASPNETCORE_ENVIRONMENT` is `Production`**. The flag is
+**runs only when `ASPNETCORE_ENVIRONMENT` is `Development`** (the compose
+stack's; any other name is refused). The flag is
 `Demo__SeedData=true` if you set it another way.
 
-All demo accounts share one password: `DEMO_PASSWORD` from `.env`, or
-`Demo-Passw0rd` when it is not set (never the admin password). Sign in as,
+All demo accounts share one password: `DEMO_PASSWORD` from `.env`, which
+must be set (there is no built-in one; never the admin password). Sign in as,
 for example:
 
 | Account | Role |
@@ -324,12 +344,19 @@ instead of `echo` — its redirect writes UTF-16, which Vite does not read.
 dotnet test PolisGo.slnx
 ```
 
-**449 backend tests** (xUnit): domain and service tests on SQLite in-memory
+**504 backend tests** (xUnit): domain and service tests on SQLite in-memory
 and HTTP tests via `WebApplicationFactory` (401/403/404 per role, JSON contract,
 and one client reading, paying, searching, uploading to or withdrawing
 another's policy or claim → 404; a client on every staff endpoint → 403, an
 agent deciding → 403, one agent's customers hidden from another and from
-adjusters, decision field rules, stale decisions → 409, CSV escaping).
+adjusters, decision field rules, stale decisions → 409, CSV escaping), the
+rate limits and security headers, contract tests over the compose, CI and
+configuration files, and two requests at once (payments, payouts, the last
+admin) on a SQLite file. Seven of them need SQL Server itself
+(`[SqlServerFact]`: the same races, paging, decimal precision, the migration
+backfills over existing rows); they are skipped unless
+`POLISGO_TEST_SQLSERVER` holds a connection string, and CI's SQL Server job
+runs them.
 
 ```bash
 cd frontend
@@ -338,8 +365,15 @@ npx playwright install chromium
 npm run e2e
 ```
 
-**309 frontend unit tests** (Vitest) and **146 end-to-end tests** (Playwright +
-axe-core: 78 at 1440px, plus the 36 cabinet and staff tests again at 390px) against the
+The e2e suite needs the stack with the demo data and relaxed sign-in limits
+(one address registers hundreds of test users), from the repository root:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.demo.yml -f docker-compose.e2e.yml up --build
+```
+
+**315 frontend unit tests** (Vitest) and **150 end-to-end tests** (Playwright +
+axe-core: 97 at 1440px, plus the 53 cabinet and staff tests again at 390px) against the
 real API — the e2e suite needs the Docker stack on `:8080`. They cover
 sign-up and sign-in, buying a policy end to end, the certificate download,
 renewal, filing a claim with photos, withdrawing it, the claim timeline after
@@ -365,14 +399,25 @@ stops working and that the last active admin is kept.
 [`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs on pushes and pull
 requests to `main`:
 
-- **Build and test** — Release build with warnings as errors, all backend tests
-  with coverage (TRX and Cobertura uploaded as artifacts).
-- **Frontend** — Node 22, `npm ci`, lint, typecheck, Vitest, production build.
-- **End-to-end** — `docker compose` starts SQL Server and the API (fresh
-  database, migrations and the dev admin seed on start-up), then the full
+- **Build and test** — NuGet vulnerability check, Release build with
+  warnings as errors, all backend tests with coverage (generated migrations
+  excluded; TRX and Cobertura uploaded as artifacts). The SQL Server tests
+  are skipped here.
+- **Frontend** — Node 22, `npm ci`, `npm audit` (high), lint, typecheck,
+  Prettier check, Vitest, production build.
+- **End-to-end** — `docker compose` with the demo and e2e overrides starts
+  SQL Server and the API (fresh database, migrations, the dev admin seed and
+  the demo data on start-up, relaxed sign-in limits), then the full
   Playwright suite runs against it; on failure the HTML report, traces,
   screenshots and container logs are kept as artifacts.
+- **SQL Server integration tests** — the `[SqlServerFact]` tests (concurrent
+  payments, payouts and admin changes, paging, decimal precision, migrations
+  with data) against a SQL Server service container, each on a fresh
+  database built by the migrations.
 - **Docker build** — builds the API image with Buildx (not pushed).
+
+Actions are pinned by commit SHA and base images by digest; Dependabot
+updates NuGet, npm, Docker, docker-compose and Actions weekly.
 
 ## API overview
 
@@ -392,10 +437,10 @@ Generated from the controllers; full schemas in Swagger.
 | GET | `/api/vehicles` | Signed in (Clients: own; staff: customers in scope) |
 | POST | `/api/vehicles` | Client, Agent, Admin (Agents: own customers) |
 | POST | `/api/policies/quote`, `/api/policies` | Client, Agent, Admin |
-| GET | `/api/policies`, `/api/policies/{id}` | Signed in, row-filtered |
+| GET | `/api/policies`, `/api/policies/{id}` | Signed in, row-filtered (Adjusters: policies with a claim in reach) |
 | GET | `/api/policies/export` (CSV, list filters) | Agent, Admin |
 | POST | `/api/policies/{id}/pay` | Client, Agent, Admin |
-| POST | `/api/policies/{id}/cancel` | Signed in, row-filtered |
+| POST | `/api/policies/{id}/cancel` | Client, Agent, Admin; row-filtered |
 | POST | `/api/claims` | Client, Agent, Admin |
 | GET | `/api/claims` (status, open, search, sort, paged), `/api/claims/{id}`, `/api/claims/{id}/history` | Signed in, row-filtered |
 | POST | `/api/claims/{id}/withdraw` | Client, Agent, Admin; row-filtered |
@@ -433,7 +478,6 @@ Not done yet:
   by type and first bytes and kept on a local volume).
 - A scheduled job that stores `Expired` (today it is derived from the end
   date on every read) and server-side language/theme preferences.
-- Revoking other sessions on a password change (tokens live up to 60 minutes).
 - Real payment and payout providers instead of the fake gateways.
 - Refresh tokens (sessions are a single 60-minute access token).
 

@@ -47,6 +47,18 @@ public class ExceptionHandlingMiddleware
             LogExpected(ex, context);
             await WriteProblem(context, StatusCodes.Status401Unauthorized, "Unauthorized", ex.Message);
         }
+        catch (TooManyRequestsException ex)
+        {
+            LogExpected(ex, context);
+            await WriteProblem(context, StatusCodes.Status429TooManyRequests, "Too many requests", ex.Message,
+                decorate: response =>
+                {
+                    if (ex.RetryAfter is { } wait)
+                    {
+                        response.Headers.RetryAfter = ((int)Math.Ceiling(wait.TotalSeconds)).ToString();
+                    }
+                });
+        }
         catch (NotFoundException ex)
         {
             LogExpected(ex, context);
@@ -70,6 +82,14 @@ public class ExceptionHandlingMiddleware
             await WriteProblem(context, StatusCodes.Status409Conflict, "Invalid state transition", ex.Message);
         }
         catch (DbUpdateConcurrencyException ex)
+        {
+            LogExpected(ex, context);
+            await WriteProblem(context, StatusCodes.Status409Conflict,
+                ConcurrentUpdateTitle, ConcurrencyConflictException.DefaultMessage);
+        }
+        // SQL Server ends a serializable race (the last-admin rule) by killing
+        // one transaction: that caller collided with another, as above.
+        catch (Exception ex) when (IsDeadlockVictim(ex))
         {
             LogExpected(ex, context);
             await WriteProblem(context, StatusCodes.Status409Conflict,
@@ -113,7 +133,8 @@ public class ExceptionHandlingMiddleware
         int status,
         string title,
         string detail,
-        IReadOnlyDictionary<string, string[]>? errors = null)
+        IReadOnlyDictionary<string, string[]>? errors = null,
+        Action<HttpResponse>? decorate = null)
     {
         if (context.Response.HasStarted)
         {
@@ -123,6 +144,7 @@ public class ExceptionHandlingMiddleware
         context.Response.Clear();
         context.Response.StatusCode = status;
         context.Response.ContentType = "application/problem+json";
+        decorate?.Invoke(context.Response);
 
         var traceId = GetTraceId(context);
 
@@ -147,6 +169,18 @@ public class ExceptionHandlingMiddleware
 
     private static string GetTraceId(HttpContext context)
         => Activity.Current?.Id ?? context.TraceIdentifier;
+
+    // SQL Server error 1205 ("... was deadlocked ... chosen as the deadlock
+    // victim"), wrapped by EF or not. Text, like the check below, so the Api
+    // needn't reference the provider's exception types.
+    private static bool IsDeadlockVictim(Exception ex)
+    {
+        for (Exception? e = ex; e is not null; e = e.InnerException)
+        {
+            if (e.Message.Contains("deadlock victim", StringComparison.OrdinalIgnoreCase)) return true;
+        }
+        return false;
+    }
 
     private static bool IsUniqueConstraintViolation(DbUpdateException ex)
     {

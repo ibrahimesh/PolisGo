@@ -7,6 +7,7 @@ import { onUnauthorized } from '../api/http';
 import { tokenStore } from '../api/tokenStore';
 import type { AuthResponse, LoginRequest, RegisterRequest } from '../api/types';
 import { useToast } from '../components/ui/ToastProvider';
+import { clearAllPendingFiles } from '../features/claims/upload/pendingFiles';
 import { AuthContext } from './AuthContext';
 import type { AuthContextValue, AuthStatus } from './AuthContext';
 
@@ -18,17 +19,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const { t } = useTranslation();
   const [session, setSession] = useState(() => tokenStore.get());
 
-  useEffect(() => tokenStore.subscribe(setSession), []);
+  // A session can end without "Sign out": the token runs out in an open tab,
+  // or the API rejects it (deactivation, role change). However it ends, the
+  // private data goes with it, so the next person to sign in on this tab
+  // never sees the previous one's cache or the photos picked for a claim.
+  useEffect(() => {
+    let previous = tokenStore.get();
+    return tokenStore.subscribe((next) => {
+      setSession(next);
+      if (previous !== null && next === null) {
+        queryClient.clear();
+        void clearAllPendingFiles();
+      }
+      previous = next;
+    });
+  }, [queryClient]);
 
-  // When the API rejects our token, drop every cached private query and tell
-  // the user; route guards then redirect to sign-in on the next render.
+  // When the API rejects our token (the store is cleared, and the cache with
+  // it, above), tell the user; route guards then redirect to sign-in.
   useEffect(
     () =>
       onUnauthorized(() => {
-        queryClient.removeQueries({ queryKey: ME_QUERY_KEY });
         toast({ title: t('auth.sessionExpired'), tone: 'info' });
       }),
-    [queryClient, toast, t],
+    [toast, t],
   );
 
   // The token alone isn't trusted for identity: /me confirms it is still valid

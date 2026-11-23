@@ -3,9 +3,28 @@
 
 export const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
-// The API prices "as of" UTC today (DateOnly.FromDateTime(DateTime.UtcNow)).
+// Business dates — cover, incidents, birthdays, "today" — are Baku dates on
+// both sides (BusinessCalendar.cs). Baku is UTC+4 all year, so between 00:00
+// and 04:00 there the UTC date is still yesterday.
+export const BUSINESS_TIME_ZONE = 'Asia/Baku';
+
+const businessDate = new Intl.DateTimeFormat('en-CA', {
+  timeZone: BUSINESS_TIME_ZONE,
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+});
+
 export function todayIso(now: Date = new Date()): string {
-  return now.toISOString().slice(0, 10);
+  const parts = Object.fromEntries(businessDate.formatToParts(now).map((p) => [p.type, p.value]));
+  return `${parts.year ?? ''}-${parts.month ?? ''}-${parts.day ?? ''}`;
+}
+
+// The earliest start of new cover (PolicyValidation.StartDateTooEarly).
+export function tomorrowIso(now: Date = new Date()): string {
+  const date = new Date(`${todayIso(now)}T00:00:00Z`);
+  date.setUTCDate(date.getUTCDate() + 1);
+  return date.toISOString().slice(0, 10);
 }
 
 export function isValidIsoDate(value: string): boolean {

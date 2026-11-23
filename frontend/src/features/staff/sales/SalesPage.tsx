@@ -2,6 +2,7 @@ import { useEffect, useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useSearchParams } from 'react-router';
 import { policiesApi } from '../../../api/endpoints';
+import { useAuth } from '../../../auth/AuthContext';
 import type { ListPoliciesQuery, PolicyResponse, PolicyStatus } from '../../../api/types';
 import { PageHeader } from '../../../components/layout/PageHeader';
 import { Button } from '../../../components/ui/Button';
@@ -36,8 +37,9 @@ import { StaffPicker } from '../../admin/StaffPicker';
 import { exportFileName } from '../saveBlob';
 import { SalesSummaryTiles } from './SalesSummaryTiles';
 
-// The agent's own sales (an Admin's: everyone's): the figures at the top and
-// the list below come from the same visibility rule on the server.
+// The agent's own sales (an Admin's: everyone's). An agent can read more than
+// they sold (every policy of their book), so the list asks for their sales
+// by agent id, matching the figures at the top.
 // mode 'agent': the agent's own sales with their figures. mode 'admin':
 // every policy, with who sold it and a filter by agent.
 export function SalesPage({ mode = 'agent' }: { mode?: 'agent' | 'admin' }) {
@@ -60,7 +62,9 @@ export function SalesPage({ mode = 'agent' }: { mode?: 'agent' | 'admin' }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedSearch]);
 
-  const query = toQuery(state);
+  const { user } = useAuth();
+  const listQuery = toQuery(state);
+  const query: ListPoliciesQuery = admin || !user ? listQuery : { ...listQuery, agentId: user.id };
   const sales = useSales(query);
   const data = sales.data;
   const pages = data ? pageCount(data.totalCount) : 1;

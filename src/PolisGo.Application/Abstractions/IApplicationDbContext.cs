@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using PolisGo.Domain.Entities;
 
 namespace PolisGo.Application.Abstractions;
@@ -23,4 +24,8 @@ public interface IApplicationDbContext
     DbSet<AuditEntry> AuditEntries { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
+
+    // For a rule that a check and a later write must hold together (the last
+    // active admin): run both inside this and commit.
+    Task<IDbContextTransaction> BeginSerializableTransactionAsync(CancellationToken cancellationToken = default);
 }

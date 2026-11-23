@@ -29,8 +29,14 @@ every change in this repo.
   rows a caller sees; a row outside that scope is a 404, never a 403, so
   existence isn't leaked. Any new endpoint that returns policies, claims or
   customers must go through them. An agent's customers are those with
-  `Customer.AgentId` = the agent (an Admin assigns them); adjusters see a
-  customer only through a claim in their reach.
+  `Customer.AgentId` = the agent (an Admin assigns them). An agent *reads*
+  the policies they sold (kept after the customer moves on) and every policy
+  and claim of a customer now in their book; every *write* (file or
+  withdraw a claim, upload, pay, cancel) goes through `PolicyAccess.WritableBy`
+  / `ClaimAccess.WritableBy`, which need the customer in the agent's current
+  book (a blocked withdraw says `OutsideYourBook`). Adjusters see a customer,
+  and a policy, only through a claim in their reach (the open queue or
+  their own), and never cancel a policy.
 - **Claim decisions take the `rowVersion`** the caller loaded; a stale one is
   a 409 titled "Concurrent update" (`ConcurrencyConflictException`), which
   the SPA tells apart from other 409s. The claim detail's `actions` list says
@@ -38,15 +44,19 @@ every change in this repo.
   there and a translation in the same change.
 - **Sessions are checked on every request** (`SessionValidator`): the
   token's `stamp` must match the user's `SecurityStamp` and the user must be
-  active. Rotate the stamp (`User.Deactivate`, `User.ChangeRole`) whenever a
+  active. Rotate the stamp (`User.Deactivate`, `User.ChangeRole`,
+  `User.ChangePassword`, which hands the caller a fresh token) whenever a
   change must end existing sessions; inactive users can't sign in.
 - **Staff actions are audited**: any admin change to an account or an
   assignment adds an `AuditEntry` in the same SaveChanges. The audit feed
   (`AuditLogService`) reads only recorded rows: status history and audit
   entries. Never synthesise events.
 - **Staff management rules** live in `StaffAdminService`: nobody acts on
-  their own account, the last active admin is kept (checked first), a former
-  agent's customers are released. Messages in `AdminValidation` (contract-tested).
+  their own account, the last active admin is kept (checked first, inside
+  `BeginSerializableTransactionAsync` with the write, so two admins acting on
+  each other at once can't both pass; SQL Server's deadlock victim is a 409
+  "Concurrent update"), a former agent's customers are released. Messages in
+  `AdminValidation` (contract-tested).
 - **CSV exports** reuse the list's filter (`Filter(...)` in the service), are
   capped at 5000 rows, and build cells only through `Csv.Text` /
   `Csv.Number` / `Csv.Date` (formula-safe, UTF-8 with BOM).
@@ -54,6 +64,17 @@ every change in this repo.
 - **Errors** are ProblemDetails with `traceId`, written only by
   `ExceptionHandlingMiddleware` — throw `ValidationException`,
   `NotFoundException`, `ConflictException`; no try/catch in controllers.
+- **Security headers** (`SecurityHeadersMiddleware`, outermost): `nosniff`,
+  `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer`, a `default-src
+  'none'` CSP (not on `/swagger`), and `Cache-Control: no-store` on
+  signed-in responses unless the endpoint sets its own cache policy.
+- **Brute-force limits** (`RateLimiting.cs`, `[EnableRateLimiting]`): sign-in
+  and registration per IP address, password change per account, fixed
+  windows from `RateLimits` (strict in `appsettings.json`, relaxed by
+  `docker-compose.e2e.yml` and `ApiFactory`). Over the limit the limiter
+  throws `TooManyRequestsException`: a 429 with `Retry-After` and
+  `AuthValidation.Messages.TooManyAttempts` (translated in the SPA). Behind a
+  reverse proxy, configure forwarded headers before trusting the address.
 - **Swagger:** XML `<summary>` and `<response>` docs plus
   `[ProducesResponseType]` for every status an endpoint can return.
 
@@ -73,9 +94,9 @@ every change in this repo.
 | GET | `/api/policy-types` | Anonymous (public cache 5 min) |
 | GET | `/api/vehicles` | Signed in; Clients see only their own, staff those of customers in `CustomerAccess` |
 | POST | `/api/vehicles` | Client, Agent, Admin (an Agent only for their own customers) |
-| GET | `/api/policies` (status, type, search, sort, paged) · `/api/policies/{id}` (detail) | Signed in, scoped by `PolicyAccess` |
+| GET | `/api/policies` (status, type, search, sort, paged) · `/api/policies/{id}` (detail) | Signed in, scoped by `PolicyAccess` (an Adjuster sees only policies with a claim in reach) |
 | POST | `/api/policies/quote` · `/api/policies` · `/api/policies/{id}/pay` | Client, Agent, Admin |
-| POST | `/api/policies/{id}/cancel` | Signed in, scoped by `PolicyAccess` |
+| POST | `/api/policies/{id}/cancel` | Client, Agent, Admin; scoped by `PolicyAccess` |
 | GET | `/api/policies/export` (list filters, CSV) | Agent, Admin; scoped by `PolicyAccess` |
 | GET | `/api/claims` (status, open, search, sort, paged) · `/{id}` · `/{id}/history` · `/{id}/documents/{docId}` | Signed in, scoped by `ClaimAccess` |
 | POST | `/api/claims` · `/api/claims/{id}/withdraw` | Client, Agent, Admin (withdraw scoped by `ClaimAccess`) |
@@ -108,6 +129,18 @@ every change in this repo.
 - **Policy status is effective on read.** Nothing stores `Expired`: an Active
   policy past its inclusive end date reads and filters as Expired
   (`Policy.StatusOn`, `PolicyStatusFilter`). Use them in any new policy query.
+- **Business dates are Baku dates.** "Today", start/end, incident, birth and
+  licence dates come from `BusinessCalendar.Today(clock)` (`Asia/Baku`, with
+  the injected `TimeProvider`), never `DateTime.UtcNow.Date`; the SPA's
+  `todayIso()` matches. Timestamps (`CreatedAt`, `PaidAt`, history) stay UTC;
+  the admin dashboard and audit day filters are Baku days
+  (`BusinessCalendar.StartOfDayUtc`), and the dashboard's monthly buckets
+  group by the timestamps' UTC month. The API logs the zone at
+  startup and refuses to start without time zone data (the aspnet image
+  ships `tzdata`).
+- **Cover starts tomorrow at the earliest** (`StartDateTooEarly`), and a
+  Draft whose start date has come can't be paid (`DraftStartPassed`): no
+  policy pays for the hours before its purchase.
 - **Status changes go through the entity** (`RecordIssued`, `Activate`,
   `Cancel`), which append `PolicyStatusHistory`. Pricing factors are frozen
   on the policy at issue (`Policy.Pricing`); quote and create share
@@ -118,6 +151,11 @@ every change in this repo.
 - **Claim status changes go through the entity** too (`StartReview`,
   `Approve`, `Reject`, `MarkPaid`, `Withdraw`), each appending
   `ClaimStatusHistory`. Documents can be added only while `Claim.IsOpen`.
+- **Money moves once.** A payout is claimed in the database
+  (`Claim.StartPayout`, saved) before the payout gateway is called; a policy
+  payment is settled by `Policy.RowVersion` and a unique completed payment.
+  Both gateways take an idempotency key per claim / per policy, so a retry
+  is the same transfer, never a second one.
   Claim updates and renewal reminders are derived on read; only read marks
   (`ClaimUpdateRead`, `PolicyReminderRead`) are stored.
 - **Check text lengths in the service, not only in the column.** SQLite
@@ -144,9 +182,10 @@ every change in this repo.
 ## Demo data
 
 - `DemoDataSeeder` (Infrastructure) runs when `Demo:SeedData=true`
-  (`docker-compose.demo.yml`), never in Production, once per database (the
+  (`docker-compose.demo.yml`), only in Development, once per database (the
   `demo.agent1@demo.polisgo.az` marker). Demo accounts share `Demo:Password`
-  (default `Demo-Passw0rd`), never the admin secret. Keep its history
+  (required, no built-in value: `MissingPassword` otherwise), never the admin
+  secret. Keep its history
   consistent with the entities' rules (dates inside cover, a row per
   transition) and extend `DemoDataSeederTests` with it.
 
@@ -168,6 +207,14 @@ every change in this repo.
 - **HTTP tests** use `ApiFactory` (`WebApplicationFactory` + SQLite) and
   `ClientAs(role)` for a real JWT. Every endpoint gets one: anonymous → 401,
   each wrong role → 403, happy path and 404 as ProblemDetails.
+- **Concurrency and SQL Server tests:** two requests at once run on
+  `FileSqliteDb` (one connection per context) with `ArrivalGate`/`SaveGate`
+  lining them up, and again on SQL Server as `[SqlServerFact]` with
+  `SqlServerTestDb` (a fresh database built by the migrations). Those run
+  when `POLISGO_TEST_SQLSERVER` holds a connection string (CI job "SQL Server
+  integration tests"; locally e.g. `Server=127.0.0.1,1433;User Id=sa;...`)
+  and are skipped otherwise. Anything that depends on locking, decimal
+  rounding or migration SQL gets one.
 - CI builds with `-warnaserror`; keep the build warning-free.
 
 ## Frontend
@@ -213,7 +260,10 @@ React Router, TanStack Query, React Hook Form + Zod, react-i18next.
 - Choosing a staff member: `StaffPicker` (server search + select), never a
   plain list of the first page of accounts.
 - Every private query lives under `cabinetKeys.all`; a write invalidates
-  that prefix (`useInvalidateCabinet`), and sign-out clears the cache.
+  that prefix (`useInvalidateCabinet`). Any end of a session — sign-out, the
+  token's expiry timer, a 401 — clears the whole cache and the pending claim
+  photos (`AuthProvider` watches `tokenStore`), so the next person on the tab
+  starts empty.
 - `src/i18n` — setup, `locales/{en,ru,az}.json`, API error mapping, number
   formatting. `src/lib` — dates and hooks. `e2e/` — Playwright suite.
 - Routes are lazy-loaded (`React.lazy` in `App.tsx`); add new pages the same way.
@@ -308,8 +358,12 @@ React Router, TanStack Query, React Hook Form + Zod, react-i18next.
 
 Run from `frontend/`:
 
-- `npm run lint` · `npm run typecheck` · `npm test` (Vitest) · `npm run build`
-  — CI runs exactly these.
+- `npm audit --audit-level=high` · `npm run lint` · `npm run typecheck` ·
+  `npm run format:check` · `npm test` (Vitest) · `npm run build` — CI runs
+  exactly these, in this order.
+- **Pinning:** GitHub Actions by commit SHA (`# vN` comment), base images by
+  digest (`tag@sha256:...`), both kept current by Dependabot (NuGet, npm,
+  Docker, docker-compose, Actions); `SupplyChainConfigurationTests` checks it.
 - `npm run e2e` — Playwright + axe against the real API (needs the Docker
   stack on `:8080`, rebuilt from the current branch; starts the dev server
   itself). Covers happy paths, negative form cases, server-400 mapping,
@@ -322,6 +376,10 @@ Run from `frontend/`:
   Run locally with `--workers=4` or fewer: more Chromium workers than that
   crash on a laptop. Arrange data through the API
   (`registerSession`, `openSession`, `cabinetApi` in `e2e/helpers.ts`;
+  the API sells cover from tomorrow only, so `activePolicy()` moves a paid
+  policy back with `startCoverEarlier` — `sqlcmd` in the stack's `sqlserver`
+  container, run from the repo root; a renamed compose project needs
+  `COMPOSE_PROJECT_NAME`;
   no `use…` names there: ESLint's hooks rules cover `e2e/` too);
   test through the UI only what the test is about. Creates real users with
   `@polisgo.test` emails. Runs in CI (the `e2e` job) against a fresh
@@ -330,9 +388,12 @@ Run from `frontend/`:
   `claims-api.spec.ts` and `api-staff.spec.ts` check length limits, uploads,
   decisions, concurrency and scoping against SQL Server. `staff-admin.spec.ts`
   covers the admin panel and reads the demo data; `cabinet-datefield.spec.ts`
-  the date field. CI starts the stack with `docker-compose.demo.yml`
-  (`COMPOSE_FILE`); locally use `docker compose -f docker-compose.yml -f
-  docker-compose.demo.yml up --build` before `npm run e2e`.
+  the date field. CI starts the stack with `docker-compose.demo.yml` and
+  `docker-compose.e2e.yml` (`COMPOSE_FILE`; the e2e file relaxes the
+  brute-force limits, which one address registering hundreds of users would
+  otherwise hit); locally use `docker compose -f docker-compose.yml -f
+  docker-compose.demo.yml -f docker-compose.e2e.yml up --build` before
+  `npm run e2e`.
 - `npm run e2e:screenshots` — regenerates `frontend/docs/screenshots`
   (landing full page; cabinet, staff and admin pages first screen, dark and
   light, desktop and mobile; admin pages need the demo data).

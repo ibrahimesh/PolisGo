@@ -34,13 +34,15 @@ public class AuditLogService : IAuditLogService
     {
         var page = Math.Clamp(query.Page, 1, MaxPage);
         var pageSize = Math.Clamp(query.PageSize, 1, MaxPageSize);
+        AdminValidation.EnsureInRange(query.From, query.To);
         if (query.From is { } f && query.To is { } t && f > t)
         {
             throw new ValidationException("from", M.RangeOrder);
         }
-        var from = query.From?.ToDateTime(TimeOnly.MinValue);
-        // Inclusive end day: everything before the next midnight.
-        var before = query.To?.AddDays(1).ToDateTime(TimeOnly.MinValue);
+        // Baku days, as the SPA's "today": from that day's midnight in Baku,
+        // and the end day inclusive (everything before the next midnight).
+        DateTime? from = query.From is { } fromDay ? BusinessCalendar.StartOfDayUtc(fromDay) : null;
+        DateTime? before = query.To is { } toDay ? BusinessCalendar.StartOfDayUtc(toDay.AddDays(1)) : null;
         var take = page * pageSize;
         var wants = (AuditEntityType type) => query.EntityType is null || query.EntityType == type;
 
@@ -122,7 +124,7 @@ public class AuditLogService : IAuditLogService
 
         var items = rows
             .OrderByDescending(r => r.OccurredAt).ThenBy(r => r.Id)
-            .Skip((page - 1) * pageSize)
+            .Skip(Paging.Skip(page, pageSize))
             .Take(pageSize)
             .ToList();
         return new PagedResult<AuditEventResponse>(items, page, pageSize, total);

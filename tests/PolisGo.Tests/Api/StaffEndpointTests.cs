@@ -1,7 +1,7 @@
-using System.Net;
 using System.Net.Http.Json;
-using System.Text;
+using System.Net;
 using System.Text.Json;
+using System.Text;
 using PolisGo.Application.Claims;
 using PolisGo.Application.Common;
 using PolisGo.Application.Customers;
@@ -174,7 +174,7 @@ public class StaffEndpointTests : IClassFixture<ApiFactory>
         var sale = new
         {
             vehicleId, policyTypeCode = "CASCO", termMonths = 12, customerId = theirs.Id,
-            startDate = DateOnly.FromDateTime(DateTime.UtcNow).ToString("yyyy-MM-dd")
+            startDate = BusinessCalendar.Today(TimeProvider.System).AddDays(1).ToString("yyyy-MM-dd")
         };
         await AssertProblem(await agent.PostAsJsonAsync("/api/policies/quote", sale), HttpStatusCode.NotFound);
         await AssertProblem(await agent.PostAsJsonAsync("/api/policies", sale), HttpStatusCode.NotFound);
@@ -243,6 +243,84 @@ public class StaffEndpointTests : IClassFixture<ApiFactory>
         await AssertProblem(
             await admin.PutAsJsonAsync($"/api/customers/{Guid.NewGuid()}/agent", new { agentId }),
             HttpStatusCode.NotFound);
+    }
+
+    // A customer moves from agent A's book to agent B's. A keeps reading what
+    // they sold but acts for the customer no more; B reads and serves all of
+    // the customer's cover, whoever sold it.
+    [Fact]
+    public async Task Moving_a_customer_moves_the_right_to_act_to_the_new_agent()
+    {
+        var agentA = _factory.ClientAs(UserRole.Agent, out var agentAId, out _);
+        var agentB = _factory.ClientAs(UserRole.Agent, out var agentBId, out _);
+        var (customerId, sold, draft, selfService, claimId) = _factory.WithDb(db =>
+        {
+            var data = new TestData(db);
+            var customer = data.Customer(agentId: agentAId);
+            var vehicle = data.Vehicle(customer.Id);
+            var p1 = data.Policy(customer, vehicle, agentId: agentAId, createdAt: DateTime.UtcNow.AddMonths(-1));
+            var p2 = data.Policy(customer, data.Vehicle(customer.Id), PolicyStatus.Draft, agentId: agentAId,
+                startDate: BusinessCalendar.Today(TimeProvider.System).AddDays(1).ToDateTime(TimeOnly.MinValue));
+            var p3 = data.Policy(customer, data.Vehicle(customer.Id), createdAt: DateTime.UtcNow.AddMonths(-2));
+            var claim = data.Claim(p1);
+            customer.AgentId = agentBId; // an Admin reassigns the customer
+            db.SaveChanges();
+            return (customer.Id, p1.Id, p2.Id, p3.Id, claim.Id);
+        });
+        var today = TestDates.Today.ToString("yyyy-MM-dd");
+
+        // A: reads what they sold, nothing else, and may not act.
+        Assert.Equal(HttpStatusCode.OK, (await agentA.GetAsync($"/api/policies/{sold}")).StatusCode);
+        var asA = await Json(await agentA.GetAsync($"/api/claims/{claimId}"));
+        Assert.False(asA.GetProperty("canWithdraw").GetBoolean());
+        Assert.False(asA.GetProperty("canAddDocuments").GetBoolean());
+        var withdraw = asA.GetProperty("actions").EnumerateArray().Single(a => a.GetProperty("action").GetString() == "Withdraw");
+        Assert.Equal(ClaimActionBlock.OutsideYourBook, withdraw.GetProperty("blockedReason").GetString());
+        await AssertProblem(await agentA.GetAsync($"/api/policies/{selfService}"), HttpStatusCode.NotFound);
+        await AssertProblem(await agentA.GetAsync($"/api/customers/{customerId}"), HttpStatusCode.NotFound);
+        await AssertProblem(await agentA.PostAsJsonAsync("/api/claims", new
+        {
+            policyId = sold, incidentDate = today, description = "Mirror broken while parked.",
+            claimedAmount = 120m, customerId, incidentType = "Vandalism", location = "Baku"
+        }), HttpStatusCode.NotFound);
+        await AssertProblem(await agentA.PostAsJsonAsync($"/api/claims/{claimId}/withdraw", new { }), HttpStatusCode.NotFound);
+        using (var form = new MultipartFormDataContent())
+        {
+            form.Add(new ByteArrayContent([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0, 0, 0, 13]), "file", "photo.png");
+            await AssertProblem(await agentA.PostAsync($"/api/claims/{claimId}/documents", form), HttpStatusCode.NotFound);
+        }
+        await AssertProblem(await agentA.PostAsync($"/api/policies/{draft}/pay", null), HttpStatusCode.NotFound);
+        await AssertProblem(await agentA.PostAsync($"/api/policies/{sold}/cancel", null), HttpStatusCode.NotFound);
+
+        // B: reads the customer's existing cover and claims, and serves them.
+        var asB = await Json(await agentB.GetAsync($"/api/customers/{customerId}"));
+        var listed = asB.GetProperty("policies").EnumerateArray().Select(p => p.GetProperty("id").GetGuid()).ToHashSet();
+        Assert.Equal(new HashSet<Guid> { sold, draft, selfService }, listed);
+        var claimAsB = await Json(await agentB.GetAsync($"/api/claims/{claimId}"));
+        Assert.True(claimAsB.GetProperty("canWithdraw").GetBoolean());
+        Assert.Equal(HttpStatusCode.OK, (await agentB.PostAsync($"/api/policies/{draft}/pay", null)).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await agentB.PostAsJsonAsync($"/api/claims/{claimId}/withdraw", new { })).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await agentB.PostAsync($"/api/policies/{selfService}/cancel", null)).StatusCode);
+    }
+
+    // The overview's sales block is what the agent sold, not every policy
+    // of their book they can read.
+    [Fact]
+    public async Task An_agents_sales_figures_count_only_what_they_sold()
+    {
+        var agent = _factory.ClientAs(UserRole.Agent, out var agentId, out _);
+        _factory.WithDb(db =>
+        {
+            var data = new TestData(db);
+            var customer = data.Customer(agentId: agentId);
+            data.Payment(data.Policy(customer, data.Vehicle(customer.Id), agentId: agentId), 100m);
+            data.Payment(data.Policy(customer, data.Vehicle(customer.Id)), 70m); // self-service, same book
+            return 0;
+        });
+
+        var sales = (await Json(await agent.GetAsync("/api/staff/overview"))).GetProperty("sales");
+
+        Assert.Equal(100m, sales.GetProperty("premiumWritten").GetDecimal());
     }
 
     // ---------- Decisions ----------

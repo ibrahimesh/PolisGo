@@ -16,6 +16,9 @@ public class PolicyConfiguration : IEntityTypeConfiguration<Policy>
 
         builder.HasIndex(p => p.PolicyNumber).IsUnique();
 
+        // A stale save (two payments of one Draft) fails instead of landing twice.
+        builder.Property(p => p.RowVersion).IsConcurrencyToken();
+
         // Admin stats: GROUP BY Status, and the monthly window on CreatedAt
         // (which also serves the default newest-first list ordering).
         builder.HasIndex(p => p.Status);
@@ -27,18 +30,20 @@ public class PolicyConfiguration : IEntityTypeConfiguration<Policy>
         builder.HasIndex(p => new { p.CustomerId, p.StartDate });
 
         // Pricing snapshot in the same row (Pricing_BaseRate, ...). Optional:
-        // legacy policies have all-null columns. Four decimals keep term
-        // factors such as 0.9167 exact.
+        // legacy policies have all-null columns. Ten decimals, because the
+        // factors must reproduce the premium: term factors repeat (5/12 x 1.1
+        // = 0.458333...), and at four decimals 250 x 0.8634 gave 215.85 for a
+        // 215.84 premium. Policies stored before keep their 4-dp factors.
         builder.OwnsOne(p => p.Pricing, pricing =>
         {
             pricing.Property(x => x.BaseRate).HasColumnType("decimal(18,2)");
-            pricing.Property(x => x.EngineFactor).HasColumnType("decimal(9,4)");
-            pricing.Property(x => x.DriverAgeFactor).HasColumnType("decimal(9,4)");
-            pricing.Property(x => x.ExperienceFactor).HasColumnType("decimal(9,4)");
-            pricing.Property(x => x.VehicleAgeFactor).HasColumnType("decimal(9,4)");
-            pricing.Property(x => x.BonusMalusFactor).HasColumnType("decimal(9,4)");
-            pricing.Property(x => x.TermFactor).HasColumnType("decimal(9,4)");
-            pricing.Property(x => x.TotalFactor).HasColumnType("decimal(9,4)");
+            pricing.Property(x => x.EngineFactor).HasColumnType("decimal(18,10)");
+            pricing.Property(x => x.DriverAgeFactor).HasColumnType("decimal(18,10)");
+            pricing.Property(x => x.ExperienceFactor).HasColumnType("decimal(18,10)");
+            pricing.Property(x => x.VehicleAgeFactor).HasColumnType("decimal(18,10)");
+            pricing.Property(x => x.BonusMalusFactor).HasColumnType("decimal(18,10)");
+            pricing.Property(x => x.TermFactor).HasColumnType("decimal(18,10)");
+            pricing.Property(x => x.TotalFactor).HasColumnType("decimal(18,10)");
         });
 
         // Restrict: policies are financial records and must not be lost when a

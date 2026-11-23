@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using PolisGo.Application.Abstractions;
+using PolisGo.Application.Common;
 using PolisGo.Application.Auth.Dtos;
 using PolisGo.Application.Common.Exceptions;
 using PolisGo.Domain.Entities;
@@ -12,20 +13,24 @@ public class AuthService : IAuthService
     private readonly IApplicationDbContext _db;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IJwtTokenGenerator _jwtTokenGenerator;
+    private readonly TimeProvider _clock;
 
     public AuthService(
         IApplicationDbContext db,
         IPasswordHasher passwordHasher,
-        IJwtTokenGenerator jwtTokenGenerator)
+        IJwtTokenGenerator jwtTokenGenerator,
+        TimeProvider? clock = null)
     {
         _db = db;
         _passwordHasher = passwordHasher;
         _jwtTokenGenerator = jwtTokenGenerator;
+        _clock = clock ?? TimeProvider.System;
     }
 
     public async Task<AuthResponse> RegisterAsync(RegisterRequest request, CancellationToken cancellationToken = default)
     {
-        var phone = ValidateRegister(request);
+        // Age and licence rules count in Baku dates (BusinessCalendar).
+        var phone = ValidateRegister(request, BusinessCalendar.Today(_clock).ToDateTime(TimeOnly.MinValue));
 
         // Normalise email so duplicate detection is case-insensitive.
         var email = request.Email.Trim().ToLowerInvariant();
@@ -35,7 +40,7 @@ public class AuthService : IAuthService
             throw new ConflictException("A user with this email already exists.");
         }
 
-        var now = DateTime.UtcNow;
+        var now = _clock.GetUtcNow().UtcDateTime;
 
         var user = new User
         {
@@ -81,12 +86,23 @@ public class AuthService : IAuthService
 
         // Same exception for unknown email, wrong password and a deactivated
         // account: nothing tells a caller which one it was.
-        if (user is null || !user.IsActive || !_passwordHasher.Verify(request.Password, user.PasswordHash))
+        // An unknown email costs the same hash check as a wrong password, so
+        // response time doesn't tell which accounts exist.
+        var passwordOk = _passwordHasher.Verify(request.Password, user?.PasswordHash ?? DummyHash);
+        if (user is null || !user.IsActive || !passwordOk)
         {
             throw new UnauthorizedException();
         }
 
         // Clients always have a linked Customer; staff accounts usually don't.
+        // An older hash (plain bcrypt, which reads only 72 bytes) moves to the
+        // current scheme while the password is at hand.
+        if (_passwordHasher.NeedsRehash(user.PasswordHash))
+        {
+            user.PasswordHash = _passwordHasher.Hash(request.Password);
+            await _db.SaveChangesAsync(cancellationToken);
+        }
+
         var customerId = await _db.Customers
             .Where(c => c.UserId == user.Id)
             .Select(c => (Guid?)c.Id)
@@ -95,6 +111,9 @@ public class AuthService : IAuthService
         var (token, expiresAt) = _jwtTokenGenerator.GenerateToken(user, customerId);
         return new AuthResponse(token, expiresAt, user.Email, user.FullName, user.Role);
     }
+
+    private static string? _dummyHash;
+    private string DummyHash => _dummyHash ??= _passwordHasher.Hash($"no-account-{Guid.NewGuid():N}");
 
     public async Task<CurrentUserResponse> GetCurrentUserAsync(Guid userId, CancellationToken cancellationToken = default)
     {
@@ -106,9 +125,8 @@ public class AuthService : IAuthService
 
     // Returns the phone in E.164 so storage is canonical whatever format the
     // client sent. Every failing field is reported at once (one 400, all errors).
-    private static string ValidateRegister(RegisterRequest request)
+    private static string ValidateRegister(RegisterRequest request, DateTime today)
     {
-        var today = DateTime.UtcNow.Date;
         var errors = new Dictionary<string, string[]>();
         void Check(string field, string? error)
         {

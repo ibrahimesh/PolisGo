@@ -18,7 +18,7 @@ namespace PolisGo.Tests.Infrastructure;
 // Boots the real API pipeline (routing, JWT auth, role attributes, exception
 // middleware, JSON options) over an in-memory SQLite database, so tests see
 // the same status codes and payloads a client would.
-public sealed class ApiFactory : WebApplicationFactory<Program>
+public class ApiFactory : WebApplicationFactory<Program>
 {
     private const string JwtSecret = "integration-tests-signing-key-at-least-32-chars";
     private readonly SqliteConnection _connection = new("DataSource=:memory:");
@@ -36,6 +36,11 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
         builder.UseSetting("ConnectionStrings:Default", "Server=unused;Database=unused");
         builder.UseSetting("Jwt:SecretKey", JwtSecret);
         builder.UseSetting("Database:ApplyMigrationsOnStartup", "false");
+        // One address signs up many users here; RateLimitEndpointTests tightens these.
+        foreach (var policy in new[] { "SignIn", "Register", "PasswordChange" })
+        {
+            builder.UseSetting($"RateLimits:{policy}:PermitLimit", "100000");
+        }
 
         builder.ConfigureTestServices(services =>
         {

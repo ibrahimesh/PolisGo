@@ -7,6 +7,7 @@ using PolisGo.Application.Common.Exceptions;
 using PolisGo.Domain.Enums;
 using PolisGo.Infrastructure.Auth;
 using PolisGo.Infrastructure.Persistence;
+using PolisGo.Tests.Infrastructure;
 using Xunit;
 
 namespace PolisGo.Tests.Auth;
@@ -24,7 +25,7 @@ public class AuthServiceTests
         return new AppDbContext(options);
     }
 
-    private static AuthService NewSut(AppDbContext db)
+    private static AuthService NewSut(AppDbContext db, TimeProvider? clock = null)
     {
         var jwt = Options.Create(new JwtSettings
         {
@@ -34,7 +35,27 @@ public class AuthServiceTests
             SecretKey = "this-is-a-very-long-test-secret-key-32chars",
             ExpiryMinutes = 60
         });
-        return new AuthService(db, new BcryptPasswordHasher(), new JwtTokenGenerator(jwt));
+        return new AuthService(db, new BcryptPasswordHasher(), new JwtTokenGenerator(jwt), clock);
+    }
+
+    // 21:30 UTC on 1 March 2026 is 2 March in Baku: someone born on 2 March
+    // 2008 turns 18 that day, and may register although UTC says 1 March.
+    [Fact]
+    public async Task Age_counts_in_Baku_dates_from_the_injected_clock()
+    {
+        await using var db = NewDb();
+        var clock = new FakeClock(new DateTimeOffset(2026, 3, 1, 21, 30, 0, TimeSpan.Zero));
+
+        var response = await NewSut(db, clock).RegisterAsync(ValidRegister() with
+        {
+            BirthDate = new DateTime(2008, 3, 2),
+            DrivingLicenseDate = new DateTime(2026, 3, 2)
+        });
+
+        Assert.Equal(UserRole.Client, response.Role);
+        var underage = await Assert.ThrowsAsync<ValidationException>(() => NewSut(db, clock)
+            .RegisterAsync(ValidRegister() with { BirthDate = new DateTime(2008, 3, 3), DrivingLicenseDate = new DateTime(2026, 3, 2) }));
+        Assert.Equal(AuthValidation.Messages.Underage, underage.Errors["BirthDate"][0]);
     }
 
     private static RegisterRequest ValidRegister(string? email = null) => new(
@@ -98,6 +119,39 @@ public class AuthServiceTests
         Assert.Equal(UserRole.Client, response.Role);
         var persisted = await db.Users.SingleAsync();
         Assert.Equal(UserRole.Client, persisted.Role);
+    }
+
+    // Response time must not tell which emails exist: an unknown email costs
+    // the same password check as a wrong password.
+    [Fact]
+    public async Task Login_with_an_unknown_email_still_checks_a_password_hash()
+    {
+        await using var db = NewDb();
+        var hasher = new CountingHasher();
+        var jwt = Options.Create(new JwtSettings
+        {
+            Issuer = "test-issuer", Audience = "test-audience",
+            SecretKey = "this-is-a-very-long-test-secret-key-32chars", ExpiryMinutes = 60
+        });
+        var sut = new AuthService(db, hasher, new JwtTokenGenerator(jwt));
+
+        await Assert.ThrowsAsync<UnauthorizedException>(() =>
+            sut.LoginAsync(new LoginRequest("nobody@example.com", "Secret12345")));
+
+        Assert.Equal(1, hasher.Verifications);
+    }
+
+    private sealed class CountingHasher : IPasswordHasher
+    {
+        private readonly BcryptPasswordHasher _inner = new();
+        public int Verifications { get; private set; }
+        public string Hash(string password) => _inner.Hash(password);
+        public bool NeedsRehash(string hash) => _inner.NeedsRehash(hash);
+        public bool Verify(string password, string hash)
+        {
+            Verifications++;
+            return _inner.Verify(password, hash);
+        }
     }
 
     [Fact]

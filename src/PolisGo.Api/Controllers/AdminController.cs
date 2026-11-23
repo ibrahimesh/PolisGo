@@ -28,8 +28,8 @@ public class AdminController : ControllerBase
     /// Dashboard figures for a date range: policies, premium and claims by
     /// month, claims by status, resolution time and the top agents.
     /// </summary>
-    /// <param name="from">First day (UTC), inclusive. Default: the first day of the month eleven months ago.</param>
-    /// <param name="to">Last day (UTC), inclusive. Default: today.</param>
+    /// <param name="from">First day (Baku date), inclusive. Default: the first day of the month eleven months ago.</param>
+    /// <param name="to">Last day (Baku date), inclusive. Default: today.</param>
     /// <param name="cancellationToken">Request cancellation.</param>
     /// <remarks>Database aggregates, cached server-side for 60 seconds per range. At most 24 months.</remarks>
     /// <response code="200">The figures.</response>
@@ -53,8 +53,8 @@ public class AdminController : ControllerBase
     /// </summary>
     /// <param name="actorId">Only what this user did.</param>
     /// <param name="entityType">Claim, Policy, User (staff accounts) or Customer (assignments).</param>
-    /// <param name="from">First day (UTC), inclusive.</param>
-    /// <param name="to">Last day (UTC), inclusive.</param>
+    /// <param name="from">First day (Baku date), inclusive.</param>
+    /// <param name="to">Last day (Baku date), inclusive.</param>
     /// <param name="page">1-based page number, at most 200.</param>
     /// <param name="pageSize">Items per page; capped at 50.</param>
     /// <param name="cancellationToken">Request cancellation.</param>

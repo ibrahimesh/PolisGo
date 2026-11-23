@@ -17,15 +17,15 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Setup .NET 10
-        uses: actions/setup-dotnet@v6
+        uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6
         with:
           dotnet-version: 10.x
 
       - name: Cache NuGet packages
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
           path: ~/.nuget/packages
           key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
@@ -35,6 +35,12 @@ jobs:
       - name: Restore
         run: dotnet restore PolisGo.slnx
 
+      # dotnet list exits 0 even when it finds something, so read its output.
+      - name: Check for vulnerable NuGet packages
+        run: |
+          dotnet list PolisGo.slnx package --vulnerable --include-transitive | tee vulnerable.txt
+          if grep -q "has the following vulnerable packages" vulnerable.txt; then exit 1; fi
+
       - name: Build (Release, warnings as errors)
         run: dotnet build PolisGo.slnx --no-restore -c Release -warnaserror
 
@@ -42,12 +48,13 @@ jobs:
         run: >
           dotnet test PolisGo.slnx --no-build -c Release
           --collect:"XPlat Code Coverage"
+          --settings coverage.runsettings
           --logger "trx;LogFileName=test-results.trx"
           --results-directory TestResults
 
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: test-results
           path: |
@@ -56,7 +63,7 @@ jobs:
 
       - name: Upload coverage report
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: coverage
           path: |
@@ -103,10 +110,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Setup Node 22 LTS
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 22
           cache: npm
@@ -115,11 +122,17 @@ jobs:
       - name: Install (clean, from lockfile)
         run: npm ci
 
+      - name: Audit dependencies
+        run: npm audit --audit-level=high
+
       - name: Lint
         run: npm run lint
 
       - name: Typecheck
         run: npm run typecheck
+
+      - name: Formatting
+        run: npm run format:check
 
       # Unit/component tests; the Playwright suite runs in the e2e job.
       - name: Unit tests
@@ -139,17 +152,18 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
-      COMPOSE_FILE: docker-compose.yml:docker-compose.demo.yml
+      COMPOSE_FILE: docker-compose.yml:docker-compose.demo.yml:docker-compose.e2e.yml
       SQL_SA_PASSWORD: Ci-Only-Sql-Passw0rd!
       JWT_SECRET_KEY: ci-only-jwt-signing-key-not-a-secret-0123456789
       SEED_ADMIN_EMAIL: admin@polisgo.test
       SEED_ADMIN_PASSWORD: Ci-Only-Admin-Passw0rd
       E2E_ADMIN_EMAIL: admin@polisgo.test
       E2E_ADMIN_PASSWORD: Ci-Only-Admin-Passw0rd
+      DEMO_PASSWORD: Ci-Only-Demo-Passw0rd
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       # Started first: SQL Server needs a minute to warm up, which overlaps
       # with the npm and browser installs below.
@@ -157,7 +171,7 @@ jobs:
         run: docker compose up --build --detach
 
       - name: Setup Node 22 LTS
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 22
           cache: npm
@@ -169,7 +183,7 @@ jobs:
 
       - name: Cache Playwright browsers
         id: playwright-cache
-        uses: actions/cache@v4
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
           path: ~/.cache/ms-playwright
           key: ${{ runner.os }}-playwright-${{ hashFiles('frontend/package-lock.json') }}
@@ -193,7 +207,7 @@ jobs:
 
       - name: Upload Playwright report
         if: failure()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: playwright-report
           path: frontend/playwright-report
@@ -202,7 +216,7 @@ jobs:
 
       - name: Upload traces and failure screenshots
         if: failure()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: playwright-traces
           path: frontend/test-results
@@ -217,6 +231,62 @@ jobs:
         if: always()
         run: docker compose down --volumes
 
+  # Tests that need SQL Server itself: locking under concurrent requests,
+  # decimal rounding and the migrations' SQL. They are [SqlServerFact]s,
+  # skipped in the job above; here each gets a fresh, migrated database.
+  sqlserver-tests:
+    name: SQL Server integration tests
+    runs-on: ubuntu-latest
+    env:
+      SQL_SA_PASSWORD: Ci-Only-Sql-Passw0rd!
+    services:
+      sqlserver:
+        image: mcr.microsoft.com/mssql/server:2022-latest@sha256:4525e3efac9f3e241cb003bb2ff2a82818b502f37e12049d788b1a9fa7e13b7f
+        env:
+          ACCEPT_EULA: "Y"
+          MSSQL_SA_PASSWORD: Ci-Only-Sql-Passw0rd!
+        ports:
+          - 1433:1433
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6
+        with:
+          dotnet-version: 10.x
+
+      - name: Cache NuGet packages
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Build
+        run: |
+          dotnet restore PolisGo.slnx
+          dotnet build PolisGo.slnx --no-restore -c Release -warnaserror
+
+      - name: Wait for SQL Server
+        run: |
+          for attempt in $(seq 1 30); do
+            if docker exec ${{ job.services.sqlserver.id }} /opt/mssql-tools18/bin/sqlcmd \
+                 -C -S localhost -U sa -P "$SQL_SA_PASSWORD" -Q "SELECT 1" > /dev/null 2>&1; then
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "SQL Server did not accept connections in time."
+          exit 1
+
+      - name: Test on SQL Server
+        env:
+          POLISGO_TEST_SQLSERVER: Server=localhost,1433;User Id=sa;Password=${{ env.SQL_SA_PASSWORD }};TrustServerCertificate=True;Encrypt=False
+        run: dotnet test PolisGo.slnx --no-build -c Release --filter "Category=SqlServer"
+
   docker-build:
     name: Docker build
     needs: build-test
@@ -224,13 +294,13 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4
 
       - name: Build API image (no push)
-        uses: docker/build-push-action@v7
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7
         with:
           context: .
           file: src/PolisGo.Api/Dockerfile

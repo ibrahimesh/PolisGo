@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using PolisGo.Application.Abstractions;
+using PolisGo.Application.Common;
 using PolisGo.Application.Common.Exceptions;
 using PolisGo.Application.Policies;
 using PolisGo.Application.Policies.Dtos;
@@ -16,7 +17,9 @@ namespace PolisGo.Tests.Policies;
 public class PolicyServiceTests
 {
     // Reasonable default future start so validation never trips in setup.
-    private static DateOnly Today => DateOnly.FromDateTime(DateTime.UtcNow);
+    // Business dates are Baku dates; cover starts tomorrow at the earliest.
+    private static DateOnly Today => BusinessCalendar.Today(TimeProvider.System);
+    private static DateOnly Tomorrow => Today.AddDays(1);
 
     private static Guid SeedCustomer(
         AppDbContext db,
@@ -76,13 +79,15 @@ public class PolicyServiceTests
     private static PolicyService NewSut(
         AppDbContext db,
         ICurrentUser currentUser,
-        IPaymentGateway? gateway = null)
+        IPaymentGateway? gateway = null,
+        TimeProvider? clock = null)
     {
         return new PolicyService(
             db,
             new PremiumCalculator(),
             gateway ?? new StubPaymentGateway(),
-            currentUser);
+            currentUser,
+            clock);
     }
 
     private static FakeCurrentUser Client(Guid userId, Guid customerId) => new()
@@ -121,7 +126,7 @@ public class PolicyServiceTests
         var response = await sut.CreateAsync(new CreatePolicyRequest(
             VehicleId: vehicleId,
             PolicyTypeCode: "MTPL",
-            StartDate: Today,
+            StartDate: Tomorrow,
             TermMonths: 12,
             CustomerId: null));
 
@@ -132,6 +137,45 @@ public class PolicyServiceTests
             2020, 0, 12, Today));
         Assert.Equal(expected.Premium, response.Premium);
         Assert.StartsWith("PG-", response.PolicyNumber);
+    }
+
+    // ---------- Business dates (Asia/Baku) and the start rule ----------
+
+    // 21:30 UTC on 1 March is 01:30 on 2 March in Baku (UTC+4, no DST).
+    private static FakeClock BakuAfterMidnight() => new(new DateTimeOffset(2026, 3, 1, 21, 30, 0, TimeSpan.Zero));
+
+    [Fact]
+    public async Task Cover_starts_tomorrow_in_Baku_at_the_earliest()
+    {
+        using var fixture = new SqliteTestDb();
+        var customerId = SeedCustomer(fixture.Db);
+        var vehicleId = SeedVehicle(fixture.Db, customerId);
+        var sut = NewSut(fixture.Db, Client(fixture.Db.Users.First().Id, customerId), clock: BakuAfterMidnight());
+
+        // 2 March is today in Baku, although UTC still says 1 March.
+        var today = await Assert.ThrowsAsync<ValidationException>(() =>
+            sut.QuoteAsync(new CreatePolicyRequest(vehicleId, "MTPL", new DateOnly(2026, 3, 2), 12, null)));
+        Assert.True(today.Errors.ContainsKey("StartDate"));
+
+        var tomorrow = await sut.QuoteAsync(new CreatePolicyRequest(vehicleId, "MTPL", new DateOnly(2026, 3, 3), 12, null));
+        Assert.True(tomorrow.Premium > 0);
+    }
+
+    // Cover bought on the day it starts would pay for that morning's accident.
+    [Fact]
+    public async Task A_draft_whose_start_date_has_come_can_no_longer_be_paid()
+    {
+        using var fixture = new SqliteTestDb();
+        var customerId = SeedCustomer(fixture.Db);
+        var vehicleId = SeedVehicle(fixture.Db, customerId);
+        var clock = new FakeClock(new DateTimeOffset(2026, 3, 5, 10, 0, 0, TimeSpan.Zero));
+        var client = Client(fixture.Db.Users.First().Id, customerId);
+        var draft = await NewSut(fixture.Db, client, clock: clock)
+            .CreateAsync(new CreatePolicyRequest(vehicleId, "MTPL", new DateOnly(2026, 3, 6), 12, null));
+
+        clock.Now = clock.Now.AddDays(1); // 6 March: the start date is today
+
+        await Assert.ThrowsAsync<ConflictException>(() => NewSut(fixture.Db, client, clock: clock).PayAsync(draft.Id));
     }
 
     // ---------- Ownership: 404 instead of 403 ----------
@@ -148,7 +192,7 @@ public class PolicyServiceTests
 
         var bobsService = NewSut(fixture.Db, Client(bobUserId, bobCustomerId));
         var bobsPolicy = await bobsService.CreateAsync(new CreatePolicyRequest(
-            bobVehicleId, "MTPL", Today, 12, null));
+            bobVehicleId, "MTPL", Tomorrow, 12, null));
 
         var alicesService = NewSut(fixture.Db, Client(aliceUserId, aliceCustomerId));
         await Assert.ThrowsAsync<NotFoundException>(
@@ -172,7 +216,7 @@ public class PolicyServiceTests
         // Alice's token says she's aliceCustomerId; a malicious CustomerId in
         // the body is stripped and the policy still links to Alice.
         var response = await sut.CreateAsync(new CreatePolicyRequest(
-            alicesVehicleId, "MTPL", Today, 12, CustomerId: bobCustomerId));
+            alicesVehicleId, "MTPL", Tomorrow, 12, CustomerId: bobCustomerId));
 
         Assert.Equal(aliceCustomerId, response.CustomerId);
     }
@@ -188,10 +232,10 @@ public class PolicyServiceTests
         var user = fixture.Db.Users.First();
         var sut = NewSut(fixture.Db, Client(user.Id, customerId));
 
-        await sut.CreateAsync(new CreatePolicyRequest(vehicleId, "MTPL", Today, 12, null));
+        await sut.CreateAsync(new CreatePolicyRequest(vehicleId, "MTPL", Tomorrow, 12, null));
 
         await Assert.ThrowsAsync<ConflictException>(() =>
-            sut.CreateAsync(new CreatePolicyRequest(vehicleId, "MTPL", Today.AddDays(30), 12, null)));
+            sut.CreateAsync(new CreatePolicyRequest(vehicleId, "MTPL", Tomorrow.AddDays(30), 12, null)));
     }
 
     [Fact]
@@ -204,10 +248,10 @@ public class PolicyServiceTests
         var sut = NewSut(fixture.Db, Client(user.Id, customerId));
 
         // First policy: 1 month long, starting today.
-        await sut.CreateAsync(new CreatePolicyRequest(vehicleId, "MTPL", Today, 1, null));
+        await sut.CreateAsync(new CreatePolicyRequest(vehicleId, "MTPL", Tomorrow, 1, null));
 
         // Second starts the day after the first ends — no overlap.
-        var secondStart = Today.AddMonths(1);
+        var secondStart = Tomorrow.AddMonths(1);
         var response = await sut.CreateAsync(new CreatePolicyRequest(vehicleId, "MTPL", secondStart, 6, null));
 
         Assert.Equal(PolicyStatus.Draft, response.Status);
@@ -222,10 +266,10 @@ public class PolicyServiceTests
         var user = fixture.Db.Users.First();
         var sut = NewSut(fixture.Db, Client(user.Id, customerId));
 
-        await sut.CreateAsync(new CreatePolicyRequest(vehicleId, "MTPL", Today, 12, null));
+        await sut.CreateAsync(new CreatePolicyRequest(vehicleId, "MTPL", Tomorrow, 12, null));
 
         // Same vehicle + overlapping dates but different product = allowed.
-        var casco = await sut.CreateAsync(new CreatePolicyRequest(vehicleId, "CASCO", Today, 12, null));
+        var casco = await sut.CreateAsync(new CreatePolicyRequest(vehicleId, "CASCO", Tomorrow, 12, null));
         Assert.Equal("CASCO", casco.PolicyTypeCode);
     }
 
@@ -241,7 +285,7 @@ public class PolicyServiceTests
         var gateway = new StubPaymentGateway();
         var sut = NewSut(fixture.Db, Client(user.Id, customerId), gateway);
 
-        var draft = await sut.CreateAsync(new CreatePolicyRequest(vehicleId, "MTPL", Today, 12, null));
+        var draft = await sut.CreateAsync(new CreatePolicyRequest(vehicleId, "MTPL", Tomorrow, 12, null));
 
         var receipt = await sut.PayAsync(draft.Id);
 
@@ -261,7 +305,7 @@ public class PolicyServiceTests
         var user = fixture.Db.Users.First();
         var sut = NewSut(fixture.Db, Client(user.Id, customerId));
 
-        var draft = await sut.CreateAsync(new CreatePolicyRequest(vehicleId, "MTPL", Today, 12, null));
+        var draft = await sut.CreateAsync(new CreatePolicyRequest(vehicleId, "MTPL", Tomorrow, 12, null));
         await sut.PayAsync(draft.Id);
 
         await Assert.ThrowsAsync<ConflictException>(() => sut.PayAsync(draft.Id));
@@ -278,7 +322,7 @@ public class PolicyServiceTests
         var user = fixture.Db.Users.First();
         var sut = NewSut(fixture.Db, Client(user.Id, customerId));
 
-        var draft = await sut.CreateAsync(new CreatePolicyRequest(vehicleId, "MTPL", Today, 12, null));
+        var draft = await sut.CreateAsync(new CreatePolicyRequest(vehicleId, "MTPL", Tomorrow, 12, null));
         var cancelled = await sut.CancelAsync(draft.Id);
         Assert.Equal(PolicyStatus.Cancelled, cancelled.Status);
     }
@@ -292,7 +336,7 @@ public class PolicyServiceTests
         var user = fixture.Db.Users.First();
         var sut = NewSut(fixture.Db, Client(user.Id, customerId));
 
-        var draft = await sut.CreateAsync(new CreatePolicyRequest(vehicleId, "MTPL", Today, 12, null));
+        var draft = await sut.CreateAsync(new CreatePolicyRequest(vehicleId, "MTPL", Tomorrow, 12, null));
         await sut.PayAsync(draft.Id);
         var cancelled = await sut.CancelAsync(draft.Id);
         Assert.Equal(PolicyStatus.Cancelled, cancelled.Status);
@@ -307,7 +351,7 @@ public class PolicyServiceTests
         var user = fixture.Db.Users.First();
         var sut = NewSut(fixture.Db, Client(user.Id, customerId));
 
-        var draft = await sut.CreateAsync(new CreatePolicyRequest(vehicleId, "MTPL", Today, 12, null));
+        var draft = await sut.CreateAsync(new CreatePolicyRequest(vehicleId, "MTPL", Tomorrow, 12, null));
         await sut.CancelAsync(draft.Id);
 
         await Assert.ThrowsAsync<InvalidStateTransitionException>(() => sut.CancelAsync(draft.Id));
@@ -316,7 +360,7 @@ public class PolicyServiceTests
     // ---------- StartDate validation ----------
 
     [Fact]
-    public async Task Create_StartDateInPast_Throws()
+    public async Task Create_StartDateTodayOrEarlier_Throws()
     {
         using var fixture = new SqliteTestDb();
         var customerId = SeedCustomer(fixture.Db);
@@ -324,8 +368,12 @@ public class PolicyServiceTests
         var user = fixture.Db.Users.First();
         var sut = NewSut(fixture.Db, Client(user.Id, customerId));
 
-        await Assert.ThrowsAsync<ValidationException>(() =>
-            sut.CreateAsync(new CreatePolicyRequest(vehicleId, "MTPL", Today.AddDays(-1), 12, null)));
+        foreach (var start in new[] { Today.AddDays(-1), Today })
+        {
+            var ex = await Assert.ThrowsAsync<ValidationException>(() =>
+                sut.CreateAsync(new CreatePolicyRequest(vehicleId, "MTPL", start, 12, null)));
+            Assert.Equal(PolicyValidation.Messages.StartDateTooEarly, ex.Errors["StartDate"][0]);
+        }
     }
 
     [Fact]
@@ -353,12 +401,12 @@ public class PolicyServiceTests
         var sut = NewSut(fixture.Db, Client(user.Id, customerId));
 
         // First MTPL policy to hang a claim off — pay it so it's Active.
-        var mtpl = await sut.CreateAsync(new CreatePolicyRequest(vehicleId, "MTPL", Today, 12, null));
+        var mtpl = await sut.CreateAsync(new CreatePolicyRequest(vehicleId, "MTPL", Tomorrow, 12, null));
         await sut.PayAsync(mtpl.Id);
 
         // Clean-record CASCO quote (0 prior claims): record its premium then
         // cancel so it doesn't collide with the second CASCO we create.
-        var cascoClean = await sut.CreateAsync(new CreatePolicyRequest(vehicleId, "CASCO", Today, 12, null));
+        var cascoClean = await sut.CreateAsync(new CreatePolicyRequest(vehicleId, "CASCO", Tomorrow, 12, null));
         await sut.CancelAsync(cascoClean.Id);
 
         // Attach an Approved claim with a recent incident date to the MTPL.
@@ -377,7 +425,7 @@ public class PolicyServiceTests
         await fixture.Db.SaveChangesAsync();
 
         // New CASCO quote now sees one claim in the last 3 years.
-        var cascoWithClaim = await sut.CreateAsync(new CreatePolicyRequest(vehicleId, "CASCO", Today, 12, null));
+        var cascoWithClaim = await sut.CreateAsync(new CreatePolicyRequest(vehicleId, "CASCO", Tomorrow, 12, null));
 
         Assert.True(cascoWithClaim.Premium > cascoClean.Premium,
             $"Expected premium after claim ({cascoWithClaim.Premium}) to exceed clean-record premium ({cascoClean.Premium}).");
@@ -409,9 +457,9 @@ public class PolicyServiceTests
         var userB = fixture.Db.Users.First(u => u.Email == "b@example.com").Id;
 
         await NewSut(fixture.Db, Client(userA, customerAId))
-            .CreateAsync(new CreatePolicyRequest(vehicleA, "MTPL", Today, 12, null));
+            .CreateAsync(new CreatePolicyRequest(vehicleA, "MTPL", Tomorrow, 12, null));
         await NewSut(fixture.Db, Client(userB, customerBId))
-            .CreateAsync(new CreatePolicyRequest(vehicleB, "MTPL", Today, 12, null));
+            .CreateAsync(new CreatePolicyRequest(vehicleB, "MTPL", Tomorrow, 12, null));
 
         var adminView = await NewSut(fixture.Db, Admin(Guid.NewGuid()))
             .ListAsync(new ListPoliciesQuery(PageSize: 10));
@@ -433,9 +481,9 @@ public class PolicyServiceTests
         var userB = fixture.Db.Users.First(u => u.Email == "b@example.com").Id;
 
         await NewSut(fixture.Db, Client(userA, customerAId))
-            .CreateAsync(new CreatePolicyRequest(vehicleA, "MTPL", Today, 12, null));
+            .CreateAsync(new CreatePolicyRequest(vehicleA, "MTPL", Tomorrow, 12, null));
         await NewSut(fixture.Db, Client(userB, customerBId))
-            .CreateAsync(new CreatePolicyRequest(vehicleB, "MTPL", Today, 12, null));
+            .CreateAsync(new CreatePolicyRequest(vehicleB, "MTPL", Tomorrow, 12, null));
 
         var aliceSees = await NewSut(fixture.Db, Client(userA, customerAId))
             .ListAsync(new ListPoliciesQuery(PageSize: 10));
@@ -457,10 +505,10 @@ public class PolicyServiceTests
         // The customer moves from one agent's book to the other's in between.
         AssignAgent(fixture.Db, customerId, agent1Id);
         await NewSut(fixture.Db, Agent(agent1Id))
-            .CreateAsync(new CreatePolicyRequest(vehicleId, "MTPL", Today, 12, customerId));
+            .CreateAsync(new CreatePolicyRequest(vehicleId, "MTPL", Tomorrow, 12, customerId));
         AssignAgent(fixture.Db, customerId, agent2Id);
         await NewSut(fixture.Db, Agent(agent2Id))
-            .CreateAsync(new CreatePolicyRequest(vehicleId, "CASCO", Today, 12, customerId));
+            .CreateAsync(new CreatePolicyRequest(vehicleId, "CASCO", Tomorrow, 12, customerId));
 
         var agent1View = await NewSut(fixture.Db, Agent(agent1Id)).ListAsync(new ListPoliciesQuery(PageSize: 10));
         Assert.Single(agent1View.Items);
@@ -476,7 +524,7 @@ public class PolicyServiceTests
         var mine = SeedUser(fixture.Db, "agent1@example.com", UserRole.Agent);
         var other = SeedUser(fixture.Db, "agent2@example.com", UserRole.Agent);
         AssignAgent(fixture.Db, customerId, other);
-        var request = new CreatePolicyRequest(vehicleId, "MTPL", Today, 12, customerId);
+        var request = new CreatePolicyRequest(vehicleId, "MTPL", Tomorrow, 12, customerId);
 
         // 404, as for an unknown customer: whose book it is stays private.
         await Assert.ThrowsAsync<NotFoundException>(() => NewSut(fixture.Db, Agent(mine)).QuoteAsync(request));

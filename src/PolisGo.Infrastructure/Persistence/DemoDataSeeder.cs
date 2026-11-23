@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using PolisGo.Application.Abstractions;
+using PolisGo.Application.Common;
 using PolisGo.Application.Pricing;
 using PolisGo.Domain.Entities;
 using PolisGo.Domain.Enums;
@@ -11,7 +12,8 @@ namespace PolisGo.Infrastructure.Persistence;
 public enum DemoSeedResult
 {
     Disabled,
-    RefusedInProduction,
+    RefusedOutsideDevelopment,
+    MissingPassword,
     AlreadySeeded,
     Seeded
 }
@@ -19,15 +21,15 @@ public enum DemoSeedResult
 // Opt-in demo data (Demo:SeedData=true) so the admin dashboard, the queues
 // and the audit log have something to show: agents, adjusters, clients,
 // vehicles, policies started months ago with their payments, and claims in
-// every status with a believable history. Never in Production; idempotent
+// every status with a believable history. Only in Development; idempotent
 // (a marker account means it already ran). All demo accounts share one
-// password: Demo:Password, or the documented DefaultPassword, never the
+// password, Demo:Password, which must be set: there is no built-in one, so no
+// password printed in the docs ever guards a staff account. Never the
 // admin's secret.
 public static class DemoDataSeeder
 {
     public const string Domain = "demo.polisgo.az";
     public const string MarkerEmail = "demo.agent1@" + Domain;
-    public const string DefaultPassword = "Demo-Passw0rd";
 
     private record Person(string Key, string FullName, string Phone, DateOnly Birth, DateOnly Licence);
 
@@ -61,10 +63,12 @@ public static class DemoDataSeeder
         CancellationToken cancellationToken = default)
     {
         if (!configuration.GetValue<bool>("Demo:SeedData")) return DemoSeedResult.Disabled;
-        // Fake people and money must never land in a real database.
-        if (string.Equals(environmentName, "Production", StringComparison.OrdinalIgnoreCase))
+        // Fake people and money must never land in a real database: only in
+        // Development, the environment the compose stack runs (an allow-list,
+        // so a "Staging" or a misspelt name is refused too).
+        if (!string.Equals(environmentName, "Development", StringComparison.OrdinalIgnoreCase))
         {
-            return DemoSeedResult.RefusedInProduction;
+            return DemoSeedResult.RefusedOutsideDevelopment;
         }
         if (await db.Users.AnyAsync(u => u.Email == MarkerEmail, cancellationToken))
         {
@@ -72,7 +76,11 @@ public static class DemoDataSeeder
         }
 
         var password = configuration["Demo:Password"];
-        var hash = passwordHasher.Hash(string.IsNullOrWhiteSpace(password) ? DefaultPassword : password);
+        if (string.IsNullOrWhiteSpace(password))
+        {
+            return DemoSeedResult.MissingPassword;
+        }
+        var hash = passwordHasher.Hash(password);
         new Builder(db, hash, calculator, clock.GetUtcNow().UtcDateTime).Build();
         await db.SaveChangesAsync(cancellationToken);
         return DemoSeedResult.Seeded;
@@ -91,7 +99,8 @@ public static class DemoDataSeeder
         private int _claimSeq;
         private int _plateSeq;
 
-        private DateTime Today => now.Date;
+        // Business dates in Baku, as everywhere else (BusinessCalendar).
+        private DateTime Today => BusinessCalendar.DateOf(new DateTimeOffset(now, TimeSpan.Zero)).ToDateTime(TimeOnly.MinValue);
 
         public void Build()
         {

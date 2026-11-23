@@ -23,18 +23,23 @@ public class ClaimService : IClaimService
     private readonly ICurrentUser _currentUser;
     private readonly IPayoutGateway _payoutGateway;
     private readonly ClaimOptions _options;
+    private readonly TimeProvider _clock;
 
     public ClaimService(
         IApplicationDbContext db,
         ICurrentUser currentUser,
         IPayoutGateway payoutGateway,
-        IOptions<ClaimOptions> options)
+        IOptions<ClaimOptions> options,
+        TimeProvider? clock = null)
     {
         _db = db;
         _currentUser = currentUser;
         _payoutGateway = payoutGateway;
         _options = options.Value;
+        _clock = clock ?? TimeProvider.System;
     }
+
+    private DateTime UtcNow => _clock.GetUtcNow().UtcDateTime;
 
     // ---------- Submit ----------
 
@@ -43,9 +48,9 @@ public class ClaimService : IClaimService
     {
         var customerId = ResolveCustomerId(request.CustomerId);
 
-        // PolicyAccess: an agent files only on policies they sold, as for
-        // every other policy endpoint.
-        var policy = await PolicyAccess.VisibleTo(_db.Policies, _currentUser)
+        // Filing acts for the customer: an agent only for one in their
+        // current book (PolicyAccess.WritableBy), as for pay and cancel.
+        var policy = await PolicyAccess.WritableBy(_db.Policies, _currentUser)
             .FirstOrDefaultAsync(p => p.Id == request.PolicyId, cancellationToken)
             ?? throw new NotFoundException(nameof(Policy), request.PolicyId);
 
@@ -73,7 +78,7 @@ public class ClaimService : IClaimService
         var claim = new DomainClaim
         {
             Id = Guid.NewGuid(),
-            ClaimNumber = await AllocateClaimNumberAsync(DateTime.UtcNow.Year, cancellationToken),
+            ClaimNumber = await AllocateClaimNumberAsync(BusinessCalendar.Today(_clock).Year, cancellationToken),
             PolicyId = policy.Id,
             IncidentDate = request.IncidentDate.Date,
             IncidentType = request.IncidentType,
@@ -81,7 +86,7 @@ public class ClaimService : IClaimService
             Description = request.Description.Trim(),
             ClaimedAmount = request.ClaimedAmount,
             Status = ClaimStatus.Submitted,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = UtcNow
         };
 
         // First history row at the start of the audit trail (null -> Submitted).
@@ -107,7 +112,7 @@ public class ClaimService : IClaimService
             }
             catch (DbUpdateException) when (attempt < ClaimNumberMaxAttempts - 1)
             {
-                claim.ClaimNumber = await AllocateClaimNumberAsync(DateTime.UtcNow.Year, cancellationToken);
+                claim.ClaimNumber = await AllocateClaimNumberAsync(BusinessCalendar.Today(_clock).Year, cancellationToken);
             }
         }
 
@@ -148,6 +153,10 @@ public class ClaimService : IClaimService
             .ToList();
 
         var open = claim.Status is ClaimStatus.Submitted or ClaimStatus.UnderReview;
+        // Reading isn't acting: an agent reads claims of policies they sold
+        // but acts only for customers in their current book.
+        var writable = await ClaimAccess.WritableBy(_db.Claims.AsNoTracking(), _currentUser)
+            .AnyAsync(c => c.Id == claimId, cancellationToken);
         return new ClaimDetailResponse(
             claim,
             new ClaimPolicySummary(policy.Id, policy.PolicyNumber, policy.Code,
@@ -155,10 +164,10 @@ public class ClaimService : IClaimService
             policy.Customer,
             history,
             documents,
-            CanWithdraw: open && CanWithdrawRole(_currentUser.Role),
-            CanAddDocuments: open && documents.Count < ClaimValidation.MaxDocumentsPerClaim,
+            CanWithdraw: open && writable && CanWithdrawRole(_currentUser.Role),
+            CanAddDocuments: open && writable && documents.Count < ClaimValidation.MaxDocumentsPerClaim,
             MaxDocuments: ClaimValidation.MaxDocumentsPerClaim,
-            Actions: ClaimActions.For(claim.Status, claim.AssignedAdjusterId, _currentUser));
+            Actions: ClaimActions.For(claim.Status, claim.AssignedAdjusterId, _currentUser, writable));
     }
 
     public async Task<IReadOnlyList<ClaimHistoryEntry>> GetHistoryAsync(
@@ -179,7 +188,7 @@ public class ClaimService : IClaimService
         var totalCount = await query.CountAsync(cancellationToken);
 
         var items = await Project(Sort(query, filter.SortBy, filter.SortDir))
-            .Skip((page - 1) * pageSize)
+            .Skip(Paging.Skip(page, pageSize))
             .Take(pageSize)
             .ToListAsync(cancellationToken);
 
@@ -293,23 +302,26 @@ public class ClaimService : IClaimService
         EnsureCommentLength(request.Comment);
         var claim = await LoadVisibleAsync(claimId, cancellationToken);
         EnsureVersion(claim, request.RowVersion);
-        if (claim.Status != ClaimStatus.Approved)
-        {
-            // Throws the usual transition error before the gateway: no payout
-            // may go out for a claim that then can't be marked paid.
-            claim.MarkPaid(_currentUser.UserId);
-        }
 
-        // Gateway call BEFORE SaveChanges so a payout failure aborts without
-        // touching the DB. Fake gateway always succeeds today.
+        // Claim the payout in the database first: of two requests that read
+        // the same version only one can save this (RowVersion), so only one
+        // reaches the gateway. A claim that isn't Approved fails here, before
+        // any money moves.
+        claim.StartPayout(UtcNow);
+        await _db.SaveChangesAsync(cancellationToken);
+
+        // If the gateway fails the claim stays Approved and can be paid again;
+        // the per-claim key makes that retry the same payout, not a second one.
         _ = await _payoutGateway.PayoutAsync(
-            claim.Id, claim.ApprovedAmount ?? 0m, cancellationToken);
+            claim.Id, claim.ApprovedAmount ?? 0m, PayoutIdempotencyKey(claim.Id), cancellationToken);
 
         claim.MarkPaid(_currentUser.UserId, NullIfBlank(request.Comment));
         await _db.SaveChangesAsync(cancellationToken);
 
         return await ProjectOneAsync(claim.Id, cancellationToken);
     }
+
+    private static string PayoutIdempotencyKey(Guid claimId) => $"claim-payout:{claimId:N}";
 
     public async Task<ClaimResponse> WithdrawAsync(
         Guid claimId, WithdrawClaimRequest request, CancellationToken cancellationToken = default)
@@ -320,7 +332,9 @@ public class ClaimService : IClaimService
             throw new ValidationException(nameof(request.Reason), M.ReasonTooLong);
         }
 
-        var claim = await LoadVisibleAsync(claimId, cancellationToken);
+        var claim = await ClaimAccess.WritableBy(_db.Claims.Where(c => c.Id == claimId), _currentUser)
+                .FirstOrDefaultAsync(cancellationToken)
+            ?? throw new NotFoundException(nameof(DomainClaim), claimId);
         claim.Withdraw(_currentUser.UserId, string.IsNullOrEmpty(reason) ? null : reason);
         await _db.SaveChangesAsync(cancellationToken);
         return await ProjectOneAsync(claim.Id, cancellationToken);
@@ -455,7 +469,9 @@ public class ClaimService : IClaimService
     private void ValidateSubmit(SubmitClaimRequest request, Policy policy)
     {
         var errors = new Dictionary<string, string[]>();
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        // The incident date is a date in Baku: at 01:00 local time it is
+        // already today there, though UTC still says yesterday.
+        var today = BusinessCalendar.Today(_clock);
 
         // Effective status: an Active policy past its end date reads as Expired
         // everywhere else, so it can't take a new claim either.

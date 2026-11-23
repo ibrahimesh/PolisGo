@@ -1,3 +1,4 @@
+using PolisGo.Application.Auth.Dtos;
 using PolisGo.Application.Profile.Dtos;
 
 namespace PolisGo.Application.Profile;
@@ -8,5 +9,6 @@ public interface IProfileService
 {
     Task<ProfileResponse> GetAsync(CancellationToken cancellationToken = default);
     Task<ProfileResponse> UpdateAsync(UpdateProfileRequest request, CancellationToken cancellationToken = default);
-    Task ChangePasswordAsync(ChangePasswordRequest request, CancellationToken cancellationToken = default);
+    // Returns a fresh session: the change ends every token issued before it.
+    Task<AuthResponse> ChangePasswordAsync(ChangePasswordRequest request, CancellationToken cancellationToken = default);
 }

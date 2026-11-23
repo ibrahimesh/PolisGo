@@ -38,7 +38,8 @@ public class PolicyService : IPolicyService
     }
 
     private DateTime UtcNow => _clock.GetUtcNow().UtcDateTime;
-    private DateOnly Today => DateOnly.FromDateTime(UtcNow);
+    // The business date in Baku, not the UTC one (see BusinessCalendar).
+    private DateOnly Today => BusinessCalendar.Today(_clock);
 
     public async Task<PremiumBreakdown> QuoteAsync(
         CreatePolicyRequest request, CancellationToken cancellationToken = default)
@@ -181,7 +182,7 @@ public class PolicyService : IPolicyService
         var totalCount = await policies.CountAsync(cancellationToken);
 
         var rows = await Project(Sort(policies, query.SortBy, query.SortDir)
-                .Skip((page - 1) * pageSize)
+                .Skip(Paging.Skip(page, pageSize))
                 .Take(pageSize))
             .ToListAsync(cancellationToken);
 
@@ -248,25 +249,30 @@ public class PolicyService : IPolicyService
         Guid policyId, CancellationToken cancellationToken = default)
     {
         var today = Today;
-        var policy = await LoadVisibleAsync(policyId, cancellationToken);
+        var policy = await LoadWritableAsync(policyId, cancellationToken);
 
-        // Idempotency guard: a Draft policy becomes Active once paid. Any
-        // non-Draft status means a previous Pay already won the race.
+        // A Draft becomes Active once paid; any other status means an earlier
+        // Pay already landed. Two requests that both read the Draft are
+        // settled by the policy's RowVersion at SaveChanges (the loser is a
+        // 409) and, at the PSP, by the idempotency key below.
         if (policy.Status != PolicyStatus.Draft)
         {
             throw new ConflictException(
                 $"Policy {policy.PolicyNumber} is in status {policy.Status} and cannot be paid.");
         }
 
-        // Paying a draft whose start date has passed would activate cover
-        // backdated to before the payment — insurance bought after the event.
-        if (DateOnly.FromDateTime(policy.StartDate) < today)
+        // Cover starts tomorrow at the earliest: paying a draft whose start
+        // date has come would cover the hours before the payment — insurance
+        // bought after the event.
+        if (DateOnly.FromDateTime(policy.StartDate) <= today)
         {
             throw new ConflictException(PolicyValidation.Messages.DraftStartPassed);
         }
 
+        // One key per policy: a policy is paid once, so a repeated charge for
+        // it is always a duplicate.
         var receipt = await _paymentGateway.ChargeAsync(
-            policy.Id, policy.Premium, cancellationToken);
+            policy.Id, policy.Premium, PaymentIdempotencyKey(policy.Id), cancellationToken);
 
         var payment = new Payment
         {
@@ -296,11 +302,13 @@ public class PolicyService : IPolicyService
             PaidAt: payment.PaidAt);
     }
 
+    internal static string PaymentIdempotencyKey(Guid policyId) => $"policy-payment:{policyId:N}";
+
     public async Task<PolicyResponse> CancelAsync(
         Guid policyId, CancellationToken cancellationToken = default)
     {
         var today = Today;
-        var policy = await LoadVisibleAsync(policyId, cancellationToken);
+        var policy = await LoadWritableAsync(policyId, cancellationToken);
 
         if (policy.StatusOn(today) == PolicyStatus.Expired)
         {
@@ -362,7 +370,7 @@ public class PolicyService : IPolicyService
             throw new ConflictException(PolicyValidation.Messages.Overlap);
         }
 
-        var threeYearsAgo = UtcNow.AddYears(-3);
+        var threeYearsAgo = today.AddYears(-3).ToDateTime(TimeOnly.MinValue);
         var claimCount = await _db.Claims
             .Where(c => c.Policy.CustomerId == customerId)
             .Where(c => c.Status == ClaimStatus.Approved || c.Status == ClaimStatus.Paid)
@@ -399,8 +407,8 @@ public class PolicyService : IPolicyService
         if (string.IsNullOrWhiteSpace(request.PolicyTypeCode))
             errors[nameof(request.PolicyTypeCode)] = [PolicyValidation.Messages.PolicyTypeRequired];
 
-        if (request.StartDate < today)
-            errors[nameof(request.StartDate)] = [PolicyValidation.Messages.StartDateInPast];
+        if (request.StartDate <= today)
+            errors[nameof(request.StartDate)] = [PolicyValidation.Messages.StartDateTooEarly];
         else if (request.StartDate > today.AddDays(PolicyValidation.StartDateHorizonDays))
             errors[nameof(request.StartDate)] = [PolicyValidation.Messages.StartDateTooFar];
 
@@ -445,12 +453,12 @@ public class PolicyService : IPolicyService
         return row.ToResponse(today);
     }
 
-    // Loads a tracked policy the current user is allowed to see. Returns
-    // NotFoundException both when the row is missing AND when it belongs to
-    // somebody else — never leaks existence of other users' policies.
-    private async Task<Policy> LoadVisibleAsync(Guid policyId, CancellationToken cancellationToken)
+    // Loads a tracked policy the current user may act on (pay, cancel).
+    // NotFoundException both when the row is missing AND when it is outside
+    // the caller's write scope — never leaks existence of other users' policies.
+    private async Task<Policy> LoadWritableAsync(Guid policyId, CancellationToken cancellationToken)
     {
-        var query = PolicyAccess.VisibleTo(_db.Policies.Where(p => p.Id == policyId), _currentUser);
+        var query = PolicyAccess.WritableBy(_db.Policies.Where(p => p.Id == policyId), _currentUser);
 
         return await query.FirstOrDefaultAsync(cancellationToken)
             ?? throw new NotFoundException(nameof(Policy), policyId);

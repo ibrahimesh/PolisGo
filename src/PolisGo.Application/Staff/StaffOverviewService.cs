@@ -100,9 +100,15 @@ public class StaffOverviewService : IStaffOverviewService
 
     private async Task<SalesSummary> SalesAsync(DateTime now, CancellationToken ct)
     {
-        var today = DateOnly.FromDateTime(now);
+        var today = BusinessCalendar.Today(_clock);
         var since = now.AddDays(-WindowDays);
+        // Sales are what the caller sold (an Admin: everything), not every
+        // policy they can read: an agent also reads their book's other cover.
         var policies = PolicyAccess.VisibleTo(_db.Policies.AsNoTracking(), _currentUser);
+        if (_currentUser.Role == UserRole.Agent)
+        {
+            policies = policies.Where(p => p.AgentId == _currentUser.UserId);
+        }
 
         var customers = await CustomerAccess.VisibleTo(_db.Customers.AsNoTracking(), _currentUser)
             .CountAsync(ct);

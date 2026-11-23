@@ -60,8 +60,10 @@ export const profileApi = {
   get: (signal?: Signal) => request<ProfileResponse>('/api/me', { signal }),
   update: (body: UpdateProfileRequest) =>
     request<ProfileResponse>('/api/me', { method: 'PUT', body }),
+  // The change ends every older session, this one included: the response
+  // is the caller's new session.
   changePassword: (body: ChangePasswordRequest) =>
-    request<undefined>('/api/me/change-password', { method: 'POST', body }),
+    request<AuthResponse>('/api/me/change-password', { method: 'POST', body }),
 };
 
 // Client-only read models; staff get 403.

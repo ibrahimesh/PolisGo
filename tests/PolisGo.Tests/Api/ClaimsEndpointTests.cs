@@ -22,7 +22,7 @@ public class ClaimsEndpointTests : IClassFixture<ApiFactory>
     private static readonly byte[] Exe = [0x4D, 0x5A, 0x90, 0, 3, 0, 0, 0];
 
     private static string Day(int offset) =>
-        DateOnly.FromDateTime(DateTime.UtcNow).AddDays(offset).ToString("yyyy-MM-dd");
+        TestDates.Today.AddDays(offset).ToString("yyyy-MM-dd");
 
     private sealed record Seeded(HttpClient Client, Customer Customer, Policy Policy);
 

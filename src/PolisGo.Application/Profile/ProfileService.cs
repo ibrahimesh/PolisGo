@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using PolisGo.Application.Abstractions;
 using PolisGo.Application.Auth;
+using PolisGo.Application.Auth.Dtos;
 using PolisGo.Application.Common.Exceptions;
 using PolisGo.Application.Profile.Dtos;
 using PolisGo.Domain.Entities;
@@ -12,12 +13,15 @@ public class ProfileService : IProfileService
     private readonly IApplicationDbContext _db;
     private readonly IPasswordHasher _passwordHasher;
     private readonly ICurrentUser _currentUser;
+    private readonly IJwtTokenGenerator _tokens;
 
-    public ProfileService(IApplicationDbContext db, IPasswordHasher passwordHasher, ICurrentUser currentUser)
+    public ProfileService(
+        IApplicationDbContext db, IPasswordHasher passwordHasher, ICurrentUser currentUser, IJwtTokenGenerator tokens)
     {
         _db = db;
         _passwordHasher = passwordHasher;
         _currentUser = currentUser;
+        _tokens = tokens;
     }
 
     public async Task<ProfileResponse> GetAsync(CancellationToken cancellationToken = default)
@@ -71,10 +75,10 @@ public class ProfileService : IProfileService
         return Map(user, customer);
     }
 
-    public async Task ChangePasswordAsync(
+    public async Task<AuthResponse> ChangePasswordAsync(
         ChangePasswordRequest request, CancellationToken cancellationToken = default)
     {
-        var (user, _) = await LoadAsync(tracked: true, cancellationToken);
+        var (user, customer) = await LoadAsync(tracked: true, cancellationToken);
 
         var errors = new Dictionary<string, string[]>();
         if (string.IsNullOrEmpty(request.CurrentPassword))
@@ -102,8 +106,13 @@ public class ProfileService : IProfileService
             throw new ValidationException(errors);
         }
 
-        user.PasswordHash = _passwordHasher.Hash(request.NewPassword);
+        // Rotates the security stamp: every older token, this tab's included,
+        // stops working, so the caller gets a fresh one to carry on with.
+        user.ChangePassword(_passwordHasher.Hash(request.NewPassword));
         await _db.SaveChangesAsync(cancellationToken);
+
+        var (token, expiresAt) = _tokens.GenerateToken(user, customer?.Id);
+        return new AuthResponse(token, expiresAt, user.Email, user.FullName, user.Role);
     }
 
     private async Task<(User User, Customer? Customer)> LoadAsync(bool tracked, CancellationToken cancellationToken)

@@ -2,9 +2,10 @@ using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using PolisGo.Application.Abstractions;
+using PolisGo.Application.Common;
+using PolisGo.Application.Policies;
 using PolisGo.Application.Pricing;
 using PolisGo.Application.Statistics.Dtos;
-using PolisGo.Application.Common;
 using PolisGo.Domain.Enums;
 
 namespace PolisGo.Application.Statistics;
@@ -49,10 +50,15 @@ public class AdminStatsService : IAdminStatsService
 
     private async Task<AdminStatsResponse> ComputeAsync(DateTime now, CancellationToken ct)
     {
-        var policiesByStatus = await _db.Policies.AsNoTracking()
-            .GroupBy(p => p.Status)
-            .Select(g => new { Status = g.Key, Count = g.Count() })
-            .ToDictionaryAsync(x => x.Status, x => x.Count, ct);
+        // Effective statuses (an Active policy past its end is Expired, which
+        // nothing stores): one count each through the shared filter.
+        var today = BusinessCalendar.Today(_clock);
+        var policiesByStatus = new Dictionary<PolicyStatus, int>();
+        foreach (var status in Enum.GetValues<PolicyStatus>())
+        {
+            policiesByStatus[status] = await _db.Policies.AsNoTracking()
+                .WhereEffectiveStatus(status, today).CountAsync(ct);
+        }
 
         var premiumWritten = await _db.Payments.AsNoTracking()
             .Where(p => p.Status == PaymentStatus.Completed)

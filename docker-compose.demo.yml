@@ -3,11 +3,12 @@
 #
 #   docker compose -f docker-compose.yml -f docker-compose.demo.yml up --build
 #
-# DEMO ACCOUNTS, NOT FOR PRODUCTION. They all share one password
-# (DEMO_PASSWORD, default "Demo-Passw0rd"); the API refuses to seed when
-# ASPNETCORE_ENVIRONMENT is Production, and seeds only once per database.
+# DEMO ACCOUNTS, NOT FOR PRODUCTION. They all share one password,
+# DEMO_PASSWORD from .env (required: there is no built-in one); the API
+# seeds only when ASPNETCORE_ENVIRONMENT is Development, and only
+# once per database.
 services:
   api:
     environment:
       Demo__SeedData: "true"
-      Demo__Password: ${DEMO_PASSWORD:-Demo-Passw0rd}
+      Demo__Password: ${DEMO_PASSWORD:?DEMO_PASSWORD is required for the demo accounts (see .env.example).}
