@@ -1,5 +1,5 @@
 import { keepPreviousData, useMutation, useQuery } from '@tanstack/react-query';
-import { errorsApi } from '../../../api/endpoints';
+import { errorsApi } from '../../../api/errorsEndpoints';
 import type { ErrorListQuery, Guid, UpdateErrorStatusRequest } from '../../../api/types';
 import { useInvalidateCabinet } from '../../cabinet/queries';
 import { adminKeys } from '../queries';

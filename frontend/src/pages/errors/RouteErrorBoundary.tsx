@@ -46,8 +46,13 @@ class Boundary extends Component<BoundaryProps, BoundaryState> {
     // the page shows; a repeat of the same crash keeps the first one's id.
     const { kind, traceId } = classifyError(error);
     if (traceId || kind !== 'server' || !this.state.clientTraceId) return;
-    const reported = reportError(error, 'boundary', { traceId: this.state.clientTraceId });
-    if (reported !== this.state.clientTraceId) this.setState({ clientTraceId: reported });
+    const shown = this.state.clientTraceId;
+    void reportError(error, 'boundary', { traceId: shown }).then((reported) => {
+      // Still the same crash on screen (no navigation since)?
+      if (reported !== shown && this.state.clientTraceId === shown) {
+        this.setState({ clientTraceId: reported });
+      }
+    });
   }
 
   override render() {

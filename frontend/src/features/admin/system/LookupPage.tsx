@@ -1,3 +1,4 @@
+import './systemI18n';
 import { useTranslation } from 'react-i18next';
 import { Link, Navigate, useParams } from 'react-router';
 import { isApiError } from '../../../api/errors';

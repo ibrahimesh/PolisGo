@@ -1,15 +1,9 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { vi } from 'vitest';
 import { RouteErrorBoundary } from '../pages/errors/RouteErrorBoundary';
-import {
-  newTraceId,
-  reportApiFailure,
-  reportError,
-  routeTemplate,
-  scrub,
-  setReporterEnabledForTests,
-} from './reporter';
+import { routeTemplate, scrub } from './reportSender';
+import { newTraceId, reportApiFailure, reportError, setReporterEnabledForTests } from './reporter';
 
 function stubFetch(
   impl: () => Promise<Response> = () => Promise.resolve(new Response(null, { status: 202 })),
@@ -28,29 +22,29 @@ const sentBodies = (fetchMock: ReturnType<typeof stubFetch>) =>
       >,
   );
 
-afterEach(() => {
-  setReporterEnabledForTests(null);
+afterEach(async () => {
+  await setReporterEnabledForTests(null);
   vi.unstubAllGlobals();
 });
 
 describe('reporter', () => {
-  it('sends nothing in unit tests unless switched on', () => {
+  it('sends nothing in unit tests unless switched on', async () => {
     const fetchMock = stubFetch();
-    setReporterEnabledForTests(null);
-    reportError(new Error('boom'), 'error');
+    await setReporterEnabledForTests(null);
+    await reportError(new Error('boom'), 'error');
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it('sends a closed, scrubbed payload with a route template and keepalive', () => {
+  it('sends a closed, scrubbed payload with a route template and keepalive', async () => {
     const fetchMock = stubFetch();
-    setReporterEnabledForTests(true);
+    await setReporterEnabledForTests(true);
     window.history.pushState({}, '', '/app/claims/3f2a9e1c-0000-4000-8000-000000000001?token=abc');
     const error = new TypeError(
       'Failed for leyla@polisgo.az with eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIn0.sig',
     );
     error.stack = 'TypeError: x\n    at Claim (http://localhost:5173/src/Claim.tsx?t=1:10:5)';
 
-    const traceId = reportError(error, 'error');
+    const traceId = await reportError(error, 'error');
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
@@ -68,29 +62,33 @@ describe('reporter', () => {
     window.history.pushState({}, '', '/');
   });
 
-  it('deduplicates the same error and returns the first trace id', () => {
+  it('deduplicates the same error and returns the first trace id', async () => {
     const fetchMock = stubFetch();
-    setReporterEnabledForTests(true);
-    const first = reportError(new Error('Same thing 1'), 'boundary');
-    const second = reportError(new Error('Same thing 2'), 'boundary', { traceId: newTraceId() });
+    await setReporterEnabledForTests(true);
+    const first = await reportError(new Error('Same thing 1'), 'boundary');
+    const second = await reportError(new Error('Same thing 2'), 'boundary', {
+      traceId: newTraceId(),
+    });
     expect(second).toBe(first);
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
-  it('sends at most ten a minute', () => {
+  it('sends at most ten a minute', async () => {
     const fetchMock = stubFetch();
-    setReporterEnabledForTests(true);
-    for (let i = 0; i < 25; i++)
-      reportError(new Error(`Distinct ${String.fromCharCode(97 + i)}`), 'error');
+    await setReporterEnabledForTests(true);
+    for (let i = 0; i < 25; i++) {
+      await reportError(new Error(`Distinct ${String.fromCharCode(97 + i)}`), 'error');
+    }
     expect(fetchMock).toHaveBeenCalledTimes(10);
   });
 
-  it('keeps a few reports while offline and sends them when back online', () => {
+  it('keeps a few reports while offline and sends them when back online', async () => {
     const fetchMock = stubFetch();
-    setReporterEnabledForTests(true);
+    await setReporterEnabledForTests(true);
     const online = vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
-    for (let i = 0; i < 8; i++)
-      reportError(new Error(`Offline ${String.fromCharCode(97 + i)}`), 'error');
+    for (let i = 0; i < 8; i++) {
+      await reportError(new Error(`Offline ${String.fromCharCode(97 + i)}`), 'error');
+    }
     expect(fetchMock).not.toHaveBeenCalled();
 
     online.mockReturnValue(true);
@@ -100,23 +98,24 @@ describe('reporter', () => {
 
   it('never loops or throws when its own request fails', async () => {
     const fetchMock = stubFetch(() => Promise.reject(new TypeError('Failed to fetch')));
-    setReporterEnabledForTests(true);
-    expect(() => reportError(new Error('first'), 'error')).not.toThrow();
-    await Promise.resolve();
-    await Promise.resolve();
+    await setReporterEnabledForTests(true);
+    await expect(reportError(new Error('first'), 'error')).resolves.toMatch(/^00-/);
+    await new Promise((resolve) => setTimeout(resolve, 0));
     expect(fetchMock).toHaveBeenCalledTimes(1);
     reportApiFailure({ method: 'POST', path: '/api/diagnostics/client-errors', status: null });
+    await new Promise((resolve) => setTimeout(resolve, 0));
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
-  it('reports API failures by template and status', () => {
+  it('reports API failures by template and status', async () => {
     const fetchMock = stubFetch();
-    setReporterEnabledForTests(true);
+    await setReporterEnabledForTests(true);
     reportApiFailure({
       method: 'GET',
       path: '/api/policies/3f2a9e1c-0000-4000-8000-000000000001?x=1',
       status: 502,
     });
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
     const body = sentBodies(fetchMock)[0] ?? {};
     expect(body).toMatchObject({
       kind: 'http',
@@ -153,9 +152,9 @@ describe('the route error boundary', () => {
     throw new Error('Deliberate render crash');
   }
 
-  it('shows the Reference of the trace id it reported', () => {
+  it('shows the Reference of the trace id it reported', async () => {
     const fetchMock = stubFetch();
-    setReporterEnabledForTests(true);
+    await setReporterEnabledForTests(true);
     vi.spyOn(console, 'error').mockImplementation(() => undefined);
     render(
       <MemoryRouter>
@@ -164,10 +163,10 @@ describe('the route error boundary', () => {
         </RouteErrorBoundary>
       </MemoryRouter>,
     );
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
     const body = sentBodies(fetchMock)[0] ?? {};
     expect(body.kind).toBe('boundary');
-    const traceId = String(body.traceId);
-    const code = traceId.slice(3, 11).toUpperCase();
+    const code = String(body.traceId).slice(3, 11).toUpperCase();
     expect(screen.getByTestId('reference-chip')).toHaveTextContent(code);
   });
 });

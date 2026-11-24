@@ -283,7 +283,11 @@ React Router, TanStack Query, React Hook Form + Zod, react-i18next.
 
 - `src/api` — the only way to call the API. `types.ts` mirrors the C# DTOs
   by hand: **update it in the same change as any DTO change.** Calls go
-  through `endpoints.ts`; anonymous endpoints pass `anonymous: true`.
+  through `endpoints.ts` (the System section's through `errorsEndpoints.ts`, so
+  only its lazy chunks carry it); anonymous endpoints pass `anonymous: true`.
+  The System section's strings are in `features/admin/system/locales/*.json`,
+  registered by `systemI18n.ts` when the section loads (same EN/RU/AZ rule;
+  `locales.test.ts` checks both sets).
 - `src/auth` — session (`AuthProvider`), route guard (`RequireAuth`). Guards
   are UX only; the API's `[Authorize(Roles = ...)]` is the real check. Which
   role sees which workspace section lives in `features/workspace/sections.ts`
@@ -311,7 +315,8 @@ React Router, TanStack Query, React Hook Form + Zod, react-i18next.
   `PolicyTypesPage`, `StaffPicker`, `system/`: the System section's
   layout, overview, errors list, detail, lookup), queries under
   `adminKeys.all` (`systemKeys` inside it).
-- `src/diagnostics/reporter.ts` sends browser errors to the API: throttled,
+- `src/diagnostics/reporter.ts` (listeners, on/off, trace ids; every page)
+  loads `reportSender.ts` on the first error, which sends it to the API: throttled,
   deduplicated, offline-queued, never reporting its own failures; route
   templates only, no form values or full URLs. Off in Vitest, and in e2e
   unless a test sets `localStorage['polisgo.e2e.reporter']='on'`. A 5xx with

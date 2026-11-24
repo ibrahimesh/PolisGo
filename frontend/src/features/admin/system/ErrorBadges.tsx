@@ -1,3 +1,4 @@
+import './systemI18n';
 import { useTranslation } from 'react-i18next';
 import type { ErrorSource, ErrorStatus } from '../../../api/types';
 import { Badge } from '../../../components/ui/Badge';

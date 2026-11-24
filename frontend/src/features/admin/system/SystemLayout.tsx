@@ -1,3 +1,4 @@
+import './systemI18n';
 import { useTranslation } from 'react-i18next';
 import { Link, Outlet, useLocation } from 'react-router';
 import { PageHeader } from '../../../components/layout/PageHeader';

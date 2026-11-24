@@ -1,3 +1,4 @@
+import './systemI18n';
 import type { TFunction } from 'i18next';
 import { parseApiTime } from '../../../lib/dates';
 

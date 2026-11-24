@@ -1,7 +1,8 @@
+import './systemI18n';
 import { useEffect, useId, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useSearchParams } from 'react-router';
-import { errorsApi } from '../../../api/endpoints';
+import { errorsApi } from '../../../api/errorsEndpoints';
 import { ERROR_SORTS, ERROR_SOURCES, ERROR_STATUSES } from '../../../api/types';
 import type { ErrorGroupRow, ErrorSort, ErrorSource, ErrorStatus } from '../../../api/types';
 import { Button } from '../../../components/ui/Button';

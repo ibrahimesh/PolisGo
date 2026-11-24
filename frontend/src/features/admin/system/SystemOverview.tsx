@@ -1,3 +1,4 @@
+import './systemI18n';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useSearchParams } from 'react-router';
