@@ -175,7 +175,7 @@ only**, 150–400ms, on shared tokens (CSS variables in `src/styles/index.css`,
 `Button` · `Input` · `PhoneInput` · `PasswordField` · `Select` · `Card` ·
 `Badge` · `Tabs` · `Table` · `Modal` · `Toast` · `Skeleton` · `EmptyState` ·
 `FormErrorSummary` · `ErrorNotice` · `ReferenceChip` · `ErrorPage` ·
-`ChoiceChips` · `ActorCombobox` · Settings dialog (`SettingsFields`) · `CommandPalette` ·
+`ChoiceChips` · `ActorCombobox` · `SearchField` · `ErrorBadges` · `ReferenceLookup` · Settings dialog (`SettingsFields`) · `CommandPalette` ·
 `Label` · `PageHeader` · `PolicyStatusBadge` · `ClaimStatusBadge` · `StepNav`
 (both wizards) · `QuoteResult` (full or compact) · `Textarea` (with a live
 count) · `Pagination` · `FileUploader` · `ExportButton` · `Modal`
@@ -308,6 +308,22 @@ and `DateFilterField`) · `StaffPicker` · `BarChart` · `ProductIcon` ·
   email underneath, the current choice has a check; arrows, Home/End, Enter,
   Escape and Alt+↓ follow the WAI-ARIA combobox pattern. When more than 50
   match, the list says how many and asks for more letters.
+- **System section** (Admin). Two views as link chips (Overview, Errors),
+  like the queue views. The overview opens with the Reference lookup (the
+  reason to come here), then health as a boxed tile grid (state words in
+  `success`/`danger`/`warning`, the detail in `muted`), unresolved and
+  regressed counters that link into the list, two one-series charts
+  (`BarChart`) and the most frequent groups. Error badges: the source in
+  words (API, Browser), the status (New → warning, Resolved → success,
+  Ignored → neutral) and **Regressed** (danger, with the alert icon). The list
+  is a table from md and stacked rows below it (never a sideways scroll);
+  bulk actions appear in a bordered bar once rows are chosen. The detail puts
+  the facts on the ivory data card (relative times in `paper-muted`), triage
+  in a `surface` card beside it, and each occurrence in a hairline box with
+  its Reference chip; the one a lookup led to gets the accent border and
+  "The one you looked up". Stack traces and fingerprints are the only text in
+  the system's own monospace (`font-mono`, no web font: code is read
+  character by character), in a focusable box that scrolls inside itself.
 - **Empty and loading.** Every list has a real empty state (and a separate
   "nothing matches" state); skeletons mirror the loaded layout. Nothing is
   mocked.

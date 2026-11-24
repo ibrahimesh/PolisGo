@@ -51,6 +51,19 @@ every change in this repo.
   assignment adds an `AuditEntry` in the same SaveChanges. The audit feed
   (`AuditLogService`) reads only recorded rows: status history and audit
   entries. Never synthesise events.
+- **Error tracking** (System section, ADR-002 in `docs/DECISIONS.md`):
+  `ExceptionHandlingMiddleware` hands unhandled exceptions and 5xx answers
+  to `ErrorCapture` → a bounded queue (`TryEnqueue`: never waits, never
+  throws) → `ErrorWriterService` → `ErrorRecorder`. Never capture
+  validation, 401, 403, 404 or 409/412 answers. Everything stored, logged or
+  returned in a 500 detail goes through `Redaction` first; the actor is a
+  role and a user id only; endpoints are route templates, never URLs. The
+  ProblemDetails `traceId` comes from `RequestTrace` so the user's
+  Reference (`ErrorReference`: first 8 of the 32-hex trace id, upper case) is
+  the stored one. Group triage goes through `ErrorGroup` with the caller's
+  `rowVersion` and an `AuditEntry`; counting doesn't change the version.
+  Caps (per-group rows, queue, new client groups per hour, client report
+  limits) are configuration (`ErrorTracking`, `RateLimits:ClientErrors*`).
 - **Staff management rules** live in `StaffAdminService`: nobody acts on
   their own account, the last active admin is kept (checked first, inside
   `BeginSerializableTransactionAsync` with the write, so two admins acting on
@@ -295,7 +308,16 @@ React Router, TanStack Query, React Hook Form + Zod, react-i18next.
   `/app/claims` and `/app/claims/:id` pick the client or staff page by role
   (an Admin's `/app` is the dashboard). Admin panel: `admin` (`dashboard/`
   with `BarChart`, `staff/`, `audit/`, `customers/AssignAgent`,
-  `PolicyTypesPage`, `StaffPicker`), queries under `adminKeys.all`.
+  `PolicyTypesPage`, `StaffPicker`, `system/`: the System section's
+  layout, overview, errors list, detail, lookup), queries under
+  `adminKeys.all` (`systemKeys` inside it).
+- `src/diagnostics/reporter.ts` sends browser errors to the API: throttled,
+  deduplicated, offline-queued, never reporting its own failures; route
+  templates only, no form values or full URLs. Off in Vitest, and in e2e
+  unless a test sets `localStorage['polisgo.e2e.reporter']='on'`. A 5xx with
+  a server trace id is not reported again (the API has it).
+- API timestamps are UTC without a "Z" (EF reads them back without a kind):
+  parse them with `parseApiTime` (`lib/dates`), never `new Date(iso)`.
 - The audit log's Actor filter is `ActorCombobox` (an editable combobox
   over the server staff search), kept visibly different from the page's
   one free-text search. List pages that sync filters to the URL build each
@@ -476,7 +498,10 @@ Run from `frontend/`:
   light, desktop and mobile; admin pages need the demo data).
 - First-time e2e setup: `npx playwright install chromium`.
 - The e2e dev server runs with `VITE_E2E_ROUTES=true` (test-only routes such
-  as `/__e2e/crash`, never in a production build). If your own `npm run
+  as `/__e2e/crash` and `/app/__e2e/server-error`, a real 500 from
+  `POST /api/diagnostics/test-failure`, which `docker-compose.e2e.yml`
+  enables; never in a production build). `staff-system.spec.ts` covers the
+  System section. If your own `npm run
   dev` holds :5173, run the suite on its own server with
   `E2E_BASE_URL=http://localhost:3000` (the API's other CORS origin).
   Helpers: `chooseSetting` (Settings dialog), `expectNoAxeViolations` and

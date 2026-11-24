@@ -143,14 +143,52 @@ dialog, role change and deactivation behind a confirm that says what follows.
 **Customers** with an agent filter and assignment. **All policies** with who
 sold them, an agent filter and CSV. **Claims** with incident-date filters.
 **Audit log** searched by email, name, policy or claim number or action
-(in any of the three languages) and filtered by person, type and dates. **Products and rates**,
-read-only. Help has an admin section.
+(in any of the three languages, case-insensitive for Latin, Cyrillic and
+Azerbaijani letters) and filtered by an **Actor** picker, type and dates.
+**Products and rates**, read-only. **System**: errors and health (see
+[Observability](#observability)). Help has an admin section.
 
 **DateField** — every date in the app is typed as DD.MM.YYYY in every
 language (pasted ISO or day-first dates work too), with its own calendar in
 EN/RU/AZ (arrow, Page and Home/End keys, month and year pickers); days
 outside min/max are crossed out and the allowed range is written under the
 field, e.g. "Must be within the cover period: from 1 Mar 2026 to today".
+
+## Observability
+
+![System section: Reference lookup, health and error trends](frontend/docs/screenshots/admin-system-dark-desktop.png)
+
+Every error a user sees carries a **Reference** ("Reference 8F05E497", the
+first 8 characters of the request's W3C trace id). The admin's **System**
+section turns that code back into what happened:
+
+- **Capture.** Unhandled exceptions and 5xx answers in the API, and in the
+  browser uncaught errors, unhandled rejections, render crashes and failed
+  calls the API never saw. Capturing is off the request path (a bounded
+  queue and a background writer); a full queue drops and counts. Validation
+  errors, 401/403/404 and concurrency conflicts are not errors.
+- **One bug, one group.** A fingerprint of source, exception type, the top
+  application frames by method name and the endpoint template; each group
+  counts every event and keeps the 20 newest occurrences (configurable).
+  A resolved group that happens again reopens as **Regressed**.
+- **Redacted before storage, and in the logs**: emails, JWTs and bearer
+  tokens, secrets, connection strings, query strings, long digit runs, IP
+  addresses. The actor is a role and a user id; pages and endpoints are
+  route templates, never URLs. Request bodies and headers are never read.
+- **Client reports** (`POST /api/diagnostics/client-errors`) are anonymous
+  but capped at 8 KB, schema-checked, rate-limited per address with a shared
+  budget, and new client groups per hour are capped, so the tables can't be
+  flooded. A crash in the browser gets a trace id minted in the same format,
+  so the Reference on the error page is the stored one.
+- **The section** (`/app/admin/system`, Admin only): paste a Reference (or
+  use **Find error by Reference** in Ctrl/⌘+K), see health (version, uptime,
+  Baku time, database round trip, migrations, writer queue, errors, 5xx and
+  rate-limit rejections in 24 hours, audit log size), errors per hour and
+  per day, the error list with filters and bulk triage, and each error's
+  occurrences, redacted stack and a **Copy bug report** in Markdown. Triage
+  goes to the audit log. Occurrences are kept 30 days; groups and counts stay.
+
+Design notes: [`docs/DECISIONS.md`](docs/DECISIONS.md) (ADR-002).
 
 ## Architecture
 
@@ -472,7 +510,12 @@ Generated from the controllers; full schemas in Swagger.
 | PUT | `/api/users/{id}/role` | Admin |
 | GET | `/api/admin/stats` | Admin |
 | GET | `/api/admin/dashboard` (from, to; 24 months max) | Admin |
-| GET | `/api/admin/audit` (actor, entity type, from, to, paged) | Admin |
+| GET | `/api/admin/audit` (search, actions, actor, entity type, from, to, paged) | Admin |
+| GET | `/api/admin/errors` (filters, search incl. a Reference, sort, paged), `/summary`, `/lookup?reference=`, `/{id}` | Admin |
+| PATCH | `/api/admin/errors/{id}` (status, note, `rowVersion`) | Admin; audited |
+| DELETE | `/api/admin/errors/resolved?olderThanDays=` | Admin; audited |
+| GET | `/api/admin/system/health` | Admin |
+| POST | `/api/diagnostics/client-errors` | Anonymous; 8 KB, schema, rate limits |
 | GET | `/health` | Anonymous |
 
 ## Roadmap

@@ -346,7 +346,17 @@ for (const size of SIZES) {
 
 /* ---------- Admin panel: first screen only, on the demo data ---------- */
 
-const ADMIN_PAGES = ['dashboard', 'staff', 'customers', 'policies', 'audit', 'products'] as const;
+const ADMIN_PAGES = [
+  'dashboard',
+  'staff',
+  'customers',
+  'policies',
+  'audit',
+  'products',
+  'system',
+  'errors',
+  'error',
+] as const;
 
 for (const size of SIZES) {
   test.describe(`admin ${size.label} @screenshots`, () => {
@@ -358,6 +368,13 @@ for (const size of SIZES) {
         const admin = await (await adminApi(page)).createStaff('Admin', 'Nərmin Əhmədova');
         await seedPreferences(page, { theme, lang: 'en' });
         await openSession(page, admin.session);
+        // The demo's regressed error group, for the detail page.
+        const demoErrors = await page.request.get(`${API_URL}/api/admin/errors`, {
+          headers: { Authorization: `Bearer ${admin.session.token}` },
+          params: { search: 'Demo', regressed: 'true' },
+        });
+        const demoError =
+          ((await demoErrors.json()) as { items: { id: string }[] }).items[0]?.id ?? '';
 
         const steps: Record<
           (typeof ADMIN_PAGES)[number],
@@ -386,6 +403,18 @@ for (const size of SIZES) {
           products: {
             path: '/app/admin/policy-types',
             ready: () => page.getByText(/rates are illustrative/).waitFor(),
+          },
+          system: {
+            path: '/app/admin/system',
+            ready: () => page.getByText('Reachable', { exact: true }).waitFor(),
+          },
+          errors: {
+            path: '/app/admin/system/errors?q=Demo',
+            ready: () => page.getByText(/^\d+ error groups?$/).waitFor(),
+          },
+          error: {
+            path: `/app/admin/system/errors/${demoError}`,
+            ready: () => page.getByRole('heading', { name: 'Recent occurrences' }).waitFor(),
           },
         };
         for (const name of ADMIN_PAGES) {
