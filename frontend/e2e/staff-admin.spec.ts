@@ -254,6 +254,8 @@ test.describe('Admin pages other roles may not open', () => {
         '/app/admin/audit',
         '/app/admin/policies',
         '/app/admin/policy-types',
+        '/app/admin/system',
+        '/app/admin/system/errors',
       ]) {
         await page.goto(path);
         await expect(

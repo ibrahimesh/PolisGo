@@ -102,7 +102,7 @@ function Detail({
   const when = (iso: string) => (
     <>
       <time dateTime={iso}>{format.dateTime(iso)}</time>{' '}
-      <span className="text-muted">({relativeTime(iso, now, t)})</span>
+      <span className="text-paper-muted">({relativeTime(iso, now, t)})</span>
     </>
   );
 
@@ -418,7 +418,14 @@ function Occurrence({
           <summary className="cursor-pointer text-sm font-medium text-muted hover:text-text">
             {t('admin.system.detail.stack')}
           </summary>
-          <pre className="mt-2 max-h-96 overflow-y-auto rounded-sm border border-line bg-surface p-3 font-mono text-sm leading-6 break-words whitespace-pre-wrap">
+          {/* A long stack scrolls inside its box, so the box takes focus:
+              arrow keys scroll it without a mouse. */}
+          <pre
+            // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
+            tabIndex={0}
+            aria-label={t('admin.system.detail.stack')}
+            className="focus-ring mt-2 max-h-96 overflow-y-auto rounded-sm border border-line bg-surface p-3 font-mono text-sm leading-6 break-words whitespace-pre-wrap"
+          >
             {occurrence.stackTrace}
           </pre>
         </details>

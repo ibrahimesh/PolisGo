@@ -83,8 +83,10 @@ export function routeTemplate(pathname: string): string {
     .split('/')
     .map((segment, index) => {
       if (index === 0 || segment === '') return segment;
-      if (/\d/.test(segment)) return ':id';
-      return /^[A-Za-z_.-]+$/.test(segment) ? segment : ':param';
+      // Digits only, or 8+ characters with a digit (ids, References,
+      // policy numbers); "__e2e" or "v2" stay as they are.
+      if (/^\d+$/.test(segment) || (segment.length >= 8 && /\d/.test(segment))) return ':id';
+      return /^[\w.-]+$/.test(segment) ? segment : ':param';
     })
     .join('/');
   return (template.startsWith('/') ? template : `/${template}`).slice(0, 200);

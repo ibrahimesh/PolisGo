@@ -131,6 +131,8 @@ describe('helpers', () => {
     ['/app/claims/3f2a9e1c-0000-4000-8000-000000000001', '/app/claims/:id'],
     ['/app/admin/system/lookup/8F05E497', '/app/admin/system/lookup/:id'],
     ['/app/policies', '/app/policies'],
+    ['/app/__e2e/crash', '/app/__e2e/crash'],
+    ['/app/customers/42/sell', '/app/customers/:id/sell'],
     ['/app/ыы', '/app/:param'],
     ['/', '/'],
   ])('routeTemplate(%s) → %s', (path, template) => {
