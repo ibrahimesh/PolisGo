@@ -25,6 +25,9 @@ public class AppDbContext : DbContext, IApplicationDbContext
     public DbSet<PolicyReminderRead> PolicyReminderReads => Set<PolicyReminderRead>();
     public DbSet<ClaimUpdateRead> ClaimUpdateReads => Set<ClaimUpdateRead>();
     public DbSet<AuditEntry> AuditEntries => Set<AuditEntry>();
+    public DbSet<ErrorGroup> ErrorGroups => Set<ErrorGroup>();
+    public DbSet<ErrorOccurrence> ErrorOccurrences => Set<ErrorOccurrence>();
+    public DbSet<ErrorHourlyCount> ErrorHourlyCounts => Set<ErrorHourlyCount>();
 
     // SQL Server takes key-range locks, so a check and the write it guards
     // can't interleave with another request's; SQLite serialises writers.

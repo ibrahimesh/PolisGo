@@ -22,6 +22,9 @@ public interface IApplicationDbContext
     DbSet<PolicyReminderRead> PolicyReminderReads { get; }
     DbSet<ClaimUpdateRead> ClaimUpdateReads { get; }
     DbSet<AuditEntry> AuditEntries { get; }
+    DbSet<ErrorGroup> ErrorGroups { get; }
+    DbSet<ErrorOccurrence> ErrorOccurrences { get; }
+    DbSet<ErrorHourlyCount> ErrorHourlyCounts { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 
