@@ -42,7 +42,7 @@ public class ApiFactory : WebApplicationFactory<Program>
         // POST /api/diagnostics/test-failure answers a real 500.
         builder.UseSetting("Diagnostics:TestFailures", "true");
         // One address signs up many users here; RateLimitEndpointTests tightens these.
-        foreach (var policy in new[] { "SignIn", "Register", "PasswordChange" })
+        foreach (var policy in new[] { "SignIn", "Register", "PasswordChange", "ClientErrors", "ClientErrorsGlobal" })
         {
             builder.UseSetting($"RateLimits:{policy}:PermitLimit", "100000");
         }

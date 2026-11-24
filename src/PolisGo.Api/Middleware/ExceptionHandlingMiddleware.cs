@@ -65,6 +65,11 @@ public class ExceptionHandlingMiddleware
                     }
                 });
         }
+        catch (PayloadTooLargeException ex)
+        {
+            LogExpected(ex, context);
+            await WriteProblem(context, StatusCodes.Status413PayloadTooLarge, "Payload too large", ex.Message);
+        }
         catch (NotFoundException ex)
         {
             LogExpected(ex, context);
