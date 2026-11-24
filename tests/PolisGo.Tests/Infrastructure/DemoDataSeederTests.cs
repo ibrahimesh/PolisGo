@@ -91,6 +91,27 @@ public class DemoDataSeederTests
         Assert.Contains(policies, p => p.Status == PolicyStatus.Cancelled);
         Assert.All(policies.Where(p => p.Status != PolicyStatus.Draft), p => Assert.Single(p.Payments));
         Assert.Equal(7, await fixture.Db.Customers.CountAsync(c => c.AgentId != null));
+
+        // Error groups for the System section, unmistakably synthetic: every
+        // status, a regression, a Reference per stored occurrence, counts in
+        // the charts.
+        var errors = await fixture.Db.ErrorGroups.Include(g => g.Occurrences).ToListAsync();
+        Assert.Equal(4, errors.Count);
+        Assert.All(errors, g =>
+        {
+            Assert.StartsWith("[Demo]", g.Title);
+            Assert.StartsWith("demo-", g.Fingerprint);
+            Assert.All(g.Occurrences, o =>
+            {
+                Assert.Equal("Demo", o.Environment);
+                Assert.StartsWith("de5000", o.TraceId);
+                Assert.Equal(o.TraceId[..8].ToUpperInvariant(), o.ReferenceCode);
+                Assert.True(o.OccurredAt <= Clock.Now.UtcDateTime);
+            });
+        });
+        Assert.Equal(Enum.GetValues<ErrorStatus>().Order(), errors.Select(g => g.Status).Distinct().Order());
+        Assert.Single(errors, g => g.IsRegressed);
+        Assert.Equal(errors.Sum(g => g.OccurrenceCount), await fixture.Db.ErrorHourlyCounts.SumAsync(c => c.Count));
     }
 
     // No built-in password: demo staff accounts with a password printed in
