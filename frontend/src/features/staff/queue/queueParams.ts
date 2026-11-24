@@ -1,6 +1,7 @@
 import { CLAIM_STATUSES } from '../../../api/types';
 import type { ClaimSortBy, ClaimStatus, ListClaimsQuery, SortDirection } from '../../../api/types';
 import { isCompleteIso } from '../../../lib/dateInput';
+import { parseApiTime } from '../../../lib/dates';
 import { CLAIM_RULES } from '../../claims/claimRules';
 
 // The adjuster's queue: everything in the URL (view, filters, sort, page), so
@@ -129,7 +130,7 @@ export const ATTENTION_DAYS = 7;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 export function ageInDays(since: string, now: Date = new Date()): number {
-  return Math.max(0, Math.floor((now.getTime() - new Date(since).getTime()) / DAY_MS));
+  return Math.max(0, Math.floor((now.getTime() - parseApiTime(since).getTime()) / DAY_MS));
 }
 
 export function needsAttention(

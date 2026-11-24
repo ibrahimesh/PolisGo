@@ -24,6 +24,7 @@ public class AuditLogService : IAuditLogService
     private const int MaxPageSize = 50;
     public const int MaxPage = 200;
     public const string StatusChanged = "StatusChanged";
+    private const string Key = SearchText.KeyProperty;
 
     private readonly IApplicationDbContext _db;
 
@@ -60,12 +61,15 @@ public class AuditLogService : IAuditLogService
             {
                 var needle = search.Needle;
                 var statuses = search.Matching<ClaimStatus>();
+                // Claim numbers are ASCII, so SQL's lower() folds them on
+                // every provider; names and emails use the folded keys.
                 claims = needle is null
                     ? claims.Where(h => statuses.Contains(h.ToStatus))
                     : claims.Where(h => statuses.Contains(h.ToStatus)
-                        || h.Claim.ClaimNumber.ToUpper().Contains(needle)
-                        || h.ChangedByUser.FullName.ToUpper().Contains(needle)
-                        || h.ChangedByUser.Email.ToUpper().Contains(needle));
+                        || h.Claim.ClaimNumber.ToLower().Contains(needle)
+                        || h.Claim.Policy.PolicyNumber.ToLower().Contains(needle)
+                        || EF.Property<string>(h.ChangedByUser, Key).Contains(needle)
+                        || EF.Property<string>(h.Claim.Policy.Customer, Key).Contains(needle));
             }
             total += await claims.CountAsync(cancellationToken);
             var found = await claims
@@ -95,9 +99,10 @@ public class AuditLogService : IAuditLogService
                 policies = needle is null
                     ? policies.Where(h => statuses.Contains(h.ToStatus))
                     : policies.Where(h => statuses.Contains(h.ToStatus)
-                        || h.Policy.PolicyNumber.ToUpper().Contains(needle)
+                        || h.Policy.PolicyNumber.ToLower().Contains(needle)
+                        || EF.Property<string>(h.Policy.Customer, Key).Contains(needle)
                         || _db.Users.Any(u => u.Id == h.ChangedByUserId
-                            && (u.FullName.ToUpper().Contains(needle) || u.Email.ToUpper().Contains(needle))));
+                            && EF.Property<string>(u, Key).Contains(needle)));
             }
             total += await policies.CountAsync(cancellationToken);
             var found = await policies
@@ -123,6 +128,11 @@ public class AuditLogService : IAuditLogService
                 AuditAction.StaffReactivated, AuditAction.RoleChanged]);
         }
         if (wants(AuditEntityType.Customer)) staffTypes.Add(AuditAction.CustomerAssigned);
+        if (wants(AuditEntityType.Error))
+        {
+            staffTypes.AddRange([AuditAction.ErrorResolved, AuditAction.ErrorIgnored,
+                AuditAction.ErrorReopened, AuditAction.ErrorsPurged]);
+        }
         if (staffTypes.Count > 0)
         {
             var entries = _db.AuditEntries.AsNoTracking().Where(a => staffTypes.Contains(a.Action));
@@ -133,15 +143,16 @@ public class AuditLogService : IAuditLogService
             {
                 var needle = search.Needle;
                 var actions = search.Matching<AuditAction>();
-                // The values hold role names and the assigned agent's name.
+                // The entry's key holds the subject as it read then (an email,
+                // a customer's name) and the values (roles, the agent's name);
+                // the subject's current name and email match too.
                 entries = needle is null
                     ? entries.Where(a => actions.Contains(a.Action))
                     : entries.Where(a => actions.Contains(a.Action)
-                        || a.SubjectLabel.ToUpper().Contains(needle)
-                        || (a.FromValue != null && a.FromValue.ToUpper().Contains(needle))
-                        || (a.ToValue != null && a.ToValue.ToUpper().Contains(needle))
-                        || a.Actor.FullName.ToUpper().Contains(needle)
-                        || a.Actor.Email.ToUpper().Contains(needle));
+                        || EF.Property<string>(a, Key).Contains(needle)
+                        || EF.Property<string>(a.Actor, Key).Contains(needle)
+                        || _db.Users.Any(u => u.Id == a.SubjectId && EF.Property<string>(u, Key).Contains(needle))
+                        || _db.Customers.Any(c => c.Id == a.SubjectId && EF.Property<string>(c, Key).Contains(needle)));
             }
             total += await entries.CountAsync(cancellationToken);
             var found = await entries
@@ -155,7 +166,7 @@ public class AuditLogService : IAuditLogService
                 .ToListAsync(cancellationToken);
             rows.AddRange(found.Select(a => new AuditEventResponse(
                 a.Id, a.OccurredAt, a.ActorUserId, a.FullName, a.Role,
-                a.Action == AuditAction.CustomerAssigned ? AuditEntityType.Customer : AuditEntityType.User,
+                EntityTypeOf(a.Action),
                 a.SubjectId, a.SubjectLabel, a.Action.ToString(), a.FromValue, a.ToValue)));
         }
 
@@ -166,12 +177,21 @@ public class AuditLogService : IAuditLogService
             .ToList();
         return new PagedResult<AuditEventResponse>(items, page, pageSize, total);
     }
+
+    private static AuditEntityType EntityTypeOf(AuditAction action) => action switch
+    {
+        AuditAction.CustomerAssigned => AuditEntityType.Customer,
+        AuditAction.ErrorResolved or AuditAction.ErrorIgnored or AuditAction.ErrorReopened or AuditAction.ErrorsPurged
+            => AuditEntityType.Error,
+        _ => AuditEntityType.User
+    };
 }
 
-// The audit feed's text search. Matching is upper-cased Contains (portable:
-// upper() on SQLite and SQL Server, like the staff search). Status and action
-// codes match when their name contains the text or the SPA sent them in
-// Actions; the enum values are resolved here, so SQL sees a plain IN list.
+// The audit feed's text search. The typed text is folded (SearchText) and
+// compared with the folded SearchKey columns, so case is ignored the same way
+// for Latin, Cyrillic and Azerbaijani on SQLite and SQL Server. Status and
+// action codes match when their name contains the text or the SPA sent them
+// in Actions; the enum values are resolved here, so SQL sees a plain IN list.
 internal sealed class AuditSearch
 {
     private readonly HashSet<string> _codes;
@@ -195,7 +215,8 @@ internal sealed class AuditSearch
             (actions ?? []).Where(a => !string.IsNullOrWhiteSpace(a)).Select(a => a.Trim()),
             StringComparer.OrdinalIgnoreCase);
         if (string.IsNullOrEmpty(term) && codes.Count == 0) return null;
-        return new AuditSearch(string.IsNullOrEmpty(term) ? null : term.ToUpperInvariant(), codes);
+        var needle = SearchText.Fold(term);
+        return new AuditSearch(needle.Length == 0 ? null : needle, codes);
     }
 
     public List<T> Matching<T>() where T : struct, Enum =>
@@ -204,7 +225,7 @@ internal sealed class AuditSearch
             {
                 var name = value.ToString();
                 return _codes.Contains(name)
-                    || (Needle is not null && name.ToUpperInvariant().Contains(Needle, StringComparison.Ordinal));
+                    || (Needle is not null && SearchText.Fold(name).Contains(Needle, StringComparison.Ordinal));
             })
             .ToList();
 }

@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using PolisGo.Application.Common;
+using PolisGo.Infrastructure.Persistence;
 
 namespace PolisGo.Tests.Infrastructure;
 
@@ -64,7 +66,9 @@ public class MigrationBackfillTests
         db.Migrate(CustomerAgent);
         await using (var check = db.NewContext())
         {
-            var books = await check.Customers.AsNoTracking().ToDictionaryAsync(c => c.Id, c => c.AgentId);
+            // Projected: the current model has columns later migrations add.
+            var books = await check.Customers.AsNoTracking()
+                .Select(c => new { c.Id, c.AgentId }).ToDictionaryAsync(c => c.Id, c => c.AgentId);
             Assert.Equal(agent2, books[customer]);
             Assert.Null(books[walkIn]);
         }
@@ -73,7 +77,8 @@ public class MigrationBackfillTests
         db.Migrate(AdminPanel);
         await using (var check = db.NewContext())
         {
-            var users = await check.Users.AsNoTracking().ToListAsync();
+            var users = await check.Users.AsNoTracking()
+                .Select(u => new { u.IsActive, u.SecurityStamp }).ToListAsync();
             Assert.Equal(3, users.Count);
             Assert.All(users, u => Assert.True(u.IsActive));
             Assert.DoesNotContain(users, u => u.SecurityStamp == Guid.Empty);
@@ -87,6 +92,16 @@ public class MigrationBackfillTests
         {
             Assert.Equal(3, await latest.Policies.CountAsync());
             Assert.Empty(await latest.Database.GetPendingMigrationsAsync());
+        }
+
+        // Old rows have no search key until the startup backfill folds them.
+        await using (var latest = db.NewContext())
+        {
+            Assert.Equal(5, await SearchKeys.BackfillAsync(latest));
+            var key = await latest.Customers.AsNoTracking().Where(c => c.Id == walkIn)
+                .Select(c => EF.Property<string>(c, SearchText.KeyProperty)).SingleAsync();
+            Assert.Equal(SearchText.Key("Walk In", "w@old.test"), key);
+            Assert.Equal(0, await SearchKeys.BackfillAsync(latest));
         }
     }
 }

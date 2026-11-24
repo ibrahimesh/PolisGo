@@ -16,6 +16,7 @@ const SOURCES = [
   'Policies/PolicyValidation.cs',
   'Claims/ClaimValidation.cs',
   'Admin/AdminValidation.cs',
+  'Diagnostics/ErrorTrackingValidation.cs',
 ];
 
 function messagesIn(file: string): string[] {

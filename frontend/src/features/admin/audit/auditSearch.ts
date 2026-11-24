@@ -1,6 +1,7 @@
 import type { TFunction } from 'i18next';
 import { CLAIM_STATUSES } from '../../../api/types';
 import type { PolicyStatus } from '../../../api/types';
+import { foldSearch } from '../../../lib/searchText';
 
 // The API matches names, emails, numbers and English codes; the words the
 // page shows ("Одобрено", "Rədd edilib", "role Agent → Admin") are
@@ -14,17 +15,17 @@ const ACTION_LABELS = {
   StaffReactivated: ['admin.audit.actions.StaffReactivated'],
   RoleChanged: ['admin.audit.actions.RoleChanged'],
   CustomerAssigned: ['admin.audit.actions.assigned', 'admin.audit.actions.released'],
+  ErrorResolved: ['admin.audit.actions.ErrorResolved'],
+  ErrorIgnored: ['admin.audit.actions.ErrorIgnored'],
+  ErrorReopened: ['admin.audit.actions.ErrorReopened'],
+  ErrorsPurged: ['admin.audit.actions.ErrorsPurged'],
 } as const;
 
 // Shorter text would match half the vocabulary ("a", "ро").
 export const MIN_CODE_MATCH = 3;
 
-const normalise = (text: string) =>
-  text
-    .replace(/\{\{[^}]+\}\}/g, ' ')
-    .toLocaleLowerCase()
-    .replace(/\s+/g, ' ')
-    .trim();
+// Folded like the API's search (I/İ/ı, ё), so "İŞÇİ" finds "işçi".
+const normalise = (text: string) => foldSearch(text.replace(/\{\{[^}]+\}\}/g, ' '));
 
 export function matchAuditCodes(search: string, t: TFunction): string[] {
   const needle = normalise(search);

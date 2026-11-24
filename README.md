@@ -143,14 +143,52 @@ dialog, role change and deactivation behind a confirm that says what follows.
 **Customers** with an agent filter and assignment. **All policies** with who
 sold them, an agent filter and CSV. **Claims** with incident-date filters.
 **Audit log** searched by email, name, policy or claim number or action
-(in any of the three languages) and filtered by person, type and dates. **Products and rates**,
-read-only. Help has an admin section.
+(in any of the three languages, case-insensitive for Latin, Cyrillic and
+Azerbaijani letters) and filtered by an **Actor** picker, type and dates.
+**Products and rates**, read-only. **System**: errors and health (see
+[Observability](#observability)). Help has an admin section.
 
 **DateField** — every date in the app is typed as DD.MM.YYYY in every
 language (pasted ISO or day-first dates work too), with its own calendar in
 EN/RU/AZ (arrow, Page and Home/End keys, month and year pickers); days
 outside min/max are crossed out and the allowed range is written under the
 field, e.g. "Must be within the cover period: from 1 Mar 2026 to today".
+
+## Observability
+
+![System section: Reference lookup, health and error trends](frontend/docs/screenshots/admin-system-dark-desktop.png)
+
+Every error a user sees carries a **Reference** ("Reference 8F05E497", the
+first 8 characters of the request's W3C trace id). The admin's **System**
+section turns that code back into what happened:
+
+- **Capture.** Unhandled exceptions and 5xx answers in the API, and in the
+  browser uncaught errors, unhandled rejections, render crashes and failed
+  calls the API never saw. Capturing is off the request path (a bounded
+  queue and a background writer); a full queue drops and counts. Validation
+  errors, 401/403/404 and concurrency conflicts are not errors.
+- **One bug, one group.** A fingerprint of source, exception type, the top
+  application frames by method name and the endpoint template; each group
+  counts every event and keeps the 20 newest occurrences (configurable).
+  A resolved group that happens again reopens as **Regressed**.
+- **Redacted before storage, and in the logs**: emails, JWTs and bearer
+  tokens, secrets, connection strings, query strings, long digit runs, IP
+  addresses. The actor is a role and a user id; pages and endpoints are
+  route templates, never URLs. Request bodies and headers are never read.
+- **Client reports** (`POST /api/diagnostics/client-errors`) are anonymous
+  but capped at 8 KB, schema-checked, rate-limited per address with a shared
+  budget, and new client groups per hour are capped, so the tables can't be
+  flooded. A crash in the browser gets a trace id minted in the same format,
+  so the Reference on the error page is the stored one.
+- **The section** (`/app/admin/system`, Admin only): paste a Reference (or
+  use **Find error by Reference** in Ctrl/⌘+K), see health (version, uptime,
+  Baku time, database round trip, migrations, writer queue, errors, 5xx and
+  rate-limit rejections in 24 hours, audit log size), errors per hour and
+  per day, the error list with filters and bulk triage, and each error's
+  occurrences, redacted stack and a **Copy bug report** in Markdown. Triage
+  goes to the audit log. Occurrences are kept 30 days; groups and counts stay.
+
+Design notes: [`docs/DECISIONS.md`](docs/DECISIONS.md) (ADR-002).
 
 ## Architecture
 
@@ -352,7 +390,7 @@ instead of `echo` — its redirect writes UTF-16, which Vite does not read.
 dotnet test PolisGo.slnx
 ```
 
-**507 backend tests** (xUnit; 7 of them need SQL Server): domain and service tests on SQLite in-memory
+**673 backend tests** (xUnit; 10 of them need SQL Server): domain and service tests on SQLite in-memory
 and HTTP tests via `WebApplicationFactory` (401/403/404 per role, JSON contract,
 and one client reading, paying, searching, uploading to or withdrawing
 another's policy or claim → 404; a client on every staff endpoint → 403, an
@@ -360,9 +398,13 @@ agent deciding → 403, one agent's customers hidden from another and from
 adjusters, decision field rules, stale decisions → 409, CSV escaping), the
 rate limits and security headers, contract tests over the compose, CI and
 configuration files, and two requests at once (payments, payouts, the last
-admin) on a SQLite file. Seven of them need SQL Server itself
-(`[SqlServerFact]`: the same races, paging, decimal precision, the migration
-backfills over existing rows); they are skipped unless
+admin) on a SQLite file, error tracking (fingerprints, redaction of
+realistic leaks, capture that never breaks a request, the writer, caps,
+regressions, retention, the client endpoint's schema, size and rate limits)
+and the audit search over a 2,640-event log with Latin, Cyrillic and
+Azerbaijani names. Ten of them need SQL Server itself (`[SqlServerFact]`:
+the same races, paging, decimal precision, the migration backfills over
+existing rows, the audit search and error tracking); they are skipped unless
 `POLISGO_TEST_SQLSERVER` holds a connection string, and CI's SQL Server job
 runs them.
 
@@ -383,8 +425,8 @@ address registers hundreds of test users), from the repository root:
 docker compose -f docker-compose.yml -f docker-compose.demo.yml -f docker-compose.e2e.yml up --build
 ```
 
-**337 frontend unit tests** (Vitest) and **217 end-to-end tests** (Playwright +
-axe-core: 147 at 1440px, plus the 70 cabinet and staff tests again at 390px) against the
+**394 frontend unit tests** (Vitest) and **230 end-to-end tests** (Playwright +
+axe-core: 154 at 1440px, plus the 76 cabinet and staff tests again at 390px) against the
 real API — the e2e suite needs the Docker stack on `:8080`. They cover
 sign-up and sign-in, buying a policy end to end, the certificate download,
 renewal, filing a claim with photos, withdrawing it, the claim timeline after
@@ -400,7 +442,9 @@ customers and selling through to payment, and both CSV exports. Admin: the
 dashboard on demo data, staff creation, deactivation refusing the next
 sign-in, a role change ending the old session, your own account protected,
 assignment seen by the agent and in the audit feed, the all-policies export,
-the 403 page for every other role, and DateField typing, pasting, invalid
+the 403 page for every other role, the audit search typed in capitals with
+Azerbaijani letters, the System section from a user's Reference (a real 500
+and a render crash) to a resolved error that comes back as regressed, and DateField typing, pasting, invalid
 dates, the Azerbaijani calendar from the keyboard and the claim's allowed
 days. The backend tests also check that a deactivated user's existing token
 stops working and that the last active admin is kept.
@@ -472,7 +516,12 @@ Generated from the controllers; full schemas in Swagger.
 | PUT | `/api/users/{id}/role` | Admin |
 | GET | `/api/admin/stats` | Admin |
 | GET | `/api/admin/dashboard` (from, to; 24 months max) | Admin |
-| GET | `/api/admin/audit` (actor, entity type, from, to, paged) | Admin |
+| GET | `/api/admin/audit` (search, actions, actor, entity type, from, to, paged) | Admin |
+| GET | `/api/admin/errors` (filters, search incl. a Reference, sort, paged), `/summary`, `/lookup?reference=`, `/{id}` | Admin |
+| PATCH | `/api/admin/errors/{id}` (status, note, `rowVersion`) | Admin; audited |
+| DELETE | `/api/admin/errors/resolved?olderThanDays=` | Admin; audited |
+| GET | `/api/admin/system/health` | Admin |
+| POST | `/api/diagnostics/client-errors` | Anonymous; 8 KB, schema, rate limits |
 | GET | `/health` | Anonymous |
 
 ## Roadmap

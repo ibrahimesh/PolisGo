@@ -24,7 +24,9 @@ import {
   UserIcon,
 } from '../ui/icons';
 import { fuzzyMatch } from './fuzzy';
+import { asReference, lookupPath } from '../../features/admin/system/errorParams';
 import { LANDING_SECTIONS } from './navigation';
+import { paletteShortcutLabel } from './usePaletteShortcut';
 
 type Group = 'recent' | 'pages' | 'actions' | 'language' | 'theme';
 const GROUP_ORDER: readonly Group[] = ['recent', 'pages', 'actions', 'language', 'theme'];
@@ -92,7 +94,23 @@ export function CommandPalette({ open, onClose, returnFocusTo }: CommandPaletteP
   const [active, setActive] = useState(0);
   const [recent, setRecent] = useState<string[]>(readRecent);
 
-  const items = useMemo(() => buildItems(commands, query, recent), [commands, query, recent]);
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const items = useMemo(() => {
+    const found = buildItems(commands, query, recent);
+    // Typed text that is a Reference ("8F05E497", "8f05-e497", a trace id):
+    // an Admin gets "Find error 8F05E497" first, whatever else matches.
+    const code = user?.role === 'Admin' ? asReference(query) : null;
+    if (!code) return found;
+    const command: Command = {
+      id: 'find-reference-code',
+      group: 'actions',
+      label: t('palette.actions.findReferenceCode', { code }),
+      icon: SearchIcon,
+      run: () => void navigate(lookupPath(code)),
+    };
+    return [{ key: command.id, group: 'actions' as const, command, indexes: [] }, ...found];
+  }, [commands, query, recent, user, t, navigate]);
   const activeIndex = Math.min(active, Math.max(items.length - 1, 0));
   const activeItem = items[activeIndex];
   const optionId = (key: string) => `${listId}-${key}`;
@@ -288,6 +306,7 @@ export function CommandPalette({ open, onClose, returnFocusTo }: CommandPaletteP
         <Hint keys={['↵']}>{t('palette.keys.run')}</Hint>
         <Hint keys={['Home', 'End']}>{t('palette.keys.ends')}</Hint>
         <Hint keys={['Esc']}>{t('palette.keys.close')}</Hint>
+        <Hint keys={[paletteShortcutLabel()]}>{t('palette.keys.toggle')}</Hint>
       </div>
       {/* The same hints for screen readers, once, in words. */}
       <p className="sr-only">{t('palette.hint')}</p>
@@ -511,6 +530,19 @@ function useCommands(): Command[] {
         icon: SettingsIcon,
         run: () => setMotionPreference(motion === 'reduce' ? 'system' : 'reduce'),
       },
+      // The System section's lookup, for whoever can open it.
+      ...(authed && user.role === 'Admin'
+        ? [
+            {
+              id: 'find-reference',
+              group: 'actions' as const,
+              label: t('palette.actions.findReference'),
+              keywords: 'reference trace error ' + t('admin.system.lookup.label'),
+              icon: SearchIcon,
+              run: go('/app/admin/system?lookup'),
+            },
+          ]
+        : []),
       ...(authed
         ? [
             {

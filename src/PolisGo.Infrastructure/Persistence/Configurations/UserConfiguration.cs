@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using PolisGo.Application.Common;
 using PolisGo.Domain.Entities;
 
 namespace PolisGo.Infrastructure.Persistence.Configurations;
@@ -13,6 +14,8 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(u => u.Email).IsRequired().HasMaxLength(256);
         builder.Property(u => u.PasswordHash).IsRequired().HasMaxLength(512);
         builder.Property(u => u.FullName).IsRequired().HasMaxLength(200);
+        // Folded name and email for searches (SearchText); set on save.
+        builder.Property<string>(SearchText.KeyProperty).HasMaxLength(SearchText.KeyMaxLength);
 
         // Enums as strings — readable in SQL tools, resilient to re-ordering values.
         builder.Property(u => u.Role).HasConversion<string>().HasMaxLength(32).IsRequired();

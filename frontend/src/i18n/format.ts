@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { INTL_LOCALE, isLanguage } from '.';
+import { parseApiTime } from '../lib/dates';
 import type { Language } from '.';
 
 // Chromium ships trimmed ICU data without Azerbaijani number symbols, so
@@ -65,7 +66,7 @@ export function formatIsoDate(lang: Language, isoDate: string): string {
 
 // ISO date-time (C# DateTime, UTC): shown in the viewer's local time.
 export function formatDateTime(lang: Language, iso: string): string {
-  const date = new Date(iso);
+  const date = parseApiTime(iso);
   if (Number.isNaN(date.getTime())) return iso;
   const day = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
   return `${formatIsoDate(lang, day)}, ${pad(date.getHours())}:${pad(date.getMinutes())}`;

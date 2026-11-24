@@ -43,6 +43,10 @@ namespace PolisGo.Infrastructure.Persistence.Migrations
                     b.Property<DateTime>("OccurredAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("SearchKey")
+                        .HasMaxLength(700)
+                        .HasColumnType("nvarchar(700)");
+
                     b.Property<Guid>("SubjectId")
                         .HasColumnType("uniqueidentifier");
 
@@ -263,6 +267,10 @@ namespace PolisGo.Infrastructure.Persistence.Migrations
                         .HasMaxLength(32)
                         .HasColumnType("nvarchar(32)");
 
+                    b.Property<string>("SearchKey")
+                        .HasMaxLength(700)
+                        .HasColumnType("nvarchar(700)");
+
                     b.Property<Guid?>("UserId")
                         .HasColumnType("uniqueidentifier");
 
@@ -281,6 +289,190 @@ namespace PolisGo.Infrastructure.Persistence.Migrations
                         .HasFilter("[UserId] IS NOT NULL");
 
                     b.ToTable("Customers");
+                });
+
+            modelBuilder.Entity("PolisGo.Domain.Entities.ErrorGroup", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Endpoint")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<string>("ExceptionType")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Fingerprint")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<DateTime>("FirstSeenAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsRegressed")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("LastHttpStatus")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("LastSeenAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<long>("OccurrenceCount")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("RegressedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("ResolvedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("ResolvedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("RowVersion")
+                        .IsConcurrencyToken()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("nvarchar(16)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("nvarchar(16)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Fingerprint")
+                        .IsUnique();
+
+                    b.HasIndex("LastSeenAt");
+
+                    b.HasIndex("ResolvedByUserId");
+
+                    b.HasIndex("Status", "IsRegressed");
+
+                    b.ToTable("ErrorGroups");
+                });
+
+            modelBuilder.Entity("PolisGo.Domain.Entities.ErrorHourlyCount", b =>
+                {
+                    b.Property<DateTime>("HourStartUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Source")
+                        .HasMaxLength(16)
+                        .HasColumnType("nvarchar(16)");
+
+                    b.Property<long>("Count")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("ServerErrorCount")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("HourStartUtc", "Source");
+
+                    b.ToTable("ErrorHourlyCounts");
+                });
+
+            modelBuilder.Entity("PolisGo.Domain.Entities.ErrorOccurrence", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ActorRole")
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.Property<Guid?>("ActorUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AppVersion")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<string>("ClientRoute")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Environment")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<Guid>("ErrorGroupId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("HttpMethod")
+                        .HasMaxLength(10)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(10)");
+
+                    b.Property<int?>("HttpStatus")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTime>("OccurredAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ReferenceCode")
+                        .IsRequired()
+                        .HasMaxLength(8)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(8)");
+
+                    b.Property<string>("RouteTemplate")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<string>("StackTrace")
+                        .HasMaxLength(8000)
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TraceId")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(32)");
+
+                    b.Property<string>("UserAgentFamily")
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OccurredAt");
+
+                    b.HasIndex("ReferenceCode");
+
+                    b.HasIndex("TraceId");
+
+                    b.HasIndex("ErrorGroupId", "OccurredAt");
+
+                    b.ToTable("ErrorOccurrences");
                 });
 
             modelBuilder.Entity("PolisGo.Domain.Entities.Payment", b =>
@@ -537,6 +729,10 @@ namespace PolisGo.Infrastructure.Persistence.Migrations
                         .HasMaxLength(32)
                         .HasColumnType("nvarchar(32)");
 
+                    b.Property<string>("SearchKey")
+                        .HasMaxLength(700)
+                        .HasColumnType("nvarchar(700)");
+
                     b.Property<Guid>("SecurityStamp")
                         .HasColumnType("uniqueidentifier");
 
@@ -688,6 +884,27 @@ namespace PolisGo.Infrastructure.Persistence.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("PolisGo.Domain.Entities.ErrorGroup", b =>
+                {
+                    b.HasOne("PolisGo.Domain.Entities.User", "ResolvedBy")
+                        .WithMany()
+                        .HasForeignKey("ResolvedByUserId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.Navigation("ResolvedBy");
+                });
+
+            modelBuilder.Entity("PolisGo.Domain.Entities.ErrorOccurrence", b =>
+                {
+                    b.HasOne("PolisGo.Domain.Entities.ErrorGroup", "Group")
+                        .WithMany("Occurrences")
+                        .HasForeignKey("ErrorGroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Group");
+                });
+
             modelBuilder.Entity("PolisGo.Domain.Entities.Payment", b =>
                 {
                     b.HasOne("PolisGo.Domain.Entities.Policy", "Policy")
@@ -828,6 +1045,11 @@ namespace PolisGo.Infrastructure.Persistence.Migrations
                     b.Navigation("Policies");
 
                     b.Navigation("Vehicles");
+                });
+
+            modelBuilder.Entity("PolisGo.Domain.Entities.ErrorGroup", b =>
+                {
+                    b.Navigation("Occurrences");
                 });
 
             modelBuilder.Entity("PolisGo.Domain.Entities.Policy", b =>

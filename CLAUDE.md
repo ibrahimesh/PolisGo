@@ -51,6 +51,19 @@ every change in this repo.
   assignment adds an `AuditEntry` in the same SaveChanges. The audit feed
   (`AuditLogService`) reads only recorded rows: status history and audit
   entries. Never synthesise events.
+- **Error tracking** (System section, ADR-002 in `docs/DECISIONS.md`):
+  `ExceptionHandlingMiddleware` hands unhandled exceptions and 5xx answers
+  to `ErrorCapture` → a bounded queue (`TryEnqueue`: never waits, never
+  throws) → `ErrorWriterService` → `ErrorRecorder`. Never capture
+  validation, 401, 403, 404 or 409/412 answers. Everything stored, logged or
+  returned in a 500 detail goes through `Redaction` first; the actor is a
+  role and a user id only; endpoints are route templates, never URLs. The
+  ProblemDetails `traceId` comes from `RequestTrace` so the user's
+  Reference (`ErrorReference`: first 8 of the 32-hex trace id, upper case) is
+  the stored one. Group triage goes through `ErrorGroup` with the caller's
+  `rowVersion` and an `AuditEntry`; counting doesn't change the version.
+  Caps (per-group rows, queue, new client groups per hour, client report
+  limits) are configuration (`ErrorTracking`, `RateLimits:ClientErrors*`).
 - **Staff management rules** live in `StaffAdminService`: nobody acts on
   their own account, the last active admin is kept (checked first, inside
   `BeginSerializableTransactionAsync` with the write, so two admins acting on
@@ -109,6 +122,11 @@ every change in this repo.
 | GET | `/api/admin/stats` | Admin (cached 60 s) |
 | GET | `/api/admin/dashboard` (from, to; 24 months max) | Admin (cached 60 s per range) |
 | GET | `/api/admin/audit` (search, actions, actor, entity type, from, to, paged) | Admin |
+| GET | `/api/admin/errors` (source, status, regressed, from, to, httpStatus, endpoint, role, search incl. a Reference, sort, paged) · `/summary` · `/lookup?reference=` · `/{id}` | Admin |
+| PATCH | `/api/admin/errors/{id}` (status, note, `rowVersion`) · DELETE `/api/admin/errors/resolved?olderThanDays=` | Admin; audited |
+| GET | `/api/admin/system/health` | Admin |
+| POST | `/api/diagnostics/client-errors` | Anonymous (actor from the token when sent); 8 KB, closed schema, per-address limit and shared budget |
+| POST | `/api/diagnostics/test-failure` | Anonymous; a 404 unless `Diagnostics:TestFailures` outside Production (the e2e override) |
 | GET | `/health` | Anonymous |
 
 ## Persistence
@@ -158,6 +176,14 @@ every change in this repo.
   is the same transfer, never a second one.
   Claim updates and renewal reminders are derived on read; only read marks
   (`ClaimUpdateRead`, `PolicyReminderRead`) are stored.
+- **Text search folds case in .NET** (`SearchText`), never with SQL's
+  `UPPER()`/`LOWER()` on names: SQLite folds ASCII only, and SQL Server's
+  `UPPER('İbrahim')` never matches "ibrahim". Users, Customers and
+  AuditEntries carry a folded `SearchKey` shadow column, set on every save
+  (`SearchKeys`, backfilled after startup); match with
+  `EF.Property<string>(x, SearchText.KeyProperty).Contains(SearchText.Fold(term))`.
+  ASCII-only values (policy and claim numbers) may use `ToLower()`. The SPA's
+  `foldSearch` (`lib/searchText.ts`) folds the same way.
 - **Check text lengths in the service, not only in the column.** SQLite
   ignores `HasMaxLength`; SQL Server fails the insert with a 500. Every
   user- or staff-supplied string gets an explicit limit and a 400, and
@@ -257,7 +283,11 @@ React Router, TanStack Query, React Hook Form + Zod, react-i18next.
 
 - `src/api` — the only way to call the API. `types.ts` mirrors the C# DTOs
   by hand: **update it in the same change as any DTO change.** Calls go
-  through `endpoints.ts`; anonymous endpoints pass `anonymous: true`.
+  through `endpoints.ts` (the System section's through `errorsEndpoints.ts`, so
+  only its lazy chunks carry it); anonymous endpoints pass `anonymous: true`.
+  The System section's strings are in `features/admin/system/locales/*.json`,
+  registered by `systemI18n.ts` when the section loads (same EN/RU/AZ rule;
+  `locales.test.ts` checks both sets).
 - `src/auth` — session (`AuthProvider`), route guard (`RequireAuth`). Guards
   are UX only; the API's `[Authorize(Roles = ...)]` is the real check. Which
   role sees which workspace section lives in `features/workspace/sections.ts`
@@ -282,7 +312,22 @@ React Router, TanStack Query, React Hook Form + Zod, react-i18next.
   `/app/claims` and `/app/claims/:id` pick the client or staff page by role
   (an Admin's `/app` is the dashboard). Admin panel: `admin` (`dashboard/`
   with `BarChart`, `staff/`, `audit/`, `customers/AssignAgent`,
-  `PolicyTypesPage`, `StaffPicker`), queries under `adminKeys.all`.
+  `PolicyTypesPage`, `StaffPicker`, `system/`: the System section's
+  layout, overview, errors list, detail, lookup), queries under
+  `adminKeys.all` (`systemKeys` inside it).
+- `src/diagnostics/reporter.ts` (listeners, on/off, trace ids; every page)
+  loads `reportSender.ts` on the first error, which sends it to the API: throttled,
+  deduplicated, offline-queued, never reporting its own failures; route
+  templates only, no form values or full URLs. Off in Vitest, and in e2e
+  unless a test sets `localStorage['polisgo.e2e.reporter']='on'`. A 5xx with
+  a server trace id is not reported again (the API has it).
+- API timestamps are UTC without a "Z" (EF reads them back without a kind):
+  parse them with `parseApiTime` (`lib/dates`), never `new Date(iso)`.
+- The audit log's Actor filter is `ActorCombobox` (an editable combobox
+  over the server staff search), kept visibly different from the page's
+  one free-text search. List pages that sync filters to the URL build each
+  change on the last one written (a ref), not on React Router's functional
+  update, which hands over the params of the render that created it.
 - Choosing a staff member: `StaffPicker` (server search + select), never a
   plain list of the first page of accounts.
 - Every private query lives under `cabinetKeys.all`; a write invalidates
@@ -333,7 +378,7 @@ React Router, TanStack Query, React Hook Form + Zod, react-i18next.
   under "More" until xl), the compact search button and the account area,
   with short names (`nav.short.*`) where a language needs them.
   `header-layout.spec.ts` checks one line per item at 1024–1440px in all
-  three languages; run it after adding anything to a header.
+  three languages (and 390px); run it after adding anything to a header.
 - **The phone menu is modal while open** (`Header`): the rest of the shell
   is `inert`, Tab wraps inside the header, Escape returns focus to the
   toggle, and reaching lg closes it. Dialogs mount outside the shell.
@@ -458,7 +503,10 @@ Run from `frontend/`:
   light, desktop and mobile; admin pages need the demo data).
 - First-time e2e setup: `npx playwright install chromium`.
 - The e2e dev server runs with `VITE_E2E_ROUTES=true` (test-only routes such
-  as `/__e2e/crash`, never in a production build). If your own `npm run
+  as `/__e2e/crash` and `/app/__e2e/server-error`, a real 500 from
+  `POST /api/diagnostics/test-failure`, which `docker-compose.e2e.yml`
+  enables; never in a production build). `staff-system.spec.ts` covers the
+  System section. If your own `npm run
   dev` holds :5173, run the suite on its own server with
   `E2E_BASE_URL=http://localhost:3000` (the API's other CORS origin).
   Helpers: `chooseSetting` (Settings dialog), `expectNoAxeViolations` and

@@ -180,6 +180,14 @@ export const HistoryIcon = () => (
   </Icon>
 );
 
+// A pulse line through a frame: the system's health and its errors.
+export const PulseIcon = () => (
+  <Icon>
+    <rect x="2" y="2.75" width="12" height="10.5" rx="1" />
+    <path d="M4 8.5h1.75L7 6l2 4.5 1.25-2H12" />
+  </Icon>
+);
+
 // A price tag: products and their rates.
 export const TagIcon = () => (
   <Icon>

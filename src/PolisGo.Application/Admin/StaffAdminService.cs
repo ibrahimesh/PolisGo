@@ -67,8 +67,9 @@ public class StaffAdminService : IStaffAdminService
         if (!string.IsNullOrEmpty(term))
         {
             if (term.Length > AdminValidation.MaxSearchLength) throw new ValidationException("search", M.SearchTooLong);
-            var needle = term.ToUpperInvariant();
-            staff = staff.Where(u => u.FullName.ToUpper().Contains(needle) || u.Email.ToUpper().Contains(needle));
+            // Folded like the audit search (SearchText): "ibrahim" finds "İbrahim".
+            var needle = SearchText.Fold(term);
+            staff = staff.Where(u => EF.Property<string>(u, SearchText.KeyProperty).Contains(needle));
         }
 
         var total = await staff.CountAsync(cancellationToken);

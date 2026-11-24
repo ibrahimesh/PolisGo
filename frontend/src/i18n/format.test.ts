@@ -29,7 +29,18 @@ describe('formatIsoDate', () => {
 
 describe('formatDateTime', () => {
   it('adds the local time to the date', () => {
-    expect(formatDateTime('ru', '2026-11-18T10:05:00')).toBe('18.11.2026, 10:05');
+    const local = new Date('2026-11-18T10:05:00Z');
+    const pad = (n: number) => String(n).padStart(2, '0');
+    expect(formatDateTime('ru', '2026-11-18T10:05:00Z')).toBe(
+      `${pad(local.getDate())}.${pad(local.getMonth() + 1)}.${local.getFullYear()}, ${pad(local.getHours())}:${pad(local.getMinutes())}`,
+    );
+  });
+
+  // The API sends UTC without a "Z"; it was shown as if it were local time.
+  it('reads an API timestamp without an offset as UTC', () => {
+    expect(formatDateTime('ru', '2026-11-18T10:05:00')).toBe(
+      formatDateTime('ru', '2026-11-18T10:05:00Z'),
+    );
   });
 
   it('returns unparseable input unchanged', () => {

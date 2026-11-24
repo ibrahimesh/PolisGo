@@ -2,7 +2,8 @@ import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 import { openSession, registerSession, seedPreferences } from './helpers';
 
-const WIDTHS = [1024, 1280, 1366, 1440] as const;
+// 390 is the phone layout: the search button shrinks to its icon there.
+const WIDTHS = [390, 1024, 1280, 1366, 1440] as const;
 const LANGS = ['en', 'ru', 'az'] as const;
 
 // Every visible link, button and kbd in the header sits on one line (its

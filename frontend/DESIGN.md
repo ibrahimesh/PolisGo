@@ -175,7 +175,7 @@ only**, 150–400ms, on shared tokens (CSS variables in `src/styles/index.css`,
 `Button` · `Input` · `PhoneInput` · `PasswordField` · `Select` · `Card` ·
 `Badge` · `Tabs` · `Table` · `Modal` · `Toast` · `Skeleton` · `EmptyState` ·
 `FormErrorSummary` · `ErrorNotice` · `ReferenceChip` · `ErrorPage` ·
-`ChoiceChips` · Settings dialog (`SettingsFields`) · `CommandPalette` ·
+`ChoiceChips` · `ActorCombobox` · `SearchField` · `ErrorBadges` · `ReferenceLookup` · Settings dialog (`SettingsFields`) · `CommandPalette` ·
 `Label` · `PageHeader` · `PolicyStatusBadge` · `ClaimStatusBadge` · `StepNav`
 (both wizards) · `QuoteResult` (full or compact) · `Textarea` (with a live
 count) · `Pagination` · `FileUploader` · `ExportButton` · `Modal`
@@ -184,7 +184,10 @@ and `DateFilterField`) · `StaffPicker` · `BarChart` · `ProductIcon` ·
 `CountUp` · `SuccessCheck`.
 
 - **Header.** Logo (always to `/`), the sections, a compact search button
-  (icon and "Ctrl K") and the account area; nothing in it wraps. The first
+  (icon and the word "Search"; the icon alone below sm, with the same
+  accessible name; the Ctrl/⌘+K shortcut only in its tooltip and in the
+  palette's key hints) and the account area; nothing in it wraps, from
+  390px up. The first
   three sections show from lg, the others join at xl and sit under a "More"
   disclosure in between; below lg everything is in the menu panel. No
   language or theme controls in any header.
@@ -211,7 +214,7 @@ and `DateFilterField`) · `StaffPicker` · `BarChart` · `ProductIcon` ·
   marked `aria-invalid`, and listed in a live summary on submit that moves
   focus to the first invalid field.
 - Icon-only buttons carry an accessible name; where a control shows text
-  (e.g. "Ctrl K") that text is part of its name.
+  (e.g. "Search") its accessible name starts with that text.
 - Tabs, combobox/listbox (palette) and disclosure (mobile menu, FAQ) follow
   the WAI-ARIA patterns; modal and palette use native `<dialog>`.
 
@@ -293,6 +296,34 @@ and `DateFilterField`) · `StaffPicker` · `BarChart` · `ProductIcon` ·
   wrap (real radios or links); the current one gets the accent border and
   `surface-2`. `ChoiceChips` is the radio version (Settings uses it); the
   old segmented control is gone, since chips wrap at 390px.
+- **Search field with a clear button.** A text input in the `searchbox`
+  role (`enterKeyHint="search"`), so the browser adds no second X beside the
+  field's own clear button; Escape clears too. While a new result loads the
+  previous rows dim (`aria-busy`) and the count line says "Searching…": a
+  count is only ever shown for the filters on screen, as "N events match
+  “text”".
+- **Actor combobox** (audit log). Labelled "Actor", a person icon and a
+  chevron like a select, so it never reads as a second search box. Typing
+  narrows the server's staff list; each option shows the name with role and
+  email underneath, the current choice has a check; arrows, Home/End, Enter,
+  Escape and Alt+↓ follow the WAI-ARIA combobox pattern. When more than 50
+  match, the list says how many and asks for more letters.
+- **System section** (Admin). Two views as link chips (Overview, Errors),
+  like the queue views. The overview opens with the Reference lookup (the
+  reason to come here), then health as a boxed tile grid (state words in
+  `success`/`danger`/`warning`, the detail in `muted`), unresolved and
+  regressed counters that link into the list, two one-series charts
+  (`BarChart`) and the most frequent groups. Error badges: the source in
+  words (API, Browser), the status (New → warning, Resolved → success,
+  Ignored → neutral) and **Regressed** (danger, with the alert icon). The list
+  is a table from md and stacked rows below it (never a sideways scroll);
+  bulk actions appear in a bordered bar once rows are chosen. The detail puts
+  the facts on the ivory data card (relative times in `paper-muted`), triage
+  in a `surface` card beside it, and each occurrence in a hairline box with
+  its Reference chip; the one a lookup led to gets the accent border and
+  "The one you looked up". Stack traces and fingerprints are the only text in
+  the system's own monospace (`font-mono`, no web font: code is read
+  character by character), in a focusable box that scrolls inside itself.
 - **Empty and loading.** Every list has a real empty state (and a separate
   "nothing matches" state); skeletons mirror the loaded layout. Nothing is
   mocked.

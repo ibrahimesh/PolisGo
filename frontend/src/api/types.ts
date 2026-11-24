@@ -622,7 +622,7 @@ export interface ChangeRoleRequest {
   role: StaffRole;
 }
 
-export const AUDIT_ENTITY_TYPES = ['Claim', 'Policy', 'User', 'Customer'] as const;
+export const AUDIT_ENTITY_TYPES = ['Claim', 'Policy', 'User', 'Customer', 'Error'] as const;
 export type AuditEntityType = (typeof AUDIT_ENTITY_TYPES)[number];
 
 export interface AuditLogQuery {
@@ -689,4 +689,141 @@ export interface AdminDashboardResponse {
   monthly: DashboardMonth[];
   claimsByStatus: StatusCount<ClaimStatus>[];
   topAgents: TopAgent[];
+}
+
+/* ---------- Error tracking (System section, Admin only) ---------- */
+
+export const ERROR_SOURCES = ['Backend', 'Frontend'] as const;
+export type ErrorSource = (typeof ERROR_SOURCES)[number];
+export const ERROR_STATUSES = ['New', 'Resolved', 'Ignored'] as const;
+export type ErrorStatus = (typeof ERROR_STATUSES)[number];
+export const ERROR_SORTS = ['LastSeen', 'Count', 'FirstSeen'] as const;
+export type ErrorSort = (typeof ERROR_SORTS)[number];
+
+export interface ErrorListQuery {
+  source?: ErrorSource;
+  status?: ErrorStatus;
+  regressed?: boolean;
+  from?: IsoDate;
+  to?: IsoDate;
+  httpStatus?: number;
+  endpoint?: string;
+  role?: UserRole;
+  // Title, type or endpoint text, or a Reference / trace id.
+  search?: string;
+  sort?: ErrorSort;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface ErrorGroupRow {
+  id: Guid;
+  title: string;
+  source: ErrorSource;
+  exceptionType: string;
+  endpoint: string;
+  occurrenceCount: number;
+  firstSeenAt: IsoDateTime;
+  lastSeenAt: IsoDateTime;
+  lastHttpStatus: number | null;
+  status: ErrorStatus;
+  isRegressed: boolean;
+  rowVersion: Guid;
+}
+
+export interface ErrorOccurrenceResponse {
+  id: Guid;
+  occurredAt: IsoDateTime;
+  traceId: string;
+  referenceCode: string;
+  httpStatus: number | null;
+  httpMethod: string | null;
+  routeTemplate: string | null;
+  actorRole: UserRole | null;
+  actorUserId: Guid | null;
+  appVersion: string | null;
+  environment: string | null;
+  message: string;
+  stackTrace: string | null;
+  userAgentFamily: string | null;
+  clientRoute: string | null;
+}
+
+export interface ErrorGroupDetail {
+  id: Guid;
+  fingerprint: string;
+  title: string;
+  source: ErrorSource;
+  exceptionType: string;
+  endpoint: string;
+  occurrenceCount: number;
+  storedOccurrenceCount: number;
+  firstSeenAt: IsoDateTime;
+  lastSeenAt: IsoDateTime;
+  lastHttpStatus: number | null;
+  status: ErrorStatus;
+  isRegressed: boolean;
+  regressedAt: IsoDateTime | null;
+  resolvedByName: string | null;
+  resolvedAt: IsoDateTime | null;
+  note: string | null;
+  rowVersion: Guid;
+  occurrences: ErrorOccurrenceResponse[];
+}
+
+export interface UpdateErrorStatusRequest {
+  status: ErrorStatus;
+  note?: string;
+  rowVersion: Guid;
+}
+
+export interface ErrorLookupResponse {
+  occurrence: ErrorOccurrenceResponse;
+  group: ErrorGroupRow;
+  matches: number;
+}
+
+export interface PurgeResolvedResponse {
+  deleted: number;
+  olderThanDays: number;
+}
+
+export interface ErrorCountBucket {
+  start: IsoDateTime;
+  count: number;
+  serverErrors: number;
+}
+
+export interface ErrorSummaryResponse {
+  generatedAt: IsoDateTime;
+  lastDay: ErrorCountBucket[];
+  lastWeek: ErrorCountBucket[];
+  top: ErrorGroupRow[];
+  unresolved: number;
+  regressed: number;
+}
+
+export interface DatabaseHealth {
+  reachable: boolean;
+  roundTripMs: number | null;
+  lastAppliedMigration: string | null;
+  pendingMigrations: string[];
+}
+
+export interface SystemHealthResponse {
+  version: string;
+  build: string;
+  environment: string;
+  startedAt: IsoDateTime;
+  uptimeSeconds: number;
+  serverTimeUtc: IsoDateTime;
+  // Asia/Baku wall time, "yyyy-MM-ddTHH:mm:ss".
+  serverTimeBaku: string;
+  database: DatabaseHealth;
+  queueDepth: number;
+  queueDropped: number;
+  errorsLast24Hours: number;
+  serverErrorsLast24Hours: number;
+  rateLimitRejectionsLast24Hours: number;
+  auditLogSize: number;
 }

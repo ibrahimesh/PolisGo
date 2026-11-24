@@ -4,7 +4,10 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging.Abstractions;
+using PolisGo.Api.Diagnostics;
 using PolisGo.Api.Middleware;
+using PolisGo.Application.Abstractions;
+using PolisGo.Tests.Diagnostics;
 using PolisGo.Application.Common.Exceptions;
 using PolisGo.Domain.Exceptions;
 using Xunit;
@@ -26,10 +29,14 @@ public class ExceptionHandlingMiddlewareTests
     }
 
     private static ExceptionHandlingMiddleware Build(RequestDelegate next, bool development = false)
+        => Build(next, new RecordingQueue(), development);
+
+    internal static ExceptionHandlingMiddleware Build(RequestDelegate next, IErrorReportQueue queue, bool development = false)
     {
         var env = new TestEnv { EnvironmentName = development ? Environments.Development : Environments.Production };
+        var capture = new ErrorCapture(queue, TimeProvider.System, NullLogger<ErrorCapture>.Instance);
         return new ExceptionHandlingMiddleware(next,
-            NullLogger<ExceptionHandlingMiddleware>.Instance, env);
+            NullLogger<ExceptionHandlingMiddleware>.Instance, env, capture);
     }
 
     private static async Task<JsonElement> ReadProblem(MemoryStream body)

@@ -8,5 +8,11 @@ public enum AuditAction
     StaffDeactivated,
     StaffReactivated,
     RoleChanged,
-    CustomerAssigned
+    CustomerAssigned,
+    // Error tracking (System section): a group's status changed by an admin,
+    // and resolved groups purged.
+    ErrorResolved,
+    ErrorIgnored,
+    ErrorReopened,
+    ErrorsPurged
 }

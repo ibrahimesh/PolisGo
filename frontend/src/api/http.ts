@@ -1,10 +1,9 @@
+import { reportApiFailure } from '../diagnostics/reporter';
+import { API_BASE_URL } from './baseUrl';
 import { ApiError, parseProblem } from './errors';
 import { tokenStore } from './tokenStore';
 
-export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080').replace(
-  /\/+$/,
-  '',
-);
+export { API_BASE_URL };
 
 // Arrays repeat the key (actions=a&actions=b), as ASP.NET binds string[].
 type QueryValue = string | number | boolean | null | undefined | readonly string[];
@@ -62,11 +61,17 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
   } catch (error) {
     // Let React Query see aborts as aborts, not as "API unreachable".
     if (error instanceof DOMException && error.name === 'AbortError') throw error;
+    reportApiFailure({ method, path, status: null });
     throw new ApiError('network', 0, undefined, error);
   }
 
   if (!response.ok) {
     const problem = await parseProblem(response);
+    // A 5xx with a trace id is already recorded by the API; one without
+    // (a proxy's 502, a dead gateway) is only seen here.
+    if (response.status >= 500 && !problem?.traceId) {
+      reportApiFailure({ method, path, status: response.status });
+    }
     if (response.status === 401 && session) {
       tokenStore.clear();
       for (const listener of unauthorizedListeners) listener();

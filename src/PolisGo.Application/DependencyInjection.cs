@@ -7,6 +7,7 @@ using PolisGo.Application.Cabinet;
 using PolisGo.Application.Claims;
 using PolisGo.Application.Claims.Documents;
 using PolisGo.Application.Customers;
+using PolisGo.Application.Diagnostics;
 using PolisGo.Application.Policies;
 using PolisGo.Application.PolicyTypes;
 using PolisGo.Application.Pricing;
@@ -46,6 +47,9 @@ public static class DependencyInjection
         services.AddScoped<IAuditLogService, AuditLogService>();
         services.AddScoped<IAdminDashboardService, AdminDashboardService>();
         services.AddScoped<IPolicyTypeService, PolicyTypeService>();
+        services.AddScoped<IErrorRecorder, ErrorRecorder>();
+        services.AddScoped<IErrorTrackingService, ErrorTrackingService>();
+        services.AddScoped<ISystemHealthService, SystemHealthService>();
 
         return services;
     }

@@ -323,7 +323,8 @@
       "allPolicies": "All policies",
       "staff": "Staff",
       "audit": "Audit log",
-      "policyTypes": "Products and rates"
+      "policyTypes": "Products and rates",
+      "system": "System"
     },
     "short": {
       "overview": "Overview",
@@ -338,7 +339,8 @@
       "allPolicies": "Policies",
       "staff": "Staff",
       "audit": "Audit",
-      "policyTypes": "Products"
+      "policyTypes": "Products",
+      "system": "System"
     },
     "backToOverview": "Back to overview"
   },
@@ -403,7 +405,11 @@
     "copyReference": "Copy reference {{code}}",
     "fullReference": "Full reference: {{traceId}}",
     "copied": "Copied",
-    "copyFailed": "Couldn’t copy; select the code instead"
+    "copyFailed": "Couldn’t copy; select the code instead",
+    "referenceNotFound": "No error has this Reference. It may be mistyped or older than 30 days.",
+    "errorAlreadyResolved": "This error is already marked resolved.",
+    "errorAlreadyIgnored": "This error is already ignored.",
+    "errorAlreadyOpen": "This error is already open."
   },
   "validation": {
     "required": "Required.",
@@ -481,7 +487,9 @@
     "rangeOrder": "The start must be on or before the end.",
     "dateOutOfRange": "Dates must be between 1 January 2000 and 31 December 2100.",
     "rangeTooLong": "Choose at most 24 months.",
-    "dateOutsideRange": "This date is outside the allowed range."
+    "dateOutsideRange": "This date is outside the allowed range.",
+    "errorNoteTooLong": "The note can be at most 1000 characters.",
+    "purgeDaysRange": "Choose between 1 and 3650 days."
   },
   "common": {
     "loading": "Loading",
@@ -498,6 +506,8 @@
   "palette": {
     "title": "Command palette",
     "open": "Search and commands",
+    "search": "Search",
+    "openWithShortcut": "Search and commands ({{shortcut}})",
     "placeholder": "Search pages and actions…",
     "hint": "Up and down arrows move, Home and End jump to the ends, Page Up and Page Down move by eight, Enter runs, Escape closes.",
     "groups": {
@@ -513,13 +523,16 @@
     "actions": {
       "settings": "Open settings",
       "motionOn": "Reduce motion",
-      "motionOff": "Allow motion again"
+      "motionOff": "Allow motion again",
+      "findReference": "Find error by Reference",
+      "findReferenceCode": "Find error {{code}}"
     },
     "keys": {
       "move": "move",
       "run": "run",
       "ends": "first, last",
-      "close": "close"
+      "close": "close",
+      "toggle": "open from anywhere"
     }
   },
   "cabinet": {
@@ -1701,7 +1714,7 @@
       "title": "Audit log",
       "lead": "Who changed what, and when: claim and policy status changes and staff actions.",
       "filters": "Filter the audit log",
-      "actor": "Who",
+      "actor": "Actor",
       "anyone": "Anyone",
       "entity": "What",
       "anything": "Anything",
@@ -1709,7 +1722,8 @@
         "Claim": "Claim",
         "Policy": "Policy",
         "User": "Staff account",
-        "Customer": "Customer"
+        "Customer": "Customer",
+        "Error": "Error"
       },
       "from": "From",
       "to": "To",
@@ -1731,13 +1745,26 @@
         "StaffReactivated": "reactivated",
         "RoleChanged": "role {{from}} → {{to}}",
         "assigned": "assigned to {{agent}}",
-        "released": "released from {{agent}}"
+        "released": "released from {{agent}}",
+        "ErrorResolved": "marked resolved",
+        "ErrorIgnored": "ignored",
+        "ErrorReopened": "reopened",
+        "ErrorsPurged": "{{count}} resolved errors older than {{days}} days deleted"
       },
       "search": "Search",
-      "searchPlaceholder": "Email, name, policy or claim number, action",
-      "searchHint": "Finds the person who acted, the policy or claim, and what happened, such as “approved” or “role”.",
+      "searchPlaceholder": "Name, email, policy or claim number, action",
+      "searchHint": "Finds who acted, the client or account the event is about, the policy or claim, and what happened, such as “approved” or “role”. Upper and lower case are the same.",
       "clearSearch": "Clear search",
-      "noMatchSearch": "No event mentions “{{query}}”. Check the spelling, or try an email, a name, or a policy or claim number."
+      "noMatchSearch": "No event mentions “{{query}}”. Check the spelling, or try an email, a name, or a policy or claim number.",
+      "actorHint": "The staff member who made the change. To find a client, use the search above.",
+      "actorShow": "Show staff members",
+      "actorMore": "Showing {{shown}} of {{count}}. Type a name or email to narrow the list.",
+      "actorNone": "No staff member matches.",
+      "actorResults_one": "{{count}} staff member",
+      "actorResults_other": "{{count}} staff members",
+      "searching": "Searching…",
+      "countFor_one": "{{count}} event matches “{{query}}”",
+      "countFor_other": "{{count}} events match “{{query}}”"
     },
     "policyTypes": {
       "title": "Products and rates",
@@ -1758,6 +1785,11 @@
       "selected": "Current choice",
       "more_one": "{{count}} match; narrow the search to see more.",
       "more_other": "{{count}} matches; narrow the search to see them all."
+    },
+    "system": {
+      "lookup": {
+        "invalid": "Enter the 8 letters and digits of a Reference, such as 8F05E497, or a full trace id."
+      }
     }
   },
   "settings": {

@@ -174,6 +174,92 @@ public static class DemoDataSeeder
             Claim(ruslan, "ruslan", 2, IncidentType.Collision, "Bakı, Babək prospekti",
                 "Minor scrape, settled privately in the end.", 400m,
                 (ClaimStatus.Withdrawn, 3, null, "Settled with the other driver."));
+
+            AddDemoErrors();
+        }
+
+        // A few error groups so the System section isn't empty in a demo.
+        // Clearly synthetic: "[Demo]" titles, "demo-" fingerprints (never a
+        // real SHA-256), environment "Demo", trace ids starting "de5000".
+        private void AddDemoErrors()
+        {
+            var adjuster = _staff["adjuster1"].Id;
+            DemoError(1, ErrorSource.Backend, "[Demo] Payment gateway timed out after 30 seconds",
+                "System.TimeoutException", "POST api/policies/{id}/pay", 503, UserRole.Client, 37, 6, ErrorStatus.New, regressed: false,
+                "System.TimeoutException: [Demo] Payment gateway timed out after 30 seconds\n" +
+                "   at PolisGo.Infrastructure.Payments.FakePaymentGateway.ChargeAsync() in FakePaymentGateway.cs:line 42\n" +
+                "   at PolisGo.Application.Policies.PolicyService.PayAsync(Guid id) in PolicyService.cs:line 270");
+            DemoError(2, ErrorSource.Frontend, "[Demo] Cannot read properties of undefined (reading {text})",
+                "TypeError", "/app/claims/:id", null, UserRole.Adjuster, 12, 3, ErrorStatus.New, regressed: true,
+                "TypeError: Cannot read properties of undefined (reading 'name')\n" +
+                "    at DecisionPanel (/src/features/staff/review/DecisionPanel.tsx:88:21)");
+            DemoError(3, ErrorSource.Backend, "[Demo] The connection pool was exhausted",
+                "System.InvalidOperationException", "GET api/claims", 500, UserRole.Adjuster, 5, 15, ErrorStatus.Resolved, regressed: false,
+                "System.InvalidOperationException: [Demo] The connection pool was exhausted\n" +
+                "   at PolisGo.Application.Claims.ClaimService.ListAsync() in ClaimService.cs:line 181",
+                resolvedBy: adjuster, note: "[Demo] Pool size raised in the connection string.");
+            DemoError(4, ErrorSource.Frontend, "[Demo] ResizeObserver callback failed in a browser extension",
+                "Error", "/app", null, null, 64, 2, ErrorStatus.Ignored, regressed: false, null,
+                note: "[Demo] Not our code: an extension's script.");
+        }
+
+        private void DemoError(int n, ErrorSource source, string title, string type, string endpoint, int? status,
+            UserRole? role, int count, int daysAgo, ErrorStatus state, bool regressed, string? stack,
+            Guid? resolvedBy = null, string? note = null)
+        {
+            var last = now.AddDays(-daysAgo).AddHours(-n);
+            var group = new ErrorGroup
+            {
+                Id = Guid.NewGuid(),
+                Fingerprint = $"demo-{n:00}",
+                Source = source,
+                Title = title,
+                ExceptionType = type,
+                Endpoint = endpoint,
+                FirstSeenAt = last.AddDays(-7),
+                LastSeenAt = last,
+                OccurrenceCount = count,
+                LastHttpStatus = status,
+                Status = state,
+                IsRegressed = regressed,
+                RegressedAt = regressed ? last : null,
+                ResolvedByUserId = state == ErrorStatus.New ? null : resolvedBy,
+                ResolvedAt = state == ErrorStatus.New ? null : last.AddHours(2),
+                Note = note
+            };
+            db.ErrorGroups.Add(group);
+            for (var i = 0; i < Math.Min(3, count); i++)
+            {
+                var traceId = $"de5000{n:00}{i:00}" + Guid.NewGuid().ToString("N")[..22];
+                db.ErrorOccurrences.Add(new ErrorOccurrence
+                {
+                    Id = Guid.NewGuid(),
+                    ErrorGroupId = group.Id,
+                    OccurredAt = last.AddHours(-i * 5),
+                    TraceId = traceId,
+                    ReferenceCode = traceId[..8].ToUpperInvariant(),
+                    HttpStatus = status,
+                    HttpMethod = source == ErrorSource.Backend ? endpoint.Split(' ')[0] : null,
+                    RouteTemplate = source == ErrorSource.Backend ? endpoint.Split(' ')[1] : null,
+                    ActorRole = role,
+                    AppVersion = "demo",
+                    Environment = "Demo",
+                    Message = title,
+                    StackTrace = stack,
+                    UserAgentFamily = source == ErrorSource.Frontend ? "Chrome" : null,
+                    ClientRoute = source == ErrorSource.Frontend ? endpoint : null
+                });
+            }
+            // The chart's last 7 days: this group's count spread over its days.
+            var hour = new DateTime(last.Year, last.Month, last.Day, last.Hour, 0, 0, DateTimeKind.Utc);
+            var counted = db.ErrorHourlyCounts.Local.FirstOrDefault(c => c.HourStartUtc == hour && c.Source == source);
+            if (counted is null)
+            {
+                counted = new ErrorHourlyCount { HourStartUtc = hour, Source = source };
+                db.ErrorHourlyCounts.Add(counted);
+            }
+            counted.Count += count;
+            counted.ServerErrorCount += status >= 500 ? count : 0;
         }
 
         private User AddUser(string email, string name, UserRole role, DateTime createdAt)

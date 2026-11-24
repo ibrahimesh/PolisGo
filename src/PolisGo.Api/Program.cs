@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using PolisGo.Api.Auth;
+using PolisGo.Api.Diagnostics;
 using PolisGo.Api.Middleware;
 using PolisGo.Application;
 using PolisGo.Application.Common;
@@ -41,6 +42,12 @@ public class Program
         // and the scoped resolver that reads them once per request.
         builder.Services.AddHttpContextAccessor();
         builder.Services.AddScoped<ICurrentUser, CurrentUser>();
+
+        // Error tracking (System section): what build is running, the capture
+        // used by ExceptionHandlingMiddleware, and the rate-limit gauge.
+        builder.Services.AddSingleton<IAppInfo, AppInfo>();
+        builder.Services.AddSingleton<ErrorCapture>();
+        builder.Services.AddSingleton<IRateLimitMonitor, RateLimitMonitor>();
 
         // JWT Bearer. The signing key comes from the same options that
         // Infrastructure already validated at startup.

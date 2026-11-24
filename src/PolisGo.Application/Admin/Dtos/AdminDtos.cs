@@ -44,7 +44,9 @@ public enum AuditEntityType
     Claim,
     Policy,
     User,
-    Customer
+    Customer,
+    // An error group's triage in the System section.
+    Error
 }
 
 public record AuditLogQuery(
