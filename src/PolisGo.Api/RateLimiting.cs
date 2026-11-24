@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using System.Threading.RateLimiting;
+using PolisGo.Application.Abstractions;
 using PolisGo.Application.Common.Exceptions;
 
 namespace PolisGo.Api;
@@ -40,8 +41,11 @@ public static class RateLimits
             options.AddPolicy(Register, context => Window(ByAddress(context), limits.Register));
             options.AddPolicy(PasswordChange, context => Window(ByAccount(context), limits.PasswordChange));
             options.OnRejected = (context, _) =>
+            {
+                context.HttpContext.RequestServices.GetService<IRateLimitMonitor>()?.RecordRejection();
                 throw new TooManyRequestsException(
                     context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var wait) ? wait : null);
+            };
         });
     }
 

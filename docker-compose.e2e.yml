@@ -7,3 +7,6 @@ services:
       RateLimits__SignIn__PermitLimit: "100000"
       RateLimits__Register__PermitLimit: "100000"
       RateLimits__PasswordChange__PermitLimit: "100000"
+      # POST /api/diagnostics/test-failure answers a real 500 for the error
+      # tracking e2e test (never in Production, whatever this says).
+      Diagnostics__TestFailures: "true"

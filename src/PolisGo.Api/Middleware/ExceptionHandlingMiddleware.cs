@@ -1,6 +1,6 @@
-using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using PolisGo.Api.Diagnostics;
 using PolisGo.Application.Common.Exceptions;
 using PolisGo.Domain.Exceptions;
 using AppUnauthorizedException = PolisGo.Application.Common.Exceptions.UnauthorizedException;
@@ -15,15 +15,18 @@ public class ExceptionHandlingMiddleware
     private readonly RequestDelegate _next;
     private readonly ILogger<ExceptionHandlingMiddleware> _logger;
     private readonly IHostEnvironment _environment;
+    private readonly ErrorCapture _capture;
 
     public ExceptionHandlingMiddleware(
         RequestDelegate next,
         ILogger<ExceptionHandlingMiddleware> logger,
-        IHostEnvironment environment)
+        IHostEnvironment environment,
+        ErrorCapture capture)
     {
         _next = next;
         _logger = logger;
         _environment = environment;
+        _capture = capture;
     }
 
     public async Task InvokeAsync(HttpContext context)
@@ -31,6 +34,9 @@ public class ExceptionHandlingMiddleware
         try
         {
             await _next(context);
+            // A 5xx that wasn't an exception (an endpoint's own 503) is an
+            // error too. Expected answers (400, 401, 403, 404, 409, 412) aren't.
+            if (context.Response.StatusCode >= StatusCodes.Status500InternalServerError) _capture.Status(context);
         }
         catch (OperationCanceledException) when (context.RequestAborted.IsCancellationRequested)
         {
@@ -110,6 +116,9 @@ public class ExceptionHandlingMiddleware
             _logger.LogError(ex,
                 "Unhandled exception for {Method} {Path} (trace {TraceId})",
                 context.Request.Method, context.Request.Path, traceId);
+            // For the System section: queued, redacted and stored off the
+            // request path; never throws, never waits.
+            _capture.Exception(context, ex);
             await WriteProblem(context, StatusCodes.Status500InternalServerError,
                 "Server error",
                 // Only expose details in Development — never in production.
@@ -167,8 +176,9 @@ public class ExceptionHandlingMiddleware
             problem, problem.GetType(), options: null, contentType: "application/problem+json");
     }
 
-    private static string GetTraceId(HttpContext context)
-        => Activity.Current?.Id ?? context.TraceIdentifier;
+    // The same id error tracking stores, so the Reference a user quotes
+    // finds the occurrence (RequestTrace).
+    private static string GetTraceId(HttpContext context) => RequestTrace.Id(context);
 
     // SQL Server error 1205 ("... was deadlocked ... chosen as the deadlock
     // victim"), wrapped by EF or not. Text, like the check below, so the Api

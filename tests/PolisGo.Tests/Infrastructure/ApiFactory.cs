@@ -8,7 +8,10 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using PolisGo.Api;
+using Microsoft.Extensions.Hosting;
 using PolisGo.Application.Abstractions;
+using PolisGo.Application.Diagnostics;
+using PolisGo.Infrastructure.Diagnostics;
 using PolisGo.Domain.Entities;
 using PolisGo.Domain.Enums;
 using PolisGo.Infrastructure.Persistence;
@@ -36,6 +39,8 @@ public class ApiFactory : WebApplicationFactory<Program>
         builder.UseSetting("ConnectionStrings:Default", "Server=unused;Database=unused");
         builder.UseSetting("Jwt:SecretKey", JwtSecret);
         builder.UseSetting("Database:ApplyMigrationsOnStartup", "false");
+        // POST /api/diagnostics/test-failure answers a real 500.
+        builder.UseSetting("Diagnostics:TestFailures", "true");
         // One address signs up many users here; RateLimitEndpointTests tightens these.
         foreach (var policy in new[] { "SignIn", "Register", "PasswordChange" })
         {
@@ -49,7 +54,38 @@ public class ApiFactory : WebApplicationFactory<Program>
             services.RemoveAll<DbContextOptions<AppDbContext>>();
             services.RemoveAll<IDbContextOptionsConfiguration<AppDbContext>>();
             services.AddDbContext<AppDbContext>(o => o.UseSqlite(_connection));
+
+            // Background services share the one in-memory SQLite connection,
+            // which isn't safe to use from two threads: tests drain the error
+            // queue themselves (DrainErrorsAsync), and there are no old rows
+            // to backfill search keys for.
+            var background = services
+                .Where(d => d.ServiceType == typeof(IHostedService)
+                    && (d.ImplementationType == typeof(ErrorWriterService)
+                        || d.ImplementationType == typeof(SearchKeyBackfillService)))
+                .ToList();
+            foreach (var descriptor in background) services.Remove(descriptor);
         });
+    }
+
+    // The async form: the context lives until the query has finished.
+    public async Task<T> WithDbAsync<T>(Func<AppDbContext, Task<T>> action)
+    {
+        using var scope = Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        await db.Database.EnsureCreatedAsync();
+        return await action(db);
+    }
+
+    // Stores whatever error reports requests have queued so far, as the
+    // background writer would.
+    public async Task DrainErrorsAsync()
+    {
+        var queue = Services.GetRequiredService<ChannelErrorReportQueue>();
+        var batch = new List<ErrorReport>();
+        while (queue.Reader.TryRead(out var report)) batch.Add(report);
+        using var scope = Services.CreateScope();
+        await scope.ServiceProvider.GetRequiredService<IErrorRecorder>().RecordAsync(batch);
     }
 
     protected override void ConfigureClient(HttpClient client)

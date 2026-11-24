@@ -4,7 +4,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using PolisGo.Application.Abstractions;
 using PolisGo.Application.Claims;
+using PolisGo.Application.Diagnostics;
 using PolisGo.Infrastructure.Auth;
+using PolisGo.Infrastructure.Diagnostics;
 using PolisGo.Infrastructure.Payments;
 using PolisGo.Infrastructure.Persistence;
 using PolisGo.Infrastructure.Storage;
@@ -30,6 +32,12 @@ public static class DependencyInjection
 
         // Folded search keys for rows saved before the column existed.
         services.AddHostedService<SearchKeyBackfillService>();
+
+        // Error tracking: a bounded queue between requests and one writer.
+        services.Configure<ErrorTrackingOptions>(configuration.GetSection(ErrorTrackingOptions.SectionName));
+        services.AddSingleton<ChannelErrorReportQueue>();
+        services.AddSingleton<IErrorReportQueue>(sp => sp.GetRequiredService<ChannelErrorReportQueue>());
+        services.AddHostedService<ErrorWriterService>();
 
         services.AddScoped<IPasswordHasher, BcryptPasswordHasher>();
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
