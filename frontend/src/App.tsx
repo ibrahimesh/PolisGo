@@ -16,6 +16,9 @@ const RegisterPage = lazy(() =>
   import('./pages/RegisterPage').then((m) => ({ default: m.RegisterPage })),
 );
 const CrashPage = lazy(() => import('./pages/CrashPage').then((m) => ({ default: m.CrashPage })));
+const ServerErrorPage = lazy(() =>
+  import('./pages/ServerErrorPage').then((m) => ({ default: m.ServerErrorPage })),
+);
 const NotFoundPage = lazy(() =>
   import('./pages/NotFoundPage').then((m) => ({ default: m.NotFoundPage })),
 );
@@ -169,6 +172,7 @@ export function App() {
           </Route>
 
           {E2E_ROUTES && <Route path="__e2e/crash" element={<CrashPage />} />}
+          {E2E_ROUTES && <Route path="__e2e/server-error" element={<ServerErrorPage />} />}
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Route>

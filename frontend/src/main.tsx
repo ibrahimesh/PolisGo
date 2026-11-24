@@ -5,6 +5,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { isApiError } from './api/errors';
 import { App } from './App';
+import { installGlobalErrorReporting } from './diagnostics/reporter';
 import { AuthProvider } from './auth/AuthProvider';
 import { MotionRouter } from './motion/MotionRouter';
 import { ToastProvider } from './components/ui/ToastProvider';
@@ -21,6 +22,9 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+// Uncaught errors and rejections go to the System section (see reporter).
+installGlobalErrorReporting();
 
 const root = document.getElementById('root');
 if (!root) throw new Error('Missing #root element.');
