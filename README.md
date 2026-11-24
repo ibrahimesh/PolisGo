@@ -390,7 +390,7 @@ instead of `echo` — its redirect writes UTF-16, which Vite does not read.
 dotnet test PolisGo.slnx
 ```
 
-**507 backend tests** (xUnit; 7 of them need SQL Server): domain and service tests on SQLite in-memory
+**673 backend tests** (xUnit; 10 of them need SQL Server): domain and service tests on SQLite in-memory
 and HTTP tests via `WebApplicationFactory` (401/403/404 per role, JSON contract,
 and one client reading, paying, searching, uploading to or withdrawing
 another's policy or claim → 404; a client on every staff endpoint → 403, an
@@ -398,9 +398,13 @@ agent deciding → 403, one agent's customers hidden from another and from
 adjusters, decision field rules, stale decisions → 409, CSV escaping), the
 rate limits and security headers, contract tests over the compose, CI and
 configuration files, and two requests at once (payments, payouts, the last
-admin) on a SQLite file. Seven of them need SQL Server itself
-(`[SqlServerFact]`: the same races, paging, decimal precision, the migration
-backfills over existing rows); they are skipped unless
+admin) on a SQLite file, error tracking (fingerprints, redaction of
+realistic leaks, capture that never breaks a request, the writer, caps,
+regressions, retention, the client endpoint's schema, size and rate limits)
+and the audit search over a 2,640-event log with Latin, Cyrillic and
+Azerbaijani names. Ten of them need SQL Server itself (`[SqlServerFact]`:
+the same races, paging, decimal precision, the migration backfills over
+existing rows, the audit search and error tracking); they are skipped unless
 `POLISGO_TEST_SQLSERVER` holds a connection string, and CI's SQL Server job
 runs them.
 
@@ -421,8 +425,8 @@ address registers hundreds of test users), from the repository root:
 docker compose -f docker-compose.yml -f docker-compose.demo.yml -f docker-compose.e2e.yml up --build
 ```
 
-**337 frontend unit tests** (Vitest) and **217 end-to-end tests** (Playwright +
-axe-core: 147 at 1440px, plus the 70 cabinet and staff tests again at 390px) against the
+**394 frontend unit tests** (Vitest) and **230 end-to-end tests** (Playwright +
+axe-core: 154 at 1440px, plus the 76 cabinet and staff tests again at 390px) against the
 real API — the e2e suite needs the Docker stack on `:8080`. They cover
 sign-up and sign-in, buying a policy end to end, the certificate download,
 renewal, filing a claim with photos, withdrawing it, the claim timeline after
@@ -438,7 +442,9 @@ customers and selling through to payment, and both CSV exports. Admin: the
 dashboard on demo data, staff creation, deactivation refusing the next
 sign-in, a role change ending the old session, your own account protected,
 assignment seen by the agent and in the audit feed, the all-policies export,
-the 403 page for every other role, and DateField typing, pasting, invalid
+the 403 page for every other role, the audit search typed in capitals with
+Azerbaijani letters, the System section from a user's Reference (a real 500
+and a render crash) to a resolved error that comes back as regressed, and DateField typing, pasting, invalid
 dates, the Azerbaijani calendar from the keyboard and the claim's allowed
 days. The backend tests also check that a deactivated user's existing token
 stops working and that the last active admin is kept.
