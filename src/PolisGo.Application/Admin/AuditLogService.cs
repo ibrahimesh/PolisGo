@@ -128,6 +128,11 @@ public class AuditLogService : IAuditLogService
                 AuditAction.StaffReactivated, AuditAction.RoleChanged]);
         }
         if (wants(AuditEntityType.Customer)) staffTypes.Add(AuditAction.CustomerAssigned);
+        if (wants(AuditEntityType.Error))
+        {
+            staffTypes.AddRange([AuditAction.ErrorResolved, AuditAction.ErrorIgnored,
+                AuditAction.ErrorReopened, AuditAction.ErrorsPurged]);
+        }
         if (staffTypes.Count > 0)
         {
             var entries = _db.AuditEntries.AsNoTracking().Where(a => staffTypes.Contains(a.Action));
@@ -161,7 +166,7 @@ public class AuditLogService : IAuditLogService
                 .ToListAsync(cancellationToken);
             rows.AddRange(found.Select(a => new AuditEventResponse(
                 a.Id, a.OccurredAt, a.ActorUserId, a.FullName, a.Role,
-                a.Action == AuditAction.CustomerAssigned ? AuditEntityType.Customer : AuditEntityType.User,
+                EntityTypeOf(a.Action),
                 a.SubjectId, a.SubjectLabel, a.Action.ToString(), a.FromValue, a.ToValue)));
         }
 
@@ -172,6 +177,14 @@ public class AuditLogService : IAuditLogService
             .ToList();
         return new PagedResult<AuditEventResponse>(items, page, pageSize, total);
     }
+
+    private static AuditEntityType EntityTypeOf(AuditAction action) => action switch
+    {
+        AuditAction.CustomerAssigned => AuditEntityType.Customer,
+        AuditAction.ErrorResolved or AuditAction.ErrorIgnored or AuditAction.ErrorReopened or AuditAction.ErrorsPurged
+            => AuditEntityType.Error,
+        _ => AuditEntityType.User
+    };
 }
 
 // The audit feed's text search. The typed text is folded (SearchText) and

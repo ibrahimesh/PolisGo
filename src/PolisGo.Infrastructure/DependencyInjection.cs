@@ -38,6 +38,8 @@ public static class DependencyInjection
         services.AddSingleton<ChannelErrorReportQueue>();
         services.AddSingleton<IErrorReportQueue>(sp => sp.GetRequiredService<ChannelErrorReportQueue>());
         services.AddHostedService<ErrorWriterService>();
+        services.AddHostedService<ErrorRetentionService>();
+        services.AddScoped<IDatabaseProbe, DatabaseProbe>();
 
         services.AddScoped<IPasswordHasher, BcryptPasswordHasher>();
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();

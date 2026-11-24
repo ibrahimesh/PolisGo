@@ -48,6 +48,8 @@ public static class DependencyInjection
         services.AddScoped<IAdminDashboardService, AdminDashboardService>();
         services.AddScoped<IPolicyTypeService, PolicyTypeService>();
         services.AddScoped<IErrorRecorder, ErrorRecorder>();
+        services.AddScoped<IErrorTrackingService, ErrorTrackingService>();
+        services.AddScoped<ISystemHealthService, SystemHealthService>();
 
         return services;
     }

@@ -62,7 +62,8 @@ public class ApiFactory : WebApplicationFactory<Program>
             var background = services
                 .Where(d => d.ServiceType == typeof(IHostedService)
                     && (d.ImplementationType == typeof(ErrorWriterService)
-                        || d.ImplementationType == typeof(SearchKeyBackfillService)))
+                        || d.ImplementationType == typeof(SearchKeyBackfillService)
+                        || d.ImplementationType == typeof(ErrorRetentionService)))
                 .ToList();
             foreach (var descriptor in background) services.Remove(descriptor);
         });

@@ -109,6 +109,11 @@ every change in this repo.
 | GET | `/api/admin/stats` | Admin (cached 60 s) |
 | GET | `/api/admin/dashboard` (from, to; 24 months max) | Admin (cached 60 s per range) |
 | GET | `/api/admin/audit` (search, actions, actor, entity type, from, to, paged) | Admin |
+| GET | `/api/admin/errors` (source, status, regressed, from, to, httpStatus, endpoint, role, search incl. a Reference, sort, paged) · `/summary` · `/lookup?reference=` · `/{id}` | Admin |
+| PATCH | `/api/admin/errors/{id}` (status, note, `rowVersion`) · DELETE `/api/admin/errors/resolved?olderThanDays=` | Admin; audited |
+| GET | `/api/admin/system/health` | Admin |
+| POST | `/api/diagnostics/client-errors` | Anonymous (actor from the token when sent); 8 KB, closed schema, per-address limit and shared budget |
+| POST | `/api/diagnostics/test-failure` | Anonymous; a 404 unless `Diagnostics:TestFailures` outside Production (the e2e override) |
 | GET | `/health` | Anonymous |
 
 ## Persistence
