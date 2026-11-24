@@ -110,6 +110,29 @@ public class ErrorCaptureTests
         Assert.Equal(503, report.HttpStatus);
     }
 
+    // A request the client abandoned (a navigation cancelling a fetch) isn't
+    // an error, whatever the database driver throws when its query is
+    // cancelled: the e2e suite logged 145 "500s" like this on SQL Server.
+    [Theory]
+    [InlineData(typeof(OperationCanceledException))]
+    [InlineData(typeof(InvalidOperationException))]
+    public async Task A_request_the_client_abandoned_is_neither_logged_as_500_nor_tracked(Type thrown)
+    {
+        var queue = new RecordingQueue();
+        var (context, body) = NewContext();
+        using var aborted = new CancellationTokenSource();
+        context.RequestAborted = aborted.Token;
+
+        await ExceptionHandlingMiddlewareTests.Build(_ =>
+        {
+            aborted.Cancel();
+            throw (Exception)Activator.CreateInstance(thrown, "Operation cancelled by user.")!;
+        }, queue).InvokeAsync(context);
+
+        Assert.Empty(queue.Reports);
+        Assert.Equal(0, body.Length);
+    }
+
     // The queue throwing, or being full, changes nothing for the caller.
     [Fact]
     public async Task Capturing_never_breaks_or_changes_the_response()

@@ -39,9 +39,13 @@ public class ExceptionHandlingMiddleware
             // error too. Expected answers (400, 401, 403, 404, 409, 412) aren't.
             if (context.Response.StatusCode >= StatusCodes.Status500InternalServerError) _capture.Status(context);
         }
-        catch (OperationCanceledException) when (context.RequestAborted.IsCancellationRequested)
+        // Client disconnected — not actionable, and log noise would drown real
+        // issues. Any exception type: SqlClient reports a cancelled query as a
+        // SqlException ("Operation cancelled by user"), which EF may wrap in an
+        // InvalidOperationException; logged as a 500 and tracked, every
+        // navigation that cancels a fetch became an error group.
+        catch (Exception) when (context.RequestAborted.IsCancellationRequested)
         {
-            // Client disconnected — not actionable, and log noise would drown real issues.
             return;
         }
         catch (ValidationException ex)
