@@ -345,6 +345,10 @@ namespace PolisGo.Infrastructure.Persistence.Migrations
                         .IsConcurrencyToken()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("SearchKey")
+                        .HasMaxLength(700)
+                        .HasColumnType("nvarchar(700)");
+
                     b.Property<string>("Source")
                         .IsRequired()
                         .HasMaxLength(16)

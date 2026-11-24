@@ -8,10 +8,12 @@ namespace PolisGo.Application.Common;
 // Server's UPPER('İbrahim') is 'İBRAHIM', which "ibrahim" never matches. So
 // the text is folded here, in .NET, once when a row is saved (a "SearchKey"
 // column) and once for the typed text; SQL then compares folded to folded
-// with a plain, culture-free Contains.
+// with a plain, culture-free Contains. One rule for every text search in the
+// app (ADR-001): names, emails and free text through a key; the ASCII codes
+// the app generates (policy, claim and plate numbers) through Code.
 public static class SearchText
 {
-    // The shadow column on Users, Customers and AuditEntries.
+    // The shadow column on Users, Customers, AuditEntries and ErrorGroups.
     public const string KeyProperty = "SearchKey";
 
     // Fits a 200-char name and a 256-char email, or an audit entry's label
@@ -53,6 +55,11 @@ public static class SearchText
         }
         return builder.ToString();
     }
+
+    // Typed text as the app stores its own codes (upper-case ASCII: "PG-2026-…",
+    // "CL-2026-…", plates), so the column is compared as stored, with no
+    // function around it. Folded first, so a typed "İ" or "ı" is an I.
+    public static string Code(string? text) => Fold(text).ToUpperInvariant();
 
     // The stored key for a row: each part folded, joined by a separator no
     // folded search text contains, cut to the column size.

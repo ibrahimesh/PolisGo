@@ -5,6 +5,7 @@ import {
   adminApi,
   expectNoHorizontalScroll,
   openSession,
+  randomUser,
   registerSession,
   seedPreferences,
 } from './helpers';
@@ -54,6 +55,36 @@ test.describe('Agent desk', () => {
     await expect(
       page.getByRole('heading', { name: 'This customer isn’t in your list' }),
     ).toBeVisible();
+  });
+
+  // One search rule for every list (SearchText): capitals with İ find a name
+  // registered with ş, ü and ə, which SQL's UPPER() never matched.
+  test('finds a customer typed in Azerbaijani capitals', async ({ page }) => {
+    const admin = await adminApi(page);
+    const agent = await admin.createStaff('Agent');
+    const base = randomUser();
+    const suffix = base.fullName.split(' ').at(-1) ?? '';
+    const named = { ...base, fullName: `Gülnarə Şirinova ${suffix}` };
+    await registerSession(page, named);
+    const { user: other } = await registerSession(page);
+    for (const email of [named.email, other.email]) {
+      await admin.assignAgent(await admin.customerIdFor(email), agent.id);
+    }
+
+    await seedPreferences(page, { lang: 'en', theme: 'light' });
+    await openSession(page, agent.session);
+    await page.goto('/app/customers');
+    await expect(page.getByText('2 customers', { exact: true })).toBeVisible();
+
+    // "ŞİRİNOVA XYZAB": the suffix in Azerbaijani capitals too (i → İ).
+    await page
+      .getByRole('searchbox', { name: 'Search' })
+      .fill(`ŞİRİNOVA ${suffix.toLocaleUpperCase('az')}`);
+    await expect(page.getByText('1 customer', { exact: true })).toBeVisible();
+    await expect(
+      page.getByRole('link', { name: named.fullName }).locator('visible=true'),
+    ).toBeVisible();
+    await expect(page.getByRole('link', { name: other.fullName })).toHaveCount(0);
   });
 
   test('sells a policy to their customer, takes payment, sees it in sales and the export', async ({

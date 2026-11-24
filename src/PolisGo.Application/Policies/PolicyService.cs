@@ -233,13 +233,14 @@ public class PolicyService : IPolicyService
             {
                 throw new ValidationException("search", PolicyValidation.Messages.SearchTooLong);
             }
-            // Policy numbers and plates are stored upper-case, so an
-            // upper-cased needle makes the match case-insensitive on any provider.
-            var needle = term.ToUpperInvariant();
-            // Names keep their case, so they are compared upper-cased on both sides.
+            // One rule for text (SearchText): policy numbers and plates are
+            // stored upper-case ASCII, the holder's name and email as a
+            // folded key. No function wraps a column.
+            var code = SearchText.Code(term);
+            var needle = SearchText.Fold(term);
             policies = policies.Where(p =>
-                p.PolicyNumber.Contains(needle) || p.Vehicle.PlateNumber.Contains(needle)
-                || p.Customer.FullName.ToUpper().Contains(needle));
+                p.PolicyNumber.Contains(code) || p.Vehicle.PlateNumber.Contains(code)
+                || EF.Property<string>(p.Customer, SearchText.KeyProperty).Contains(needle));
         }
 
         return policies;

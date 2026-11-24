@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using PolisGo.Application.Common;
 using PolisGo.Domain.Entities;
 
 namespace PolisGo.Infrastructure.Persistence.Configurations;
@@ -23,6 +24,9 @@ public class ErrorGroupConfiguration : IEntityTypeConfiguration<ErrorGroup>
         builder.Property(g => g.Status).HasConversion<string>().HasMaxLength(16).IsRequired();
         builder.Property(g => g.Note).HasMaxLength(NoteMaxLength);
         builder.Property(g => g.RowVersion).IsConcurrencyToken();
+        // Folded title, type and endpoint for the list's search (SearchText);
+        // set on save. Not indexed: a contains-search can't seek.
+        builder.Property<string>(SearchText.KeyProperty).HasMaxLength(SearchText.KeyMaxLength);
 
         // The writer finds a group by its fingerprint; one bug, one row.
         builder.HasIndex(g => g.Fingerprint).IsUnique();

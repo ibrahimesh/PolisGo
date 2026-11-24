@@ -16,7 +16,7 @@ public record ListPoliciesQuery(
     // Effective status, so "Expired" includes Active policies past their end date.
     PolicyStatus? Status = null,
     string? PolicyTypeCode = null,
-    // Matches the policy number, the vehicle's plate or the holder's name,
+    // Matches the policy number, the vehicle's plate or the holder's name or email,
     // case-insensitively.
     string? Search = null,
     PolicySortBy SortBy = PolicySortBy.CreatedAt,

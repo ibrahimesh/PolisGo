@@ -67,7 +67,8 @@ public class ErrorTrackingSqlServerTests
             if (migrated)
             {
                 Assert.Empty(health.PendingMigrations);
-                Assert.EndsWith("_ErrorTracking", health.LastAppliedMigration);
+                // The newest migration the app ships, whichever it is.
+                Assert.Equal(db.Database.GetMigrations().Last(), health.LastAppliedMigration);
             }
         }
     }

@@ -233,10 +233,13 @@ public class ClaimService : IClaimService
             {
                 throw new ValidationException("search", M.SearchTooLong);
             }
-            var needle = term.ToUpperInvariant();
+            // One rule for text (SearchText): numbers are stored upper-case
+            // ASCII, the customer's name and email as a folded key.
+            var code = SearchText.Code(term);
+            var needle = SearchText.Fold(term);
             query = query.Where(c =>
-                c.ClaimNumber.ToUpper().Contains(needle) || c.Policy.PolicyNumber.ToUpper().Contains(needle)
-                || c.Policy.Customer.FullName.ToUpper().Contains(needle));
+                c.ClaimNumber.Contains(code) || c.Policy.PolicyNumber.Contains(code)
+                || EF.Property<string>(c.Policy.Customer, SearchText.KeyProperty).Contains(needle));
         }
 
         return query;

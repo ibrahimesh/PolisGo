@@ -390,7 +390,7 @@ instead of `echo` — its redirect writes UTF-16, which Vite does not read.
 dotnet test PolisGo.slnx
 ```
 
-**673 backend tests** (xUnit; 10 of them need SQL Server): domain and service tests on SQLite in-memory
+**741 backend tests** (xUnit; 11 of them need SQL Server): domain and service tests on SQLite in-memory
 and HTTP tests via `WebApplicationFactory` (401/403/404 per role, JSON contract,
 and one client reading, paying, searching, uploading to or withdrawing
 another's policy or claim → 404; a client on every staff endpoint → 403, an
@@ -401,10 +401,12 @@ configuration files, and two requests at once (payments, payouts, the last
 admin) on a SQLite file, error tracking (fingerprints, redaction of
 realistic leaks, capture that never breaks a request, the writer, caps,
 regressions, retention, the client endpoint's schema, size and rate limits)
-and the audit search over a 2,640-event log with Latin, Cyrillic and
-Azerbaijani names. Ten of them need SQL Server itself (`[SqlServerFact]`:
-the same races, paging, decimal precision, the migration backfills over
-existing rows, the audit search and error tracking); they are skipped unless
+the audit search over a 2,640-event log, and every other list's search
+(customers, policies, claims, staff, an agent's book, error groups, the CSV
+exports) with Latin, Cyrillic and Azerbaijani names. Eleven of them need SQL
+Server itself (`[SqlServerFact]`: the same races, paging, decimal precision,
+the migration backfills over existing rows, the searches and error
+tracking); they are skipped unless
 `POLISGO_TEST_SQLSERVER` holds a connection string, and CI's SQL Server job
 runs them.
 
@@ -425,8 +427,8 @@ address registers hundreds of test users), from the repository root:
 docker compose -f docker-compose.yml -f docker-compose.demo.yml -f docker-compose.e2e.yml up --build
 ```
 
-**394 frontend unit tests** (Vitest) and **230 end-to-end tests** (Playwright +
-axe-core: 154 at 1440px, plus the 76 cabinet and staff tests again at 390px) against the
+**394 frontend unit tests** (Vitest) and **232 end-to-end tests** (Playwright +
+axe-core: 155 at 1440px, plus the 77 cabinet and staff tests again at 390px) against the
 real API — the e2e suite needs the Docker stack on `:8080`. They cover
 sign-up and sign-in, buying a policy end to end, the certificate download,
 renewal, filing a claim with photos, withdrawing it, the claim timeline after

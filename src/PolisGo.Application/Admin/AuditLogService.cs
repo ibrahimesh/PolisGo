@@ -59,15 +59,15 @@ public class AuditLogService : IAuditLogService
             if (before is not null) claims = claims.Where(h => h.ChangedAt < before);
             if (search is not null)
             {
-                var needle = search.Needle;
+                var (needle, code) = (search.Needle, search.Code);
                 var statuses = search.Matching<ClaimStatus>();
-                // Claim numbers are ASCII, so SQL's lower() folds them on
-                // every provider; names and emails use the folded keys.
+                // Numbers as stored (upper-case ASCII), names and emails
+                // through the folded keys: one rule (SearchText).
                 claims = needle is null
                     ? claims.Where(h => statuses.Contains(h.ToStatus))
                     : claims.Where(h => statuses.Contains(h.ToStatus)
-                        || h.Claim.ClaimNumber.ToLower().Contains(needle)
-                        || h.Claim.Policy.PolicyNumber.ToLower().Contains(needle)
+                        || h.Claim.ClaimNumber.Contains(code)
+                        || h.Claim.Policy.PolicyNumber.Contains(code)
                         || EF.Property<string>(h.ChangedByUser, Key).Contains(needle)
                         || EF.Property<string>(h.Claim.Policy.Customer, Key).Contains(needle));
             }
@@ -94,12 +94,12 @@ public class AuditLogService : IAuditLogService
             if (before is not null) policies = policies.Where(h => h.ChangedAt < before);
             if (search is not null)
             {
-                var needle = search.Needle;
+                var (needle, code) = (search.Needle, search.Code);
                 var statuses = search.Matching<PolicyStatus>();
                 policies = needle is null
                     ? policies.Where(h => statuses.Contains(h.ToStatus))
                     : policies.Where(h => statuses.Contains(h.ToStatus)
-                        || h.Policy.PolicyNumber.ToLower().Contains(needle)
+                        || h.Policy.PolicyNumber.Contains(code)
                         || EF.Property<string>(h.Policy.Customer, Key).Contains(needle)
                         || _db.Users.Any(u => u.Id == h.ChangedByUserId
                             && EF.Property<string>(u, Key).Contains(needle)));
@@ -203,6 +203,9 @@ internal sealed class AuditSearch
     }
 
     public string? Needle { get; }
+
+    // The needle as the app's own codes are stored (SearchText.Code).
+    public string Code => Needle?.ToUpperInvariant() ?? string.Empty;
 
     public static AuditSearch? From(string? search, IReadOnlyCollection<string>? actions)
     {

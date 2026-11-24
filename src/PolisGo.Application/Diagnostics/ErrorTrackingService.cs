@@ -70,16 +70,16 @@ public sealed class ErrorTrackingService : IErrorTrackingService
         if (query.Role is { } role) groups = groups.Where(g => g.Occurrences.Any(o => o.ActorRole == role));
         if (Text(query.Endpoint) is { } endpoint)
         {
+            // Route templates are ASCII with mixed case ("{claimId}"): lower() is exact for ASCII.
             groups = groups.Where(g => g.Endpoint.ToLower().Contains(endpoint));
         }
         if (Text(query.Search) is { } search)
         {
             var (code8, traceId) = ErrorReference.Parse(query.Search);
-            // Endpoints, types and our own titles are ASCII in practice, so
-            // SQL's lower() is enough here; a Reference matches exactly.
-            groups = groups.Where(g => g.Title.ToLower().Contains(search)
-                || g.ExceptionType.ToLower().Contains(search)
-                || g.Endpoint.ToLower().Contains(search)
+            // Titles carry the message, which a browser may write in the
+            // user's language: the folded key (SearchText) covers title, type
+            // and endpoint. A Reference matches exactly.
+            groups = groups.Where(g => EF.Property<string>(g, SearchText.KeyProperty).Contains(search)
                 || (code8 != null && g.Occurrences.Any(o => o.ReferenceCode == code8))
                 || (traceId != null && g.Occurrences.Any(o => o.TraceId == traceId)));
         }
@@ -293,7 +293,7 @@ public sealed class ErrorTrackingService : IErrorTrackingService
         {
             throw new ValidationException("search", AdminValidation.Messages.SearchTooLong);
         }
-        return term.ToLowerInvariant();
+        return SearchText.Fold(term);
     }
 
     private static string Cut(string text, int max) => text.Length <= max ? text : text[..max];
