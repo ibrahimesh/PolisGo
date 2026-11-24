@@ -1704,7 +1704,7 @@
       "title": "Audit log",
       "lead": "Who changed what, and when: claim and policy status changes and staff actions.",
       "filters": "Filter the audit log",
-      "actor": "Who",
+      "actor": "Actor",
       "anyone": "Anyone",
       "entity": "What",
       "anything": "Anything",
@@ -1737,10 +1737,19 @@
         "released": "released from {{agent}}"
       },
       "search": "Search",
-      "searchPlaceholder": "Email, name, policy or claim number, action",
-      "searchHint": "Finds the person who acted, the policy or claim, and what happened, such as “approved” or “role”.",
+      "searchPlaceholder": "Name, email, policy or claim number, action",
+      "searchHint": "Finds who acted, the client or account the event is about, the policy or claim, and what happened, such as “approved” or “role”. Upper and lower case are the same.",
       "clearSearch": "Clear search",
-      "noMatchSearch": "No event mentions “{{query}}”. Check the spelling, or try an email, a name, or a policy or claim number."
+      "noMatchSearch": "No event mentions “{{query}}”. Check the spelling, or try an email, a name, or a policy or claim number.",
+      "actorHint": "The staff member who made the change. To find a client, use the search above.",
+      "actorShow": "Show staff members",
+      "actorMore": "Showing {{shown}} of {{count}}. Type a name or email to narrow the list.",
+      "actorNone": "No staff member matches.",
+      "actorResults_one": "{{count}} staff member",
+      "actorResults_other": "{{count}} staff members",
+      "searching": "Searching…",
+      "countFor_one": "{{count}} event matches “{{query}}”",
+      "countFor_other": "{{count}} events match “{{query}}”"
     },
     "policyTypes": {
       "title": "Products and rates",

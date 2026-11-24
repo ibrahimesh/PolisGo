@@ -28,6 +28,9 @@ public static class DependencyInjection
         // the concrete context under the interface so AuthService can resolve it.
         services.AddScoped<IApplicationDbContext>(sp => sp.GetRequiredService<AppDbContext>());
 
+        // Folded search keys for rows saved before the column existed.
+        services.AddHostedService<SearchKeyBackfillService>();
+
         services.AddScoped<IPasswordHasher, BcryptPasswordHasher>();
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 

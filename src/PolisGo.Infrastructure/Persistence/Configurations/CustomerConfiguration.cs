@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using PolisGo.Application.Common;
 using PolisGo.Domain.Entities;
 
 namespace PolisGo.Infrastructure.Persistence.Configurations;
@@ -13,6 +14,8 @@ public class CustomerConfiguration : IEntityTypeConfiguration<Customer>
         builder.Property(c => c.FullName).IsRequired().HasMaxLength(200);
         builder.Property(c => c.Email).IsRequired().HasMaxLength(256);
         builder.Property(c => c.Phone).IsRequired().HasMaxLength(32);
+        // Folded name and email for searches (SearchText); set on save.
+        builder.Property<string>(SearchText.KeyProperty).HasMaxLength(SearchText.KeyMaxLength);
 
         // Customer directory: each sortable column gets an index so ORDER BY
         // + OFFSET/FETCH reads a page instead of sorting the whole table.

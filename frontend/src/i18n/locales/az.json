@@ -1712,7 +1712,7 @@
       "title": "Fəaliyyət jurnalı",
       "lead": "Kim, nəyi, nə vaxt dəyişib: zərər və polis statusları, əməkdaş əməliyyatları.",
       "filters": "Jurnal filtrləri",
-      "actor": "Kim",
+      "actor": "İcraçı",
       "anyone": "Hər kəs",
       "entity": "Nə",
       "anything": "Hamısı",
@@ -1745,10 +1745,19 @@
         "released": "{{agent}} agentindən ayrılıb"
       },
       "search": "Axtarış",
-      "searchPlaceholder": "E-poçt, ad, polis və ya iddia nömrəsi, əməliyyat",
-      "searchHint": "Əməliyyatı edəni, polisi və ya iddianı və baş verəni tapır, məsələn «təsdiq» və ya «rol».",
+      "searchPlaceholder": "Ad, e-poçt, polis və ya iddia nömrəsi, əməliyyat",
+      "searchHint": "Əməliyyatı edəni, hadisənin aid olduğu müştərini və ya hesabı, polisi və ya iddianı və baş verəni tapır, məsələn «təsdiq» və ya «rol». Böyük və kiçik hərflər fərqlənmir.",
       "clearSearch": "Axtarışı təmizlə",
-      "noMatchSearch": "Heç bir hadisədə «{{query}}» yoxdur. Yazılışı yoxlayın və ya e-poçt, ad, polis və ya iddia nömrəsi daxil edin."
+      "noMatchSearch": "Heç bir hadisədə «{{query}}» yoxdur. Yazılışı yoxlayın və ya e-poçt, ad, polis və ya iddia nömrəsi daxil edin.",
+      "actorHint": "Dəyişikliyi edən əməkdaş. Müştərini tapmaq üçün yuxarıdakı axtarışdan istifadə edin.",
+      "actorShow": "Əməkdaşları göstər",
+      "actorMore": "{{count}} nəfərdən {{shown}} göstərilir. Siyahını daraltmaq üçün ad və ya e-poçt yazın.",
+      "actorNone": "Uyğun əməkdaş yoxdur.",
+      "actorResults_one": "{{count}} əməkdaş",
+      "actorResults_other": "{{count}} əməkdaş",
+      "searching": "Axtarılır…",
+      "countFor_one": "«{{query}}» üzrə {{count}} hadisə",
+      "countFor_other": "«{{query}}» üzrə {{count}} hadisə"
     },
     "policyTypes": {
       "title": "Məhsullar və tariflər",

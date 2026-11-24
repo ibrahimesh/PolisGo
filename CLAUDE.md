@@ -158,6 +158,14 @@ every change in this repo.
   is the same transfer, never a second one.
   Claim updates and renewal reminders are derived on read; only read marks
   (`ClaimUpdateRead`, `PolicyReminderRead`) are stored.
+- **Text search folds case in .NET** (`SearchText`), never with SQL's
+  `UPPER()`/`LOWER()` on names: SQLite folds ASCII only, and SQL Server's
+  `UPPER('İbrahim')` never matches "ibrahim". Users, Customers and
+  AuditEntries carry a folded `SearchKey` shadow column, set on every save
+  (`SearchKeys`, backfilled after startup); match with
+  `EF.Property<string>(x, SearchText.KeyProperty).Contains(SearchText.Fold(term))`.
+  ASCII-only values (policy and claim numbers) may use `ToLower()`. The SPA's
+  `foldSearch` (`lib/searchText.ts`) folds the same way.
 - **Check text lengths in the service, not only in the column.** SQLite
   ignores `HasMaxLength`; SQL Server fails the insert with a 500. Every
   user- or staff-supplied string gets an explicit limit and a 400, and
@@ -283,6 +291,11 @@ React Router, TanStack Query, React Hook Form + Zod, react-i18next.
   (an Admin's `/app` is the dashboard). Admin panel: `admin` (`dashboard/`
   with `BarChart`, `staff/`, `audit/`, `customers/AssignAgent`,
   `PolicyTypesPage`, `StaffPicker`), queries under `adminKeys.all`.
+- The audit log's Actor filter is `ActorCombobox` (an editable combobox
+  over the server staff search), kept visibly different from the page's
+  one free-text search. List pages that sync filters to the URL build each
+  change on the last one written (a ref), not on React Router's functional
+  update, which hands over the params of the render that created it.
 - Choosing a staff member: `StaffPicker` (server search + select), never a
   plain list of the first page of accounts.
 - Every private query lives under `cabinetKeys.all`; a write invalidates

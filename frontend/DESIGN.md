@@ -175,7 +175,7 @@ only**, 150–400ms, on shared tokens (CSS variables in `src/styles/index.css`,
 `Button` · `Input` · `PhoneInput` · `PasswordField` · `Select` · `Card` ·
 `Badge` · `Tabs` · `Table` · `Modal` · `Toast` · `Skeleton` · `EmptyState` ·
 `FormErrorSummary` · `ErrorNotice` · `ReferenceChip` · `ErrorPage` ·
-`ChoiceChips` · Settings dialog (`SettingsFields`) · `CommandPalette` ·
+`ChoiceChips` · `ActorCombobox` · Settings dialog (`SettingsFields`) · `CommandPalette` ·
 `Label` · `PageHeader` · `PolicyStatusBadge` · `ClaimStatusBadge` · `StepNav`
 (both wizards) · `QuoteResult` (full or compact) · `Textarea` (with a live
 count) · `Pagination` · `FileUploader` · `ExportButton` · `Modal`
@@ -296,6 +296,18 @@ and `DateFilterField`) · `StaffPicker` · `BarChart` · `ProductIcon` ·
   wrap (real radios or links); the current one gets the accent border and
   `surface-2`. `ChoiceChips` is the radio version (Settings uses it); the
   old segmented control is gone, since chips wrap at 390px.
+- **Search field with a clear button.** A text input in the `searchbox`
+  role (`enterKeyHint="search"`), so the browser adds no second X beside the
+  field's own clear button; Escape clears too. While a new result loads the
+  previous rows dim (`aria-busy`) and the count line says "Searching…": a
+  count is only ever shown for the filters on screen, as "N events match
+  “text”".
+- **Actor combobox** (audit log). Labelled "Actor", a person icon and a
+  chevron like a select, so it never reads as a second search box. Typing
+  narrows the server's staff list; each option shows the name with role and
+  email underneath, the current choice has a check; arrows, Home/End, Enter,
+  Escape and Alt+↓ follow the WAI-ARIA combobox pattern. When more than 50
+  match, the list says how many and asks for more letters.
 - **Empty and loading.** Every list has a real empty state (and a separate
   "nothing matches" state); skeletons mirror the loaded layout. Nothing is
   mocked.

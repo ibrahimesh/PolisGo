@@ -5,6 +5,7 @@ import { AUDIT_ENTITY_TYPES } from '../../../api/types';
 import type { AuditEntityType, AuditEventResponse } from '../../../api/types';
 import { PageHeader } from '../../../components/layout/PageHeader';
 import { Button } from '../../../components/ui/Button';
+import { cx } from '../../../components/ui/cx';
 import { DateFilterField } from '../../../components/ui/DateFilterField';
 import { EmptyState } from '../../../components/ui/EmptyState';
 import { ErrorNotice } from '../../../components/ui/ErrorNotice';
@@ -16,7 +17,7 @@ import { useFormatters } from '../../../i18n/format';
 import { todayIso } from '../../../lib/dates';
 import { ListSkeleton } from '../../staff/ListSkeleton';
 import { useAudit } from '../queries';
-import { StaffPicker } from '../StaffPicker';
+import { ActorCombobox } from './ActorCombobox';
 import {
   AUDIT_PAGE_SIZE,
   AUDIT_SEARCH_MAX,
@@ -36,13 +37,35 @@ export function AuditPage() {
   const [params, setParams] = useSearchParams();
   const state = readAudit(params);
   const audit = useAudit(toAuditQuery(state, matchAuditCodes(state.q, t)));
+  // Typed but not yet sent (the 300ms debounce).
+  const [typing, setTyping] = useState(false);
   const data = audit.data;
+  // keepPreviousData shows the last result while the next one loads. Its
+  // count belongs to the previous filters, so it is never shown as the
+  // count of the new ones.
+  const settled = Boolean(data) && !audit.isPlaceholderData && !typing;
   const pages = data
     ? Math.max(1, Math.ceil(Math.min(data.totalCount, 200 * AUDIT_PAGE_SIZE) / AUDIT_PAGE_SIZE))
     : 1;
   const filtered = hasAuditFilters(state);
+  // Each change builds on the last one written, not on this render's URL:
+  // the router re-renders after a navigation, and a second filter changed
+  // before that (or the debounced search landing after it) would otherwise
+  // write the old URL back and drop the first. React Router's functional
+  // update doesn't help: it hands over the params of the render that made it.
+  const latest = useRef(params);
+  useEffect(() => {
+    latest.current = params;
+  }, [params]);
+  const write = (next: AuditState, replace: boolean) => {
+    const search = writeAudit(next);
+    latest.current = search;
+    setParams(search, { replace });
+  };
   const update = (patch: Partial<AuditState>) =>
-    setParams(writeAudit({ ...state, page: 1, ...patch }), { replace: true });
+    write({ ...readAudit(latest.current), page: 1, ...patch }, true);
+  const actorName = data?.items.find((event) => event.actorId === state.actor)?.actorName;
+  const query = state.q.trim();
 
   return (
     <div className="space-y-8">
@@ -54,12 +77,11 @@ export function AuditPage() {
         onSubmit={(event) => event.preventDefault()}
         className="grid gap-4 md:grid-cols-2 xl:grid-cols-4"
       >
-        <SearchField value={state.q} onCommit={(q) => update({ q })} />
-        <StaffPicker
-          label={t('admin.audit.actor')}
+        <SearchField value={state.q} onCommit={(q) => update({ q })} onTyping={setTyping} />
+        <ActorCombobox
           value={state.actor}
+          knownName={actorName ?? undefined}
           onChange={(actor) => update({ actor })}
-          emptyOption={{ value: '', label: t('admin.audit.anyone') }}
         />
         <Select
           label={t('admin.audit.entity')}
@@ -95,15 +117,17 @@ export function AuditPage() {
           <h2 id="audit-results" className="sr-only">
             {t('admin.audit.results')}
           </h2>
-          <p aria-live="polite" className="text-sm text-muted">
-            {data ? t('admin.audit.count', { count: data.totalCount }) : ' '}
+          <p aria-live="polite" className="text-sm text-muted" data-testid="audit-count">
+            {!data
+              ? ' '
+              : !settled
+                ? t('admin.audit.searching')
+                : query
+                  ? t('admin.audit.countFor', { count: data.totalCount, query })
+                  : t('admin.audit.count', { count: data.totalCount })}
           </p>
           {filtered && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setParams(writeAudit(DEFAULT_AUDIT), { replace: true })}
-            >
+            <Button variant="ghost" size="sm" onClick={() => write(DEFAULT_AUDIT, true)}>
               {t('policies.clearFilters')}
             </Button>
           )}
@@ -120,7 +144,7 @@ export function AuditPage() {
               </Button>
             }
           />
-        ) : audit.data.totalCount === 0 ? (
+        ) : audit.data.totalCount === 0 && settled ? (
           <EmptyState
             headingLevel="h3"
             title={filtered ? t('admin.audit.noMatchTitle') : t('admin.audit.emptyTitle')}
@@ -134,12 +158,11 @@ export function AuditPage() {
           />
         ) : (
           <ol
-            aria-busy={audit.isFetching}
-            className={
-              audit.isFetching
-                ? 'stagger divide-y divide-line border-y border-line opacity-60'
-                : 'stagger divide-y divide-line border-y border-line'
-            }
+            aria-busy={!settled}
+            className={cx(
+              'stagger divide-y divide-line border-y border-line transition-opacity duration-(--duration-fast)',
+              !settled && 'opacity-60',
+            )}
           >
             {audit.data.items.map((event) => (
               <Event key={`${event.entityType}-${event.id}`} event={event} />
@@ -152,7 +175,7 @@ export function AuditPage() {
             page={Math.min(state.page, pages)}
             pages={pages}
             label={t('admin.audit.pagination')}
-            onChange={(page) => setParams(writeAudit({ ...state, page }))}
+            onChange={(page) => write({ ...readAudit(latest.current), page }, false)}
           />
         )}
       </section>
@@ -163,7 +186,15 @@ export function AuditPage() {
 // Free-text search over the feed. Typing is debounced (300ms) before it
 // reaches the URL and the API; the URL stays the source of truth, so Back,
 // a shared link and "Clear filters" all update the box.
-function SearchField({ value, onCommit }: { value: string; onCommit: (q: string) => void }) {
+function SearchField({
+  value,
+  onCommit,
+  onTyping,
+}: {
+  value: string;
+  onCommit: (q: string) => void;
+  onTyping: (typing: boolean) => void;
+}) {
   const { t } = useTranslation();
   const inputRef = useRef<HTMLInputElement>(null);
   const [draft, setDraft] = useState(value);
@@ -174,12 +205,20 @@ function SearchField({ value, onCommit }: { value: string; onCommit: (q: string)
     setDraft(value);
   }
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  // What this field last sent. A URL change that isn't it came from
+  // elsewhere, and a pending send must not bring the old text back.
+  const sent = useRef(value);
+  useEffect(() => {
+    if (value !== sent.current) clearTimeout(timer.current);
+  }, [value]);
   useEffect(() => () => clearTimeout(timer.current), []);
+  useEffect(() => onTyping(draft.trim() !== committed.trim()), [draft, committed, onTyping]);
 
   const change = (next: string) => {
     setDraft(next);
     clearTimeout(timer.current);
     timer.current = setTimeout(() => {
+      sent.current = next;
       setCommitted(next);
       onCommit(next);
     }, 300);
@@ -188,6 +227,7 @@ function SearchField({ value, onCommit }: { value: string; onCommit: (q: string)
   const clear = () => {
     clearTimeout(timer.current);
     setDraft('');
+    sent.current = '';
     setCommitted('');
     onCommit('');
     inputRef.current?.focus();
@@ -198,7 +238,11 @@ function SearchField({ value, onCommit }: { value: string; onCommit: (q: string)
       <Input
         ref={inputRef}
         id="audit-search"
-        type="search"
+        // A text field in the searchbox role: type="search" adds the
+        // browser's own clear X beside this field's clear button.
+        type="text"
+        role="searchbox"
+        enterKeyHint="search"
         label={t('admin.audit.search')}
         hint={t('admin.audit.searchHint')}
         placeholder={t('admin.audit.searchPlaceholder')}

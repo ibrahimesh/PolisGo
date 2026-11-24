@@ -31,6 +31,18 @@ public class AppDbContext : DbContext, IApplicationDbContext
     public Task<IDbContextTransaction> BeginSerializableTransactionAsync(CancellationToken cancellationToken = default) =>
         Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken);
 
+    public override int SaveChanges(bool acceptAllChangesOnSuccess)
+    {
+        SearchKeys.Apply(ChangeTracker);
+        return base.SaveChanges(acceptAllChangesOnSuccess);
+    }
+
+    public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+    {
+        SearchKeys.Apply(ChangeTracker);
+        return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+    }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         // Pick up every IEntityTypeConfiguration in this assembly — keeps the

@@ -159,8 +159,14 @@ test.describe('Admin panel', () => {
 
     // The audit feed, filtered to this admin's customer events today.
     await page.goto('/app/admin/audit');
-    await page.getByRole('searchbox', { name: 'Search for: Who' }).fill(admin.email);
-    await page.getByRole('combobox', { name: 'Who' }).selectOption(admin.id);
+    // Actor: type to narrow the staff list, then pick the person.
+    const actor = page.getByRole('combobox', { name: 'Actor' });
+    await actor.fill(admin.email);
+    await page
+      .getByRole('listbox', { name: 'Actor' })
+      .getByRole('option', { name: new RegExp(admin.email.replace(/[.+]/g, '\\$&')) })
+      .click();
+    await expect(page).toHaveURL(new RegExp(`actor=${admin.id}`));
     await page.getByLabel('What').selectOption({ label: 'Customer' });
     await page.getByRole('textbox', { name: 'From' }).fill(displayDate(isoToday()));
     await expect(page).toHaveURL(new RegExp(`from=${isoToday()}`));
