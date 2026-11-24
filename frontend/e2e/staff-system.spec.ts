@@ -88,7 +88,9 @@ test('a 500 a user saw is found by its Reference, resolved, and comes back as re
   // It happens again: reopened by the system and flagged.
   const again = await page.request.post(`${API_URL}/api/diagnostics/test-failure`);
   expect(again.status()).toBe(500);
-  const againCode = ((await again.json()) as { traceId: string }).traceId.slice(3, 11).toUpperCase();
+  const againCode = ((await again.json()) as { traceId: string }).traceId
+    .slice(3, 11)
+    .toUpperCase();
   await stored(page, session, againCode);
   await page.reload();
   await expect(main.getByText('Regressed').first()).toBeVisible();
@@ -97,10 +99,14 @@ test('a 500 a user saw is found by its Reference, resolved, and comes back as re
 
   // The triage is in the audit log.
   await page.goto('/app/admin/audit?type=Error');
-  await expect(page.getByRole('region', { name: 'Events' }).getByText('marked resolved').first()).toBeVisible();
+  await expect(
+    page.getByRole('region', { name: 'Events' }).getByText('marked resolved').first(),
+  ).toBeVisible();
 });
 
-test('a crash in the browser gets a Reference the admin finds from the palette', async ({ page }) => {
+test('a crash in the browser gets a Reference the admin finds from the palette', async ({
+  page,
+}) => {
   const session = await signedInAdmin(page);
 
   await page.goto('/app/__e2e/crash');
@@ -119,7 +125,9 @@ test('a crash in the browser gets a Reference the admin finds from the palette',
 
   const main = page.getByRole('main');
   await expect(main.getByText('Browser', { exact: true }).first()).toBeVisible();
-  await expect(main.getByText('Deliberate crash for the error boundary test.').first()).toBeVisible();
+  await expect(
+    main.getByText('Deliberate crash for the error boundary test.').first(),
+  ).toBeVisible();
   await expect(
     main.getByTestId('error-occurrence').filter({ hasText: 'The one you looked up' }),
   ).toContainText('/app/__e2e/crash');
@@ -138,7 +146,9 @@ test('the errors list finds a Reference, says when nothing matches, and fits a p
   await search.fill(` ${code.slice(0, 4)} ${code.slice(4)} `);
   await expect(page).toHaveURL(/q=/);
   await expect(page.getByTestId('errors-count')).toHaveText('1 error group');
-  await expect(page.getByRole('main').getByRole('link', { name: /Deliberate failure/ })).toHaveCount(1);
+  await expect(
+    page.getByRole('main').getByRole('link', { name: /Deliberate failure/ }),
+  ).toHaveCount(1);
   await expectNoHorizontalScroll(page);
 
   await search.fill('ZZZZZZZZ-no-such');
