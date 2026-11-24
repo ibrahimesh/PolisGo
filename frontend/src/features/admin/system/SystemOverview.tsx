@@ -7,7 +7,7 @@ import { cx } from '../../../components/ui/cx';
 import { ErrorNotice } from '../../../components/ui/ErrorNotice';
 import { Skeleton } from '../../../components/ui/Skeleton';
 import { useFormatters } from '../../../i18n/format';
-import { todayIso } from '../../../lib/dates';
+import { parseApiTime, todayIso } from '../../../lib/dates';
 import { CountUp } from '../../../motion/CountUp';
 import { BarChart } from '../dashboard/BarChart';
 import type { BarDatum } from '../dashboard/BarChart';
@@ -230,7 +230,7 @@ function Summary({ data }: { data: ErrorSummaryResponse }) {
   const pad = (n: number) => String(n).padStart(2, '0');
 
   const hourly: BarDatum[] = data.lastDay.map((bucket) => {
-    const start = new Date(bucket.start);
+    const start = parseApiTime(bucket.start);
     const hour = `${pad(start.getHours())}:00`;
     return {
       key: bucket.start,
@@ -241,7 +241,7 @@ function Summary({ data }: { data: ErrorSummaryResponse }) {
   });
   const daily: BarDatum[] = data.lastWeek.map((bucket) => {
     // The bucket starts at Baku midnight: its Baku date is the day.
-    const day = todayIso(new Date(bucket.start));
+    const day = todayIso(parseApiTime(bucket.start));
     return {
       key: bucket.start,
       // "24 Nov" or "24.11": the year is in the full label.

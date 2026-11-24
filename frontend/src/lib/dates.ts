@@ -48,3 +48,11 @@ export function addYears(date: string, years: number): string {
   const [y, rest] = [Number(date.slice(0, 4)), date.slice(4)];
   return `${String(y + years).padStart(4, '0')}${rest}`;
 }
+
+// API timestamps are UTC, but EF reads them back without a kind, so the
+// JSON carries no "Z" ("2026-11-24T13:13:00"), and new Date() would take
+// that as local time: four hours off in Baku. A time without an offset is
+// read as UTC; one with an offset is left as it is.
+export function parseApiTime(iso: string): Date {
+  return new Date(/(?:[zZ]|[+-]\d{2}:?\d{2})$/.test(iso) || !iso.includes('T') ? iso : `${iso}Z`);
+}

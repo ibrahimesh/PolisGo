@@ -1,9 +1,10 @@
 import type { TFunction } from 'i18next';
+import { parseApiTime } from '../../../lib/dates';
 
 // "just now", "5 min ago", "3 h ago", "2 days ago": beside an absolute time,
 // never instead of it (the absolute one is the record).
 export function relativeTime(iso: string, now: number, t: TFunction): string {
-  const minutes = Math.floor((now - new Date(iso).getTime()) / 60_000);
+  const minutes = Math.floor((now - parseApiTime(iso).getTime()) / 60_000);
   if (minutes < 1) return t('admin.system.relative.justNow');
   if (minutes < 60) return t('admin.system.relative.minutes', { count: minutes });
   const hours = Math.floor(minutes / 60);
