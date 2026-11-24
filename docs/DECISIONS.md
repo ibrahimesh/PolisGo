@@ -5,7 +5,7 @@ last. Earlier decisions live in the commit history and `docs/AUDIT.md`.
 
 ---
 
-## ADR-001 — Audit search folds text in .NET, not in SQL
+## ADR-001 — One rule for text search: fold in .NET, not in SQL
 
 **Context.** The audit log's search compared `UPPER(column)` with an
 upper-cased needle. SQLite's `upper()` folds ASCII only, so Cyrillic and
@@ -13,18 +13,46 @@ Azerbaijani names never matched in the test suite; SQL Server's
 `UPPER(N'İbrahim')` is `İBRAHIM`, so "ibrahim" never found "İbrahim" in
 production. The owner's report ("ibrahim" still listing all 2,452 events)
 was caused by an API container built before the search existed, but the
-case bug was real underneath it.
+case bug was real underneath it. The claim, policy and customer lists had
+the same bug in other forms: `FullName.ToUpper().Contains(...)` for claims
+and policies (SQLite: "ольга" never found "Ольга"; on either database
+"ibrahim" never found "İbrahim"), and `LIKE` on name and email for
+customers, case-insensitive only for ASCII on SQLite and leaving İ ≠ i on
+SQL Server's collation. The System section's error search used `lower()`
+on titles, which carry browser messages in the user's language.
 
-**Decision.** One fold rule (`SearchText.Fold`: lower case, every I/İ/ı as
-`i`, `ё` as `е`, NFC) applied in .NET. Users, Customers and AuditEntries
-carry a folded `SearchKey` shadow column, set by `AppDbContext` on every
-save and backfilled after startup for older rows; queries compare folded to
-folded with a plain `Contains`. The SPA mirrors the rule in `foldSearch`.
+**Decision.** One rule for every text search in the API (`SearchText`):
+
+- **Names, emails and free text** are folded once in .NET (`Fold`: lower
+  case, every I/İ/ı as `i`, `ё` as `е`, NFC, whitespace collapsed) into a
+  `SearchKey` shadow column on Users, Customers, AuditEntries and
+  ErrorGroups, set by `AppDbContext` on every save and backfilled after
+  startup for older rows. The typed text is folded the same way and the
+  query is a plain `Contains` on the key: claims and policies match their
+  customer's key (name and email), customers their own, staff and the
+  audit log theirs, error groups title, type and endpoint.
+- **The app's own codes** (policy, claim and plate numbers) are stored
+  upper-case ASCII; the typed text goes through `Code` (folded, then
+  upper-cased) and is compared with the column as stored.
+- **Phones** stay digits-only `LIKE`; the error list's endpoint filter
+  keeps `lower()` on route templates, which are ASCII with mixed case.
+
+No query wraps a name column in `UPPER()`/`LOWER()` or relies on the
+collation for case; tests assert it on the SQL each database is sent. The
+SPA mirrors the rule in `foldSearch`; the command palette's fuzzy match is
+a looser rule for command names only.
 
 **Consequences.** Identical behaviour on SQLite and SQL Server, tested on
-both with a 2,640-event data set. Three extra columns, kept in step
-automatically; bulk SQL updates of names (none exist) would have to refresh
-the key. A leading-wildcard `LIKE` can't use an index, as before.
+both (a 2,640-event audit log; customers, policies, claims, staff, an
+agent's book and error groups with Latin, Cyrillic and Azerbaijani names).
+Four extra columns, kept in step automatically; a bulk SQL update of a name
+(none exist) would have to refresh the key. Claims and policies are now
+also found by the customer's email. A leading-wildcard `LIKE` can't seek
+an index, before or after, so the keys aren't indexed: on 200,000
+customers in SQL Server 2022 the key search costs the same as the old
+name/email `LIKE` (about 31 ms per count, a clustered scan both times),
+and the list still sorts and pages on its existing indexes after the
+filter.
 
 ---
 

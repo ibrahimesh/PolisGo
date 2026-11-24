@@ -176,14 +176,19 @@ every change in this repo.
   is the same transfer, never a second one.
   Claim updates and renewal reminders are derived on read; only read marks
   (`ClaimUpdateRead`, `PolicyReminderRead`) are stored.
-- **Text search folds case in .NET** (`SearchText`), never with SQL's
-  `UPPER()`/`LOWER()` on names: SQLite folds ASCII only, and SQL Server's
-  `UPPER('İbrahim')` never matches "ibrahim". Users, Customers and
-  AuditEntries carry a folded `SearchKey` shadow column, set on every save
-  (`SearchKeys`, backfilled after startup); match with
-  `EF.Property<string>(x, SearchText.KeyProperty).Contains(SearchText.Fold(term))`.
-  ASCII-only values (policy and claim numbers) may use `ToLower()`. The SPA's
-  `foldSearch` (`lib/searchText.ts`) folds the same way.
+- **One rule for text search** (`SearchText`, ADR-001): case is folded in
+  .NET, never with SQL's `UPPER()`/`LOWER()`/collation on names: SQLite
+  folds ASCII only, and SQL Server's `UPPER('İbrahim')` never matches
+  "ibrahim". Users, Customers, AuditEntries and ErrorGroups carry a folded
+  `SearchKey` shadow column, set on every save (`SearchKeys`, backfilled
+  after startup); match with
+  `EF.Property<string>(x, SearchText.KeyProperty).Contains(SearchText.Fold(term))`
+  (claims and policies through their customer's key). The app's own
+  upper-case codes (policy, claim and plate numbers) match
+  `column.Contains(SearchText.Code(term))`, the column as stored. A new
+  searchable entity gets a key in `SearchKeys.For`, the backfill and a
+  migration, and a case in `Search/SearchFoldDataSet.cs` (run on SQLite and
+  SQL Server). The SPA's `foldSearch` (`lib/searchText.ts`) folds the same way.
 - **Check text lengths in the service, not only in the column.** SQLite
   ignores `HasMaxLength`; SQL Server fails the insert with a 500. Every
   user- or staff-supplied string gets an explicit limit and a 400, and
