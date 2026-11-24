@@ -92,3 +92,21 @@ public class ErrorGroupEntityTests
         Assert.Throws<ArgumentOutOfRangeException>(() => group.Record(0, T0, null));
     }
 }
+
+// The SPA translates the entity's 409 messages by their text.
+public class ErrorGroupMessageTests
+{
+    [Fact]
+    public void Transition_messages_match_the_published_ones()
+    {
+        var group = new ErrorGroup { Fingerprint = "f", Title = "t", ExceptionType = "x", Endpoint = "e" };
+        Assert.Equal(PolisGo.Application.Diagnostics.ErrorTrackingValidation.Messages.AlreadyOpen,
+            Assert.Throws<InvalidStateTransitionException>(() => group.Reopen(null)).Message);
+        group.Resolve(Guid.NewGuid(), DateTime.UtcNow, null);
+        Assert.Equal(PolisGo.Application.Diagnostics.ErrorTrackingValidation.Messages.AlreadyResolved,
+            Assert.Throws<InvalidStateTransitionException>(() => group.Resolve(Guid.NewGuid(), DateTime.UtcNow, null)).Message);
+        group.Ignore(Guid.NewGuid(), DateTime.UtcNow, null);
+        Assert.Equal(PolisGo.Application.Diagnostics.ErrorTrackingValidation.Messages.AlreadyIgnored,
+            Assert.Throws<InvalidStateTransitionException>(() => group.Ignore(Guid.NewGuid(), DateTime.UtcNow, null)).Message);
+    }
+}

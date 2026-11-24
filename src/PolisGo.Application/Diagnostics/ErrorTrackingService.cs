@@ -20,20 +20,6 @@ public interface IErrorTrackingService
     Task<ErrorSummaryResponse> SummaryAsync(CancellationToken cancellationToken = default);
 }
 
-public static class ErrorTrackingValidation
-{
-    public const int NoteMaxLength = 1000;
-    public const int MaxPurgeDays = 3650;
-
-    public static class Messages
-    {
-        public const string NoteTooLong = "The note can be at most 1000 characters.";
-        public const string PurgeDaysRange = "Choose between 1 and 3650 days.";
-        public const string ReferenceInvalid = "Enter a Reference such as 8F05E497, or a full trace id.";
-        public const string ReferenceNotFound = "No error has this Reference. It may be older than the retention period.";
-    }
-}
-
 // The System section's error views and triage (Admin only, by the
 // controller). Status changes go through the entity, carry the caller's
 // RowVersion, and are audited in the same SaveChanges like any staff action.

@@ -9,9 +9,8 @@ import { cx } from '../../../components/ui/cx';
 import { DateFilterField } from '../../../components/ui/DateFilterField';
 import { EmptyState } from '../../../components/ui/EmptyState';
 import { ErrorNotice } from '../../../components/ui/ErrorNotice';
-import { CloseIcon, SearchIcon } from '../../../components/ui/icons';
-import { Input } from '../../../components/ui/Input';
 import { Pagination } from '../../../components/ui/Pagination';
+import { SearchField } from '../../../components/ui/SearchField';
 import { Select } from '../../../components/ui/Select';
 import { useFormatters } from '../../../i18n/format';
 import { todayIso } from '../../../lib/dates';
@@ -77,7 +76,19 @@ export function AuditPage() {
         onSubmit={(event) => event.preventDefault()}
         className="grid gap-4 md:grid-cols-2 xl:grid-cols-4"
       >
-        <SearchField value={state.q} onCommit={(q) => update({ q })} onTyping={setTyping} />
+        <div className="md:col-span-2 xl:col-span-4">
+          <SearchField
+            id="audit-search"
+            label={t('admin.audit.search')}
+            hint={t('admin.audit.searchHint')}
+            placeholder={t('admin.audit.searchPlaceholder')}
+            clearLabel={t('admin.audit.clearSearch')}
+            value={state.q}
+            maxLength={AUDIT_SEARCH_MAX}
+            onCommit={(q) => update({ q })}
+            onTyping={setTyping}
+          />
+        </div>
         <ActorCombobox
           value={state.actor}
           knownName={actorName ?? undefined}
@@ -183,100 +194,6 @@ export function AuditPage() {
   );
 }
 
-// Free-text search over the feed. Typing is debounced (300ms) before it
-// reaches the URL and the API; the URL stays the source of truth, so Back,
-// a shared link and "Clear filters" all update the box.
-function SearchField({
-  value,
-  onCommit,
-  onTyping,
-}: {
-  value: string;
-  onCommit: (q: string) => void;
-  onTyping: (typing: boolean) => void;
-}) {
-  const { t } = useTranslation();
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [draft, setDraft] = useState(value);
-  const [committed, setCommitted] = useState(value);
-  // The URL changed from elsewhere (Back, Clear filters): follow it.
-  if (value !== committed) {
-    setCommitted(value);
-    setDraft(value);
-  }
-  const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
-  // What this field last sent. A URL change that isn't it came from
-  // elsewhere, and a pending send must not bring the old text back.
-  const sent = useRef(value);
-  useEffect(() => {
-    if (value !== sent.current) clearTimeout(timer.current);
-  }, [value]);
-  useEffect(() => () => clearTimeout(timer.current), []);
-  useEffect(() => onTyping(draft.trim() !== committed.trim()), [draft, committed, onTyping]);
-
-  const change = (next: string) => {
-    setDraft(next);
-    clearTimeout(timer.current);
-    timer.current = setTimeout(() => {
-      sent.current = next;
-      setCommitted(next);
-      onCommit(next);
-    }, 300);
-  };
-
-  const clear = () => {
-    clearTimeout(timer.current);
-    setDraft('');
-    sent.current = '';
-    setCommitted('');
-    onCommit('');
-    inputRef.current?.focus();
-  };
-
-  return (
-    <div className="md:col-span-2 xl:col-span-4">
-      <Input
-        ref={inputRef}
-        id="audit-search"
-        // A text field in the searchbox role: type="search" adds the
-        // browser's own clear X beside this field's clear button.
-        type="text"
-        role="searchbox"
-        enterKeyHint="search"
-        label={t('admin.audit.search')}
-        hint={t('admin.audit.searchHint')}
-        placeholder={t('admin.audit.searchPlaceholder')}
-        value={draft}
-        maxLength={AUDIT_SEARCH_MAX}
-        autoComplete="off"
-        onChange={(event) => change(event.target.value)}
-        onKeyDown={(event) => {
-          if (event.key === 'Escape' && draft) {
-            event.preventDefault();
-            clear();
-          }
-        }}
-        trailing={
-          draft ? (
-            <button
-              type="button"
-              onClick={clear}
-              aria-label={t('admin.audit.clearSearch')}
-              className="grid size-10 place-items-center rounded-sm text-muted transition-colors duration-(--duration-fast) hover:text-text"
-            >
-              <CloseIcon />
-            </button>
-          ) : (
-            <span className="grid size-10 place-items-center text-muted" aria-hidden="true">
-              <SearchIcon />
-            </span>
-          )
-        }
-      />
-    </div>
-  );
-}
-
 function Event({ event }: { event: AuditEventResponse }) {
   const { t } = useTranslation();
   const format = useFormatters();
@@ -290,6 +207,13 @@ function Event({ event }: { event: AuditEventResponse }) {
       <Link
         to={`/app/claims/${event.entityId}`}
         className="font-medium break-all underline decoration-line-strong underline-offset-4 hover:decoration-current"
+      >
+        {event.entityLabel}
+      </Link>
+    ) : event.entityType === 'Error' && event.action !== 'ErrorsPurged' ? (
+      <Link
+        to={`/app/admin/system/errors/${event.entityId}`}
+        className="font-medium break-words underline decoration-line-strong underline-offset-4 hover:decoration-current"
       >
         {event.entityLabel}
       </Link>
@@ -319,11 +243,16 @@ function Event({ event }: { event: AuditEventResponse }) {
           })
         : event.action === 'StaffCreated'
           ? t('admin.audit.actions.StaffCreated', { role: t(`roles.${event.toValue ?? ''}`) })
-          : event.action === 'CustomerAssigned'
-            ? event.toValue
-              ? t('admin.audit.actions.assigned', { agent: event.toValue })
-              : t('admin.audit.actions.released', { agent: event.fromValue ?? '' })
-            : t(`admin.audit.actions.${event.action}`);
+          : event.action === 'ErrorsPurged'
+            ? t('admin.audit.actions.ErrorsPurged', {
+                count: Number(event.toValue ?? 0),
+                days: event.fromValue ?? '',
+              })
+            : event.action === 'CustomerAssigned'
+              ? event.toValue
+                ? t('admin.audit.actions.assigned', { agent: event.toValue })
+                : t('admin.audit.actions.released', { agent: event.fromValue ?? '' })
+              : t(`admin.audit.actions.${event.action}`);
 
   return (
     <li className="grid gap-1 py-4 sm:grid-cols-[11rem_minmax(0,1fr)] sm:gap-6">

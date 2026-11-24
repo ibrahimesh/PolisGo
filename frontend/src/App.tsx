@@ -66,6 +66,22 @@ const StaffPage = lazy(() =>
 const AuditPage = lazy(() =>
   import('./features/admin/audit/AuditPage').then((m) => ({ default: m.AuditPage })),
 );
+// The System section (Admin): its own chunks, never in the landing bundle.
+const SystemLayout = lazy(() =>
+  import('./features/admin/system/SystemLayout').then((m) => ({ default: m.SystemLayout })),
+);
+const SystemOverview = lazy(() =>
+  import('./features/admin/system/SystemOverview').then((m) => ({ default: m.SystemOverview })),
+);
+const ErrorsPage = lazy(() =>
+  import('./features/admin/system/ErrorsPage').then((m) => ({ default: m.ErrorsPage })),
+);
+const ErrorDetailPage = lazy(() =>
+  import('./features/admin/system/ErrorDetailPage').then((m) => ({ default: m.ErrorDetailPage })),
+);
+const LookupPage = lazy(() =>
+  import('./features/admin/system/LookupPage').then((m) => ({ default: m.LookupPage })),
+);
 const PolicyTypesPage = lazy(() =>
   import('./features/admin/PolicyTypesPage').then((m) => ({ default: m.PolicyTypesPage })),
 );
@@ -140,6 +156,16 @@ export function App() {
             <Route path="staff" element={<StaffPage />} />
             <Route path="audit" element={<AuditPage />} />
             <Route path="policy-types" element={<PolicyTypesPage />} />
+          </Route>
+
+          {/* The technical section: errors and health. */}
+          <Route path="admin/system" element={guard('system')}>
+            <Route element={<SystemLayout />}>
+              <Route index element={<SystemOverview />} />
+              <Route path="errors" element={<ErrorsPage />} />
+              <Route path="errors/:id" element={<ErrorDetailPage />} />
+              <Route path="lookup/:reference" element={<LookupPage />} />
+            </Route>
           </Route>
 
           {E2E_ROUTES && <Route path="__e2e/crash" element={<CrashPage />} />}

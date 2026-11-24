@@ -15,6 +15,10 @@ const ACTION_LABELS = {
   StaffReactivated: ['admin.audit.actions.StaffReactivated'],
   RoleChanged: ['admin.audit.actions.RoleChanged'],
   CustomerAssigned: ['admin.audit.actions.assigned', 'admin.audit.actions.released'],
+  ErrorResolved: ['admin.audit.actions.ErrorResolved'],
+  ErrorIgnored: ['admin.audit.actions.ErrorIgnored'],
+  ErrorReopened: ['admin.audit.actions.ErrorReopened'],
+  ErrorsPurged: ['admin.audit.actions.ErrorsPurged'],
 } as const;
 
 // Shorter text would match half the vocabulary ("a", "ро").

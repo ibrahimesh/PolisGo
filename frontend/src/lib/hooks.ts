@@ -19,6 +19,17 @@ export function useDebouncedValue<T>(value: T, delayMs: number): T {
   return debounced;
 }
 
+// The current time, re-read every minute: for "5 min ago" labels, which
+// must not call Date.now() while rendering.
+export function useNow(intervalMs = 60_000): number {
+  const [now, setNow] = useState(Date.now);
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), intervalMs);
+    return () => clearInterval(timer);
+  }, [intervalMs]);
+  return now;
+}
+
 // True when the OS asks for reduced motion or the user turned on "Reduce
 // motion" in Settings; every JS-driven animation checks this.
 export function usePrefersReducedMotion(): boolean {

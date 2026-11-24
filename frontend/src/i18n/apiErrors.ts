@@ -95,6 +95,15 @@ const SERVER_MESSAGE_KEYS: Record<string, string> = {
   'The start of the range must be on or before its end.': 'validation.rangeOrder',
   'The range can be at most 24 months.': 'validation.rangeTooLong',
   'Dates must be between 1 January 2000 and 31 December 2100.': 'validation.dateOutOfRange',
+  // System section — ErrorTrackingValidation.Messages (same contract test).
+  'The note can be at most 1000 characters.': 'validation.errorNoteTooLong',
+  'Choose between 1 and 3650 days.': 'validation.purgeDaysRange',
+  'Enter a Reference such as 8F05E497, or a full trace id.': 'admin.system.lookup.invalid',
+  'No error has this Reference. It may be older than the retention period.':
+    'errors.referenceNotFound',
+  'This error is already resolved.': 'errors.errorAlreadyResolved',
+  'This error is already ignored.': 'errors.errorAlreadyIgnored',
+  'This error is already open.': 'errors.errorAlreadyOpen',
 };
 
 export function serverMessageKey(message: string | undefined): string | undefined {

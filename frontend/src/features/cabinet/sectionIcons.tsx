@@ -9,6 +9,7 @@ import {
   InboxIcon,
   PlusIcon,
   PolicyIcon,
+  PulseIcon,
   StackIcon,
   TagIcon,
   UserIcon,
@@ -30,6 +31,7 @@ export const SECTION_ICONS: Record<WorkspaceSectionId, ComponentType> = {
   staff: BriefcaseIcon,
   audit: HistoryIcon,
   policyTypes: TagIcon,
+  system: PulseIcon,
   profile: UserIcon,
   help: HelpIcon,
 };

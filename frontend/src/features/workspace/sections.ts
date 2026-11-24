@@ -36,6 +36,8 @@ export const WORKSPACE_SECTIONS = [
   { id: 'staff', path: '/app/admin/staff', roles: ['Admin'], mobile: ['Admin'] },
   { id: 'audit', path: '/app/admin/audit', roles: ['Admin'], mobile: [] },
   { id: 'policyTypes', path: '/app/admin/policy-types', roles: ['Admin'], mobile: [] },
+  // The technical section: errors and health.
+  { id: 'system', path: '/app/admin/system', roles: ['Admin'], mobile: [] },
   { id: 'profile', path: '/app/profile', roles: USER_ROLES, mobile: USER_ROLES },
   { id: 'help', path: '/app/help', roles: USER_ROLES, mobile: [] },
 ] as const satisfies readonly {
@@ -57,6 +59,7 @@ export const STAFF_SECTION_IDS = [
   'staff',
   'audit',
   'policyTypes',
+  'system',
 ] as const;
 export type StaffSectionId = (typeof STAFF_SECTION_IDS)[number];
 

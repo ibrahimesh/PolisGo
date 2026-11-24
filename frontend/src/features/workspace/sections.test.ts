@@ -28,6 +28,7 @@ describe('workspace sections', () => {
       'staff',
       'audit',
       'policyTypes',
+      'system',
       'profile',
       'help',
     ]);
