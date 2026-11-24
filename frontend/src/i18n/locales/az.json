@@ -498,6 +498,8 @@
   "palette": {
     "title": "Əmrlər paneli",
     "open": "Axtarış və əmrlər",
+    "search": "Axtarış",
+    "openWithShortcut": "Axtarış və əmrlər ({{shortcut}})",
     "placeholder": "Səhifə və əməliyyat axtarın…",
     "hint": "Yuxarı və aşağı oxlar seçir, Home və End başa və sona keçir, Page Up və Page Down səkkiz bənd keçir, Enter icra edir, Escape bağlayır.",
     "groups": {
@@ -519,7 +521,8 @@
       "move": "seçim",
       "run": "icra",
       "ends": "əvvəl, son",
-      "close": "bağla"
+      "close": "bağla",
+      "toggle": "istənilən yerdən açmaq"
     }
   },
   "cabinet": {

@@ -25,6 +25,7 @@ import {
 } from '../ui/icons';
 import { fuzzyMatch } from './fuzzy';
 import { LANDING_SECTIONS } from './navigation';
+import { paletteShortcutLabel } from './usePaletteShortcut';
 
 type Group = 'recent' | 'pages' | 'actions' | 'language' | 'theme';
 const GROUP_ORDER: readonly Group[] = ['recent', 'pages', 'actions', 'language', 'theme'];
@@ -288,6 +289,7 @@ export function CommandPalette({ open, onClose, returnFocusTo }: CommandPaletteP
         <Hint keys={['↵']}>{t('palette.keys.run')}</Hint>
         <Hint keys={['Home', 'End']}>{t('palette.keys.ends')}</Hint>
         <Hint keys={['Esc']}>{t('palette.keys.close')}</Hint>
+        <Hint keys={[paletteShortcutLabel()]}>{t('palette.keys.toggle')}</Hint>
       </div>
       {/* The same hints for screen readers, once, in words. */}
       <p className="sr-only">{t('palette.hint')}</p>

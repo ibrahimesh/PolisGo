@@ -74,6 +74,34 @@ test.describe('Command palette', () => {
     await expect(button).toBeFocused();
   });
 
+  test('the search button says "Search"; the shortcut is in its tooltip and the palette', async ({
+    page,
+  }) => {
+    for (const [lang, word, name] of [
+      ['en', 'Search', 'Search and commands'],
+      ['ru', 'Поиск', 'Поиск и команды'],
+      ['az', 'Axtarış', 'Axtarış və əmrlər'],
+    ] as const) {
+      await seedPreferences(page, { lang }, { override: true });
+      await page.setViewportSize({ width: 1280, height: 800 });
+      await page.goto('/');
+      const button = page.getByRole('banner').getByRole('button', { name });
+      await expect(button).toHaveText(word);
+      await expect(button).toHaveAttribute('title', new RegExp(`${name} \\(Ctrl K\\)`));
+      await expect(button.locator('kbd')).toHaveCount(0);
+
+      // A phone shows the icon alone; the accessible name stays.
+      await page.setViewportSize({ width: 390, height: 844 });
+      await expect(button).toBeVisible();
+      await expect(button.getByText(word)).toBeHidden();
+    }
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.keyboard.press('Control+K');
+    const dialog = page.getByRole('dialog', { name: 'Əmrlər paneli' });
+    await expect(dialog).toBeVisible();
+    await expect(dialog.locator('kbd', { hasText: /^Ctrl K$/ })).toBeVisible();
+  });
+
   test('arrowing past the visible area keeps the active item in view', async ({ page }) => {
     const admin = await (await adminApi(page)).createStaff('Admin');
     await openSession(page, admin.session);

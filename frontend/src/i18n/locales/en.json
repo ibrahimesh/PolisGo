@@ -498,6 +498,8 @@
   "palette": {
     "title": "Command palette",
     "open": "Search and commands",
+    "search": "Search",
+    "openWithShortcut": "Search and commands ({{shortcut}})",
     "placeholder": "Search pages and actions…",
     "hint": "Up and down arrows move, Home and End jump to the ends, Page Up and Page Down move by eight, Enter runs, Escape closes.",
     "groups": {
@@ -519,7 +521,8 @@
       "move": "move",
       "run": "run",
       "ends": "first, last",
-      "close": "close"
+      "close": "close",
+      "toggle": "open from anywhere"
     }
   },
   "cabinet": {

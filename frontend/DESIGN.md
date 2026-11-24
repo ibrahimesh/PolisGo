@@ -184,7 +184,10 @@ and `DateFilterField`) · `StaffPicker` · `BarChart` · `ProductIcon` ·
 `CountUp` · `SuccessCheck`.
 
 - **Header.** Logo (always to `/`), the sections, a compact search button
-  (icon and "Ctrl K") and the account area; nothing in it wraps. The first
+  (icon and the word "Search"; the icon alone below sm, with the same
+  accessible name; the Ctrl/⌘+K shortcut only in its tooltip and in the
+  palette's key hints) and the account area; nothing in it wraps, from
+  390px up. The first
   three sections show from lg, the others join at xl and sit under a "More"
   disclosure in between; below lg everything is in the menu panel. No
   language or theme controls in any header.
@@ -211,7 +214,7 @@ and `DateFilterField`) · `StaffPicker` · `BarChart` · `ProductIcon` ·
   marked `aria-invalid`, and listed in a live summary on submit that moves
   focus to the first invalid field.
 - Icon-only buttons carry an accessible name; where a control shows text
-  (e.g. "Ctrl K") that text is part of its name.
+  (e.g. "Search") its accessible name starts with that text.
 - Tabs, combobox/listbox (palette) and disclosure (mobile menu, FAQ) follow
   the WAI-ARIA patterns; modal and palette use native `<dialog>`.
 

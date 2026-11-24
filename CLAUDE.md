@@ -333,7 +333,7 @@ React Router, TanStack Query, React Hook Form + Zod, react-i18next.
   under "More" until xl), the compact search button and the account area,
   with short names (`nav.short.*`) where a language needs them.
   `header-layout.spec.ts` checks one line per item at 1024–1440px in all
-  three languages; run it after adding anything to a header.
+  three languages (and 390px); run it after adding anything to a header.
 - **The phone menu is modal while open** (`Header`): the rest of the shell
   is `inert`, Tab wraps inside the header, Escape returns focus to the
   toggle, and reaching lg closes it. Dialogs mount outside the shell.
