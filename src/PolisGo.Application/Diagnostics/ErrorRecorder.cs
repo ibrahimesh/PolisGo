@@ -162,7 +162,8 @@ public sealed class ErrorRecorder : IErrorRecorder
             TraceId = report.TraceId,
             ReferenceCode = ErrorReference.CodeOf(report.TraceId),
             HttpStatus = report.HttpStatus,
-            HttpMethod = report.HttpMethod,
+            // A custom verb can be any length; the column holds 10.
+            HttpMethod = report.HttpMethod is null ? null : Cut(report.HttpMethod, 10),
             RouteTemplate = report.RouteTemplate is null ? null : Cut(report.RouteTemplate, EndpointMaxLength),
             ActorRole = report.ActorRole,
             ActorUserId = report.ActorUserId,

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PolisGo.Api.Diagnostics;
+using PolisGo.Application.Diagnostics;
 using PolisGo.Application.Common.Exceptions;
 using PolisGo.Domain.Exceptions;
 using AppUnauthorizedException = PolisGo.Application.Common.Exceptions.UnauthorizedException;
@@ -118,9 +119,11 @@ public class ExceptionHandlingMiddleware
             // Anything we didn't anticipate: log full stack trace server-side,
             // tell the client only a generic message with the traceId.
             var traceId = GetTraceId(context);
-            _logger.LogError(ex,
-                "Unhandled exception for {Method} {Path} (trace {TraceId})",
-                context.Request.Method, context.Request.Path, traceId);
+            // Redacted like stored errors: exception text is where emails,
+            // tokens and connection strings leak, and logs are kept too.
+            _logger.LogError(
+                "Unhandled exception for {Method} {Path} (trace {TraceId}): {Error}",
+                context.Request.Method, context.Request.Path, traceId, Redaction.Stack(ex.ToString()));
             // For the System section: queued, redacted and stored off the
             // request path; never throws, never waits.
             _capture.Exception(context, ex);
@@ -128,7 +131,7 @@ public class ExceptionHandlingMiddleware
                 "Server error",
                 // Only expose details in Development — never in production.
                 _environment.IsDevelopment()
-                    ? ex.Message
+                    ? Redaction.Message(ex.Message)
                     : "An unexpected error occurred. Please contact support with the trace id.");
         }
     }
@@ -137,9 +140,10 @@ public class ExceptionHandlingMiddleware
 
     private void LogExpected(Exception ex, HttpContext context)
     {
-        _logger.LogWarning(ex,
+        // The type and the redacted message; no stack: these are answers, not bugs.
+        _logger.LogWarning(
             "Expected domain error for {Method} {Path}: {Type} - {Message}",
-            context.Request.Method, context.Request.Path, ex.GetType().Name, ex.Message);
+            context.Request.Method, context.Request.Path, ex.GetType().Name, Redaction.Message(ex.Message));
     }
 
     private Task WriteProblem(
