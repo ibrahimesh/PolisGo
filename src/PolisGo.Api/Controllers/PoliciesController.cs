@@ -84,7 +84,7 @@ public class PoliciesController : ControllerBase
     /// </summary>
     /// <param name="status">Effective status: Expired includes Active policies past their end date.</param>
     /// <param name="type">Policy type code, e.g. MTPL.</param>
-    /// <param name="search">Part of a policy number, plate or holder name, any case. Max 100 characters.</param>
+    /// <param name="search">Part of a policy number, plate or the holder's name or email, any case (İ, ı and I alike). Max 100 characters.</param>
     /// <param name="sortBy">CreatedAt (default), StartDate, EndDate, Premium or PolicyNumber.</param>
     /// <param name="sortDir">Asc or Desc (default).</param>
     /// <param name="page">1-based page number.</param>

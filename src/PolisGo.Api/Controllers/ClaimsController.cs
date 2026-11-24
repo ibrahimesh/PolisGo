@@ -63,7 +63,7 @@ public class ClaimsController : ControllerBase
     /// <param name="assignedToMe">Adjusters: only claims assigned to the caller.</param>
     /// <param name="from">Incident on or after this date.</param>
     /// <param name="to">Incident on or before this date.</param>
-    /// <param name="search">Part of a claim or policy number or the customer's name, any case. Max 100 characters.</param>
+    /// <param name="search">Part of a claim or policy number or the customer's name or email, any case (İ, ı and I alike). Max 100 characters.</param>
     /// <param name="sortBy">CreatedAt (default), IncidentDate, ClaimedAmount or ClaimNumber.</param>
     /// <param name="sortDir">Asc or Desc (default).</param>
     /// <param name="page">1-based page number.</param>

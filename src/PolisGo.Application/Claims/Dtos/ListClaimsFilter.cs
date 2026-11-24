@@ -20,7 +20,7 @@ public record ListClaimsFilter(
     int PageSize = 20,
     // Submitted or UnderReview; ignored when Status is set.
     bool? Open = null,
-    // Part of a claim or policy number or the customer's name, any case.
+    // Part of a claim or policy number or the customer's name or email, any case.
     string? Search = null,
     ClaimSortBy SortBy = ClaimSortBy.CreatedAt,
     SortDirection SortDir = SortDirection.Desc

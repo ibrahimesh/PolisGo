@@ -192,8 +192,11 @@ public class CustomerService : ICustomerService
                 "search", $"Search must be at most {MaxSearchLength} characters.");
         }
 
-        // LIKE with escaped wildcards: user input can't inject % or _ patterns.
-        // Case-insensitive on SQL Server's default collation.
+        // Name and email through the folded key (SearchText): SQL Server's
+        // collation and SQLite's LIKE disagree on İ/ı, ə and Cyrillic case.
+        // Contains takes the text literally: % and _ are not patterns.
+        var needle = SearchText.Fold(term);
+        // Phones are digits and separators: LIKE with escaped wildcards.
         var pattern = $"%{EscapeLike(term)}%";
         var digits = new string(term.Where(char.IsAsciiDigit).ToArray());
 
@@ -204,8 +207,7 @@ public class CustomerService : ICustomerService
         if (!looksLikePhone || digits.Length < MinPhoneDigits)
         {
             return customers.Where(c =>
-                EF.Functions.Like(c.FullName, pattern, LikeEscape)
-                || EF.Functions.Like(c.Email, pattern, LikeEscape)
+                EF.Property<string>(c, SearchText.KeyProperty).Contains(needle)
                 || EF.Functions.Like(c.Phone, pattern, LikeEscape));
         }
 
@@ -213,8 +215,7 @@ public class CustomerService : ICustomerService
         // so "501234567" and "50-123-45-67" both match.
         var digitPattern = $"%{digits}%";
         return customers.Where(c =>
-            EF.Functions.Like(c.FullName, pattern, LikeEscape)
-            || EF.Functions.Like(c.Email, pattern, LikeEscape)
+            EF.Property<string>(c, SearchText.KeyProperty).Contains(needle)
             || EF.Functions.Like(
                 c.Phone.Replace(" ", "").Replace("-", "").Replace("(", "").Replace(")", "").Replace("+", ""),
                 digitPattern));
