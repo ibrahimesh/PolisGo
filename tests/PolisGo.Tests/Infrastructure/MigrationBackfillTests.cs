@@ -14,6 +14,7 @@ public class MigrationBackfillTests
     private const string PolicyHistory = "20261118003359_PolicyHistoryAndPricing";
     private const string CustomerAgent = "20261118192153_CustomerAgent";
     private const string AdminPanel = "20261119221821_AdminPanel";
+    private const string ErrorTracking = "20261124124323_ErrorTracking";
     private const string Mtpl = "11111111-1111-1111-1111-111111111111";
 
     [SqlServerFact]
@@ -85,6 +86,19 @@ public class MigrationBackfillTests
             Assert.Equal(3, users.Select(u => u.SecurityStamp).Distinct().Count());
         }
 
+        // An error group recorded before error groups had a search key.
+        db.Migrate(ErrorTracking);
+        var errorGroup = Guid.NewGuid();
+        await using (var old = db.NewContext())
+        {
+            await old.Database.ExecuteSqlInterpolatedAsync($"""
+                INSERT INTO ErrorGroups (Id, Fingerprint, Source, Title, ExceptionType, Endpoint, FirstSeenAt, LastSeenAt,
+                  OccurrenceCount, Status, IsRegressed, RowVersion) VALUES
+                  ({errorGroup}, {"old-fingerprint"}, {"Frontend"}, {"Не удалось загрузить: Şəkil"}, {"TypeError"},
+                   {"/app/claims/:id"}, {"2026-11-24T10:00:00"}, {"2026-11-24T10:00:00"}, 1, {"New"}, 0, NEWID());
+                """);
+        }
+
         // And the rest of the migrations accept that data (one completed
         // payment per policy, so the unique completed-payment index builds).
         db.Migrate();
@@ -97,10 +111,13 @@ public class MigrationBackfillTests
         // Old rows have no search key until the startup backfill folds them.
         await using (var latest = db.NewContext())
         {
-            Assert.Equal(5, await SearchKeys.BackfillAsync(latest));
+            Assert.Equal(6, await SearchKeys.BackfillAsync(latest));
             var key = await latest.Customers.AsNoTracking().Where(c => c.Id == walkIn)
                 .Select(c => EF.Property<string>(c, SearchText.KeyProperty)).SingleAsync();
             Assert.Equal(SearchText.Key("Walk In", "w@old.test"), key);
+            var errorKey = await latest.ErrorGroups.AsNoTracking().Where(g => g.Id == errorGroup)
+                .Select(g => EF.Property<string>(g, SearchText.KeyProperty)).SingleAsync();
+            Assert.Equal("не удалось загрузить: şəkiltypeerror/app/claims/:id", errorKey);
             Assert.Equal(0, await SearchKeys.BackfillAsync(latest));
         }
     }

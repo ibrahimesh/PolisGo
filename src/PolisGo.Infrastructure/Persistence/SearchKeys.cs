@@ -31,6 +31,7 @@ public static class SearchKeys
         User u => SearchText.Key(u.FullName, u.Email),
         Customer c => SearchText.Key(c.FullName, c.Email),
         AuditEntry a => SearchText.Key(a.SubjectLabel, a.FromValue, a.ToValue),
+        ErrorGroup g => SearchText.Key(g.Title, g.ExceptionType, g.Endpoint),
         _ => null,
     };
 
@@ -40,7 +41,8 @@ public static class SearchKeys
     {
         return await FillAsync(db.Users, cancellationToken)
             + await FillAsync(db.Customers, cancellationToken)
-            + await FillAsync(db.AuditEntries, cancellationToken);
+            + await FillAsync(db.AuditEntries, cancellationToken)
+            + await FillAsync(db.ErrorGroups, cancellationToken);
 
         async Task<int> FillAsync<T>(DbSet<T> set, CancellationToken ct) where T : class
         {
